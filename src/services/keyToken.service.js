@@ -35,7 +35,6 @@ class KeyTokenService {
 
   static findByUserId = async (userId) => {
      const userIds = await keyTokenModel.findOne({ user: userId })
-     console.log("🚀 ~ userIds:", userIds)
      return userIds
   };
 

@@ -1,19 +1,19 @@
 const courseModel = require("../../models/course.model");
 const lessonModel = require("../../models/lesson.model");
 const validateMongoDbId = require("../../config/validateMongoDbId");
+const { NotFoundError, BadRequestError } = require("../../core/error.response");
 
-class lessonService {
-  static createLesson = async ({ name, content, videoUrl, courseId }) => {
+class LessonService {
+  static createLesson = async ({ name, content, courseId }) => {
     try {
       const findCourse = await courseModel.findById(courseId);
       if (!findCourse) {
-        throw new Error("Course not found");
+        throw new NotFoundError("Course not found");
       }
 
       const lesson = await lessonModel.create({
         name,
         content,
-        videoUrl,
       });
       await lesson.save();
 
@@ -26,7 +26,7 @@ class lessonService {
 
       return { lesson, findCourse: updatedCourse };
     } catch (error) {
-      throw new Error("Failed to create lesson", error);
+      throw new BadRequestError("Failed to create lesson", error);
     }
   };
 
@@ -67,6 +67,21 @@ class lessonService {
       const findLesson = await lessonModel.findByIdAndDelete(lessonId);
     } catch (error) {}
   };
+
+  static updateLesson = async ({ lessonId, name, content, videoUrl }) => {
+    validateMongoDbId(lessonId);
+    try {
+      const lesson = await lessonModel.findById(lessonId);
+      lesson.name = name;
+      lesson.content = content;
+      lesson.videoUrl = videoUrl;
+
+      const updateLesson = await lesson.save();
+      return updateLesson;
+    } catch (error) {
+      throw new BadRequestError("Failed to update lesson", error);
+    }
+  };
 }
 
-exports.lessonService = lessonService;
+exports.LessonService = LessonService;

@@ -1,18 +1,18 @@
 "use strict";
 
 const { BadRequestError } = require("../core/error.response");
-const { lessonService } = require("../services/course/lesson.service");
+const { SuccessReponse } = require("../core/success.reponse");
+const { LessonService } = require("../services/course/lesson.service");
 
 class LessonController {
   createLesson = async (req, res, next) => {
     try {
-      const { name, content, videoUrl } = req.body;
+      const { name, content } = req.body;
       const { courseId } = req.params;
 
-      const result = await lessonService.createLesson({
+      const result = await LessonService.createLesson({
         name,
         content,
-        videoUrl,
         courseId,
       });
 
@@ -26,7 +26,7 @@ class LessonController {
     try {
       const { courseId } = req.params;
 
-      const result = await lessonService.getAllCourseLeesion({ courseId });
+      const result = await LessonService.getAllCourseLeesion({ courseId });
 
       return res.status(200).json({
         status: true,
@@ -42,7 +42,7 @@ class LessonController {
     const { lessonId } = req.params;
 
     try {
-      const result = await lessonService.getALession({ lessonId });
+      const result = await LessonService.getALession({ lessonId });
 
       return res.status(200).json({
         status: true,
@@ -58,7 +58,7 @@ class LessonController {
     const { courseId, lessonId } = req.params;
 
     try {
-      await lessonService.deleteLesson({ courseId, lessonId });
+      await LessonService.deleteLesson({ courseId, lessonId });
 
       return res.status(200).json({
         status: true,
@@ -67,6 +67,20 @@ class LessonController {
     } catch (error) {
       throw new BadRequestError(error);
     }
+  };
+
+  updateLesson = async (req, res, next) => {
+    const { lessonId } = req.params;
+    const { name, content, videoUrl } = req.body;
+    new SuccessReponse({
+      message: "Lesson Updated!",
+      metadata: await LessonService.updateLesson({
+        lessonId,
+        name,
+        content,
+        videoUrl,
+      }),
+    }).send(res);
   };
 }
 

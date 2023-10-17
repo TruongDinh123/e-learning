@@ -3,6 +3,8 @@
 const express = require("express");
 const { permission, asyncHandler } = require("../../auth/checkAuthen");
 const lessonController = require("../../controllers/lesson.controller");
+const VideoLessonController = require("../../controllers/video-lesson.controller");
+const { uploadMiddleware } = require("../../middlewares/upload");
 const router = express.Router();
 
 //lesson
@@ -26,6 +28,21 @@ router.get(
 router.get(
   "/e-learning/lesson/:lessonId",
   asyncHandler(lessonController.getALession)
+);
+
+//video-lessons
+
+router.post(
+  "/e-learning/lesson/:lessonId/upload-video",
+  permission("Mentor"),
+  uploadMiddleware.single("filename"),
+  asyncHandler(VideoLessonController.createVdLesson)
+);
+
+router.delete(
+  "/e-learning/lesson/:lessonId/video/:videoLessonId",
+  permission("Mentor"),
+  asyncHandler(VideoLessonController.deleteVdLesson)
 );
 
 module.exports = router;

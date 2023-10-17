@@ -1,5 +1,5 @@
-'use strict';
-const mongoose = require('mongoose');
+"use strict";
+const mongoose = require("mongoose");
 
 const lessonSchema = new mongoose.Schema({
   name: {
@@ -10,14 +10,16 @@ const lessonSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  videoUrl: {
-    type: String,
-    required: true,
-  },
+  videos: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "VideoLesson",
+    },
+  ],
   quiz: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Quiz',
+    ref: "Quiz",
   },
 });
 
-module.exports = mongoose.model('Lesson', lessonSchema);
+module.exports = mongoose.model("Lesson", lessonSchema);
