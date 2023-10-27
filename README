@@ -1,0 +1,4 @@
+Step 1: git clone https://github.com/95ideal/95elearning.git
+step 2: git connect database mongodb compass mongodb:127.0.0.1:27017/elearning_dev
+step 3: git install
+step 4: npm run dev
