@@ -9,22 +9,28 @@ const router = express.Router();
 //signUp
 router.post("/e-learning/signup", asyncHandler(accessController.signUp));
 
-router.post(
-  "/e-learning/login",
-  apiKey,
-  asyncHandler(accessController.login)
-);
-
-router.put(
-  "/e-learning/user/:userId/:roleId",
-  apiKey,
-  permission("Admin"),
-  asyncHandler(accessController.updateUserRoles)
-);
+router.post("/e-learning/login", apiKey, asyncHandler(accessController.login));
 
 //authentication//
 router.use(authentication);
-//////////////////
+
+router.put(
+  "/e-learning/user/update-user-role",
+  permission(["Admin", "Mentor"]),
+  asyncHandler(accessController.updateUserRoles)
+);
+
+router.get(
+  "/e-learning/users",
+  permission(["Admin", "Mentor"]),
+  asyncHandler(accessController.getAllUser)
+);
+
+router.delete(
+  "/e-learning/user/:id",
+  permission(["Admin", "Mentor"]),
+  asyncHandler(accessController.deleteUser)
+);
 
 router.post("/e-learning/logout", asyncHandler(accessController.logOut));
 

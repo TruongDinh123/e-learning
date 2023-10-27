@@ -14,6 +14,7 @@ class LessonService {
       const lesson = await lessonModel.create({
         name,
         content,
+        courseId,
       });
       await lesson.save();
 
@@ -30,29 +31,46 @@ class LessonService {
     }
   };
 
-  static getAllCourseLeesion = async ({ courseId }) => {
+  static getAllCourseLeesion = async ({
+    courseId,
+    select = {
+      name: 1,
+      title: 1,
+      lessons: 1,
+    },
+  }) => {
+    validateMongoDbId(courseId);
     try {
+      const findCourse = await courseModel.findById(courseId);
+
+      if (!findCourse) {
+        throw new NotFoundError("Course not found");
+      }
       const lessons = await courseModel
         .find()
-        .where({ _id: courseId })
-        .select("lessons")
-        .populate("lessons");
+        .where({ _id: findCourse })
+        .select(select)
+        .populate("lessons")
+        .lean();
 
       return lessons;
     } catch (error) {
-      throw new Error("Failed to get all lesson", error);
+      throw new BadRequestError("Failed to get all lesson", error);
     }
   };
 
   static getALession = async ({ lessonId }) => {
     validateMongoDbId(lessonId);
     try {
-      const lesson = await lessonModel.findOne({
-        _id: lessonId,
-      });
+      const lesson = await lessonModel
+        .findOne({
+          _id: lessonId,
+        })
+        .populate("videos")
+
       return lesson;
     } catch (error) {
-      throw new Error("Failed to get a lesson", error);
+      throw new BadRequestError("Failed to get a lesson", error);
     }
   };
 

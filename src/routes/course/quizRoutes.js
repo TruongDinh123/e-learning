@@ -7,25 +7,33 @@ const router = express.Router();
 
 router.post(
   "/e-learning/lesson/:lessonId/quiz",
-  permission("Trainee"),
+  permission(["Admin", "Mentor"]),
   asyncHandler(quizController.createQuiz)
 );
 
+
+router.get(
+  "/e-learning/lesson/:lessonId/quizs",
+  permission(["Admin", "Mentor"]),
+  asyncHandler(quizController.getQuizsByLesson)
+)
+
+
 router.put(
   "/e-learning/quiz/:quizId",
-  permission("Trainee"),
+  permission(["Admin", "Mentor"]),
   asyncHandler(quizController.updateQuiz)
 );
 
 router.delete(
   "/e-learning/quiz/:quizId/question/:questionId",
-  permission("Trainee"),
+  permission(["Admin", "Mentor"]),
   asyncHandler(quizController.deleteQuestion)
 );
 
 router.post(
   "/e-learning/quiz/:quizId/submit",
-  permission("Trainee"),
+  permission(["Admin", "Mentor"]),
   asyncHandler(quizController.submitQuiz)
 );
 

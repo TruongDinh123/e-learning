@@ -13,6 +13,7 @@ const {
 } = require("../core/error.response");
 const { findByEmail } = require("./user.service");
 const Role = require("../models/role.model");
+const validateMongoDbId = require("../config/validateMongoDbId");
 
 class AccessService {
   static login = async ({ email, password, refreshToken = null } = null) => {
@@ -46,7 +47,7 @@ class AccessService {
 
     return {
       account: getInfoData({
-        fileds: ["_id", "email", "lastName"],
+        fileds: ["_id", "email", "lastName", "roles"],
         object: foundAccount,
       }),
       tokens,
@@ -101,6 +102,7 @@ class AccessService {
             }),
             tokens,
           },
+          user: newAccount,
         };
       }
 
@@ -123,7 +125,7 @@ class AccessService {
     return delKey;
   };
 
-  static updateUserRoles = async ({userId, roleId}) => {
+  static updateUserRoles = async ({ userId, roleId }) => {
     try {
       // Use RoleService to get the role
       const role = await Role.findById(roleId);
@@ -137,7 +139,10 @@ class AccessService {
         throw new NotFoundError("User not found");
       }
 
-      // Update the user's role
+      if (user.roles) {
+        throw new BadRequestError("User already has a role");
+      }
+
       user.roles = role.name;
       await user.save();
 
@@ -145,6 +150,31 @@ class AccessService {
     } catch (error) {
       console.error(error);
       throw error;
+    }
+  };
+
+  static getAllUser = async () => {
+    try {
+      const users = await User.find().lean();
+
+      if (!users) {
+        throw new NotFoundError("Users not found");
+      }
+
+      return users;
+    } catch (error) {
+      throw new BadRequestError("Failed to get a User", error);
+    }
+  };
+
+  static deleteUser = async ({ id }) => {
+    try {
+      const user = await User.findByIdAndDelete(id);
+      if (!user) {
+        throw new NotFoundError("User not found");
+      }
+    } catch (error) {
+      throw new BadRequestError(error);
     }
   };
 }

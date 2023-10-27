@@ -1,9 +1,14 @@
-'use strict';
-const mongoose = require('mongoose');
+"use strict";
+const mongoose = require("mongoose");
 
 const quizSchema = new mongoose.Schema({
   name: {
     type: String,
+    required: true,
+  },
+  lessonId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Lesson",
     required: true,
   },
   questions: [

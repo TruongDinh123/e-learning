@@ -6,6 +6,7 @@ const { findUserById } = require("../services/user.service");
 const HEADER = {
   API_KEY: "x-api-key",
   AUTHORIZATION: "authorization",
+  CLIENT_ID: "x-client-id",
 };
 
 const apiKey = async (req, res, next) => {
@@ -32,10 +33,13 @@ const apiKey = async (req, res, next) => {
     });
   }
 };
+
 const permission = (roles) => {
   return async (req, res, next) => {
     try {
-      const userId = req.keyAccount.user;
+      const userId = req.headers[HEADER.CLIENT_ID];
+      if (!userId) throw new AuthFailureError(`Invalid client id`);
+      
       const user = await findUserById(userId);
       const userRoles = user.roles;
 
@@ -43,6 +47,7 @@ const permission = (roles) => {
         roles.includes(role)
       );
 
+      
       if (!hasRoleMatchingPermission) {
         return res.status(403).json({
           message: "Permission denied",

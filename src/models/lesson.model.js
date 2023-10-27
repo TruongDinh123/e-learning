@@ -10,6 +10,11 @@ const lessonSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  courseId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Course",
+    required: true,
+  },
   videos: [
     {
       type: mongoose.Schema.Types.ObjectId,

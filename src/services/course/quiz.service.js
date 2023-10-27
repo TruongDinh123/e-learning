@@ -1,5 +1,4 @@
 "use strict";
-
 const { NotFoundError } = require("../../core/error.response");
 const lessonModel = require("../../models/lesson.model");
 const Quiz = require("../../models/quiz.model");
@@ -18,7 +17,7 @@ class QuizService {
       formattedQuestions.push(formattedQuestion);
     }
 
-    const quiz = new Quiz({ name, questions: formattedQuestions });
+    const quiz = new Quiz({ name, lessonId, questions: formattedQuestions });
     const savedQuiz = await quiz.save();
 
     const lesson = await lessonModel
@@ -34,6 +33,22 @@ class QuizService {
     if (!lesson) throw new NotFoundError("lesson not found");
 
     return lesson;
+  };
+
+  static getQuizsByLesson = async (lessonId) => {
+    try {
+      const quizs = await Quiz.find()
+        .where({ lessonId: lessonId })
+        .populate("questions")
+        .lean();
+
+      if (!quizs) throw new NotFoundError("quizs not found");
+      console.log("🚀 ~ quizs:", quizs);
+
+      return quizs;
+    } catch (error) {
+      throw new BadRequestError("Failed to get quizs", error);
+    }
   };
 
   static updateQuiz = async (quizId, updatedQuizData) => {
@@ -58,22 +73,31 @@ class QuizService {
   };
 
   static deleteQuestion = async (quizId, questionId) => {
-    const quiz = await Quiz.findById(quizId);
-    if (!quiz) throw new NotFoundError("quiz not found");
+    try {
+      const quiz = await Quiz.findById(quizId);
+      if (!quiz) throw new NotFoundError("quiz not found");
 
-    const questionExists = quiz.questions.some(
-      (question) => question._id.toString() === questionId
-    );
+      const questionExists = quiz.questions.some(
+        (question) => question._id.toString() === questionId
+      );
 
-    if (!questionExists) throw new NotFoundError("question not found");
+      if (!questionExists) throw new NotFoundError("question not found");
 
-    quiz.questions = quiz.questions.filter(
-      (question) => question._id.toString() !== questionId
-    );
+      quiz.questions = quiz.questions.filter(
+        (question) => question._id.toString() !== questionId
+      );
 
-    const updatedQuiz = await quiz.save();
+      if (quiz.questions.length === 0) {
+        await Quiz.findByIdAndDelete(quizId);
+      } else {
+        await quiz.save();
+      }
 
-    return updatedQuiz;
+      return quiz;
+    } catch (error) {
+      console.log("🚀 ~ error:", error);
+      throw new BadRequestError("Failed to delete question", error);
+    }
   };
 
   static submitQuiz = async (quizId, userId, answer) => {

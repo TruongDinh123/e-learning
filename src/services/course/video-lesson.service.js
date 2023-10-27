@@ -15,7 +15,7 @@ class VideoLessonService {
 
       const videoLesson = await videoLessonModel.create({
         filename: uuidv4(filename),
-        url: "uploads/" + uuidv4(filename),
+        url: filename,
         lesson: lessonId,
       });
       await videoLesson.save();
@@ -48,7 +48,7 @@ class VideoLessonService {
       const findVideoLesson = await videoLessonModel.findByIdAndDelete(
         videoLessonId
       );
-      
+
       if (!findVideoLesson) {
         throw new NotFoundError("Video Lesson not found");
       }

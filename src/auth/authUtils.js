@@ -10,6 +10,10 @@ const HEADER = {
   AUTHORIZATION: "authorization",
 };
 
+// khi login => cos header => BE nhan 3 thang do'
+// tạo 1 page manager roles => 
+ // ktra xem có quyền ko => xử lí api
+
 const createTokenPair = async (payload, publicKey, privateKey) => {
   try {
     const accessToken = await JWT.sign(payload, publicKey, {
@@ -44,9 +48,11 @@ const authentication = asyncHandler(async (req, res, next) => {
 
   try {
     const decodeUser = await JWT.verify(accessToken, keyAccount.publicKey);
+    console.log("🚀 ~ decodeUser:", decodeUser);
     if (userId !== decodeUser.userId)
       throw new AuthFailureError("Invalid access token user id");
     req.keyAccount = keyAccount;
+    req.user = decodeUser;
     return next();
   } catch (error) {
     throw error;

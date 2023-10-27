@@ -1,15 +1,27 @@
-const express = require("express");
-const { checkOverload } = require("./helpers/check.connect");
+import express from "express";
 const app = express();
 const PORT = process.env.PORT || 5000;
-const dotenv = require("dotenv").config();
+const cors = require("cors");
 
 //init middleware
 app.use(express.json());
+
 app.use(express.urlencoded({ extended: true }));
+
+app.use(
+  cors({
+    origin: ["http://localhost:3000"],
+    credentials: true,
+    methods: "GET,POST,PUT,DELETE",
+  })
+);
+
+app.use("/uploads", express.static("uploads"));
+
 //intit db
 require("./dbs/dbConnect");
 // checkOverload();
+
 //init routes
 app.use("", require("./routes"));
 

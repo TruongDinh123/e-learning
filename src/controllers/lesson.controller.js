@@ -1,7 +1,7 @@
 "use strict";
 
 const { BadRequestError } = require("../core/error.response");
-const { SuccessReponse } = require("../core/success.reponse");
+const { SuccessReponse, OK } = require("../core/success.reponse");
 const { LessonService } = require("../services/course/lesson.service");
 
 class LessonController {
@@ -10,13 +10,14 @@ class LessonController {
       const { name, content } = req.body;
       const { courseId } = req.params;
 
-      const result = await LessonService.createLesson({
-        name,
-        content,
-        courseId,
-      });
-
-      return res.status(200).json(result);
+      new SuccessReponse({
+        message: "Lesson created!",
+        metadata: await LessonService.createLesson({
+          name,
+          content,
+          courseId,
+        }),
+      }).send(res);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }
@@ -26,29 +27,23 @@ class LessonController {
     try {
       const { courseId } = req.params;
 
-      const result = await LessonService.getAllCourseLeesion({ courseId });
-
-      return res.status(200).json({
-        status: true,
+      new SuccessReponse({
         message: "Get all lesson successfully!",
-        result,
-      });
+        metadata: await LessonService.getAllCourseLeesion({ courseId }),
+      }).send(res);
     } catch (error) {
       throw new BadRequestError(error);
     }
   };
-
+  
   getALession = async (req, res, next) => {
     const { lessonId } = req.params;
 
     try {
-      const result = await LessonService.getALession({ lessonId });
-
-      return res.status(200).json({
-        status: true,
+      new SuccessReponse({
         message: "Get a lesson successfully!",
-        result,
-      });
+        metadata: await LessonService.getALession({ lessonId }),
+      }).send(res);
     } catch (error) {
       throw new BadRequestError(error);
     }
@@ -58,12 +53,10 @@ class LessonController {
     const { courseId, lessonId } = req.params;
 
     try {
-      await LessonService.deleteLesson({ courseId, lessonId });
-
-      return res.status(200).json({
-        status: true,
-        message: "Lesson Deleted!",
-      });
+      new OK({
+        message: "Delete lesson successfully!",
+        metadata: await LessonService.deleteLesson({ courseId, lessonId }),
+      }).send(res);
     } catch (error) {
       throw new BadRequestError(error);
     }

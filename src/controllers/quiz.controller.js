@@ -14,6 +14,15 @@ class QuizController {
     }).send(res);
   };
 
+  getQuizsByLesson = async (req, res, next) => {
+    const { lessonId } = req.params;
+
+    new SuccessReponse({
+      message: "Get quizs successfully",
+      metadata: await QuizService.getQuizsByLesson(lessonId),
+    }).send(res);
+  };
+
   updateQuiz = async (req, res, next) => {
     const { quizId } = req.params;
     const { questions, name } = req.body;
@@ -38,7 +47,6 @@ class QuizController {
       const { quizId } = req.params;
       const { answer } = req.body;
       const userId = req.headers["x-client-id"];
-      console.log("🚀 ~ userId:", userId);
 
       new SuccessReponse({
         message: "Submit quiz successfully",
