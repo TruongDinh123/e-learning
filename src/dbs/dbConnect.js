@@ -1,12 +1,16 @@
 ("use strict");
 
 const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+
+dotenv.config();
+
 const {
   db: { host, name, port },
 } = require("../config/config.mongdb");
 const { countConnect } = require("../helpers/check.connect");
 
-const connectString = `mongodb://${host}:${port}/${name}`;
+const connectString = process.env.DB_URL;
 
 class Database {
   constructor() {
