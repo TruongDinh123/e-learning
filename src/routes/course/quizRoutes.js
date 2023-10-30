@@ -14,7 +14,7 @@ router.post(
 
 router.get(
   "/e-learning/lesson/:lessonId/quizs",
-  permission(["Admin", "Mentor"]),
+  permission(["Admin", "Mentor", "Trainee"]),
   asyncHandler(quizController.getQuizsByLesson)
 )
 
@@ -33,7 +33,7 @@ router.delete(
 
 router.post(
   "/e-learning/quiz/:quizId/submit",
-  permission(["Admin", "Mentor"]),
+  permission(["Admin", "Mentor", "Trainee"]),
   asyncHandler(quizController.submitQuiz)
 );
 

@@ -95,7 +95,6 @@ class QuizService {
 
       return quiz;
     } catch (error) {
-      console.log("🚀 ~ error:", error);
       throw new BadRequestError("Failed to delete question", error);
     }
   };

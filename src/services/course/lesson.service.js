@@ -66,7 +66,7 @@ class LessonService {
         .findOne({
           _id: lessonId,
         })
-        .populate("videos")
+        .populate("videos");
 
       return lesson;
     } catch (error) {

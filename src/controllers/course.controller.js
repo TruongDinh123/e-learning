@@ -42,7 +42,6 @@ class CourseController {
         metadata: await CourseService.getACourse({ id }),
       }).send(res);
     } catch (error) {
-      console.log("🚀 ~ error:", error);
       throw new BadRequestError(error);
     }
   };
@@ -84,7 +83,16 @@ class CourseController {
         userId,
       }),
     }).send(res);
-  }
+  };
+
+  getstudentCourses = async (req, res, next) => {
+    const userId = req.headers["x-client-id"];
+
+    new SuccessReponse({
+      message: "Get student courses successfully!",
+      metadata: await CourseService.getStudentCourses(userId),
+    }).send(res);
+  };
 }
 
 module.exports = new CourseController();

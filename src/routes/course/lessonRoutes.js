@@ -22,13 +22,13 @@ router.delete(
 
 router.get(
   "/e-learning/lessons/:courseId",
-  permission(["Mentor", "Admin"]),
+  permission(["Mentor", "Admin", "Trainee"]),
   asyncHandler(lessonController.getAllCourseLeesion)
 );
 
 router.get(
   "/e-learning/lesson/:lessonId",
-  permission(["Mentor", "Admin"]),
+  permission(["Mentor", "Admin", "Trainee"]),
   asyncHandler(lessonController.getALession)
 );
 

@@ -14,13 +14,13 @@ router.post(
 
 router.get(
   "/e-learning/get-courses",
-  permission(["Mentor", "Admin"]),
+  permission(["Mentor", "Admin", "Trainee"]),
   asyncHandler(courseController.getCourses)
 );
 
 router.get(
   "/e-learning/course/:id",
-  permission(["Mentor", "Admin"]),
+  permission(["Mentor", "Admin", "Trainee"]),
   asyncHandler(courseController.getACourse)
 );
 
@@ -47,5 +47,11 @@ router.delete(
   permission(["Mentor", "Admin"]),
   asyncHandler(courseController.removeStudentFromCourse)
 );
+
+router.get(
+  "/e-learning/get-student-course",
+  permission(["Trainee"]),
+  asyncHandler(courseController.getstudentCourses)
+)
 
 module.exports = router;
