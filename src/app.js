@@ -10,13 +10,24 @@ app.use(express.urlencoded({ extended: true }));
 
 dotenv.config();
 
-app.use(
-  cors({
-    origin: '*',
-    credentials: true,
-    methods: "GET,POST,PUT,DELETE",
-  })
-);
+const cors = (req, res, next) => {
+
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, PUT, PATCH, POST, DELETE");
+  res.header("Access-Control-Allow-Headers", "Origin, Content-Type");
+
+  next();
+};
+
+app.use(cors);
+
+// app.use(
+//   cors({
+//     origin: "*",
+//     // credentials: true,
+//     methods: "GET,POST,PUT,DELETE,OPTIONS",
+//   })
+// );
 
 app.use("/uploads", express.static("uploads"));
 
