@@ -10,7 +10,7 @@ app.use(express.urlencoded({ extended: true }));
 
 dotenv.config();
 
-const cors = (req, res, next) => {
+cors = (req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET, PUT, PATCH, POST, DELETE");
   res.header("Access-Control-Allow-Headers", "Origin, Content-Type, x-api-key");
