@@ -12,7 +12,7 @@ dotenv.config();
 
 app.use(
   cors({
-    origin: [process.env.CLIENT_URL],
+    origin: ['https://feature-course-lesson-view--resplendent-beijinho-8599d8.netlify.app' || process.env.CLIENT_URL],
     credentials: true,
     methods: "GET,POST,PUT,DELETE",
   })
