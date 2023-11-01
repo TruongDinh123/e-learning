@@ -155,7 +155,7 @@ class AccessService {
 
   static getAllUser = async () => {
     try {
-      const users = await User.find().lean();
+      const users = await User.find({ status: "active" }).lean();
 
       if (!users) {
         throw new NotFoundError("Users not found");
@@ -169,10 +169,15 @@ class AccessService {
 
   static deleteUser = async ({ id }) => {
     try {
-      const user = await User.findByIdAndDelete(id);
+      const user = await User.findOneAndUpdate(
+        { _id: id },
+        { status: "inactive" }
+      );
       if (!user) {
         throw new NotFoundError("User not found");
       }
+
+      user.save();
     } catch (error) {
       throw new BadRequestError(error);
     }

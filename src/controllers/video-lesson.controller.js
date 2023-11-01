@@ -3,10 +3,11 @@
 const { SuccessReponse, OK } = require("../core/success.reponse");
 const VideoLessonService = require("../services/course/video-lesson.service");
 
+
 class VideoLessonController {
   createVdLesson = async (req, res, next) => {
     const { lessonId } = req.params;
-    const { filename } = req.file;
+    const { path: filename } = req.file;
     new SuccessReponse({
       message: "Video Lesson Created!",
       metadata: await VideoLessonService.createVdLesson({

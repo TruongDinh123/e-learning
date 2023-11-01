@@ -11,13 +11,11 @@ router.post(
   asyncHandler(quizController.createQuiz)
 );
 
-
 router.get(
   "/e-learning/lesson/:lessonId/quizs",
   permission(["Admin", "Mentor", "Trainee"]),
   asyncHandler(quizController.getQuizsByLesson)
-)
-
+);
 
 router.put(
   "/e-learning/quiz/:quizId",
@@ -35,6 +33,12 @@ router.post(
   "/e-learning/quiz/:quizId/submit",
   permission(["Admin", "Mentor", "Trainee"]),
   asyncHandler(quizController.submitQuiz)
+);
+
+router.get(
+  "/e-learning/score",
+  permission(["Admin", "Mentor", "Trainee"]),
+  asyncHandler(quizController.getScoreByUser)
 );
 
 module.exports = router;

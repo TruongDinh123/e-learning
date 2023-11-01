@@ -43,7 +43,6 @@ class QuizService {
         .lean();
 
       if (!quizs) throw new NotFoundError("quizs not found");
-      console.log("🚀 ~ quizs:", quizs);
 
       return quizs;
     } catch (error) {
@@ -99,32 +98,76 @@ class QuizService {
     }
   };
 
+  // static submitQuiz = async (quizId, userId, answer) => {
+  //   try {
+  //     const quiz = await Quiz.findById(quizId);
+  //     if (!quiz) throw new NotFoundError("no quiz found");
+
+  //     let score = 0;
+  //     const maxScore = 10; // Điểm số tối đa
+
+  //     for (let i = 0; i < quiz.questions.length; i++) {
+  //       if (quiz.questions[i].answer === answer[i]) {
+  //         score++;
+  //       }
+  //     }
+
+  //     const userScore = new Score({
+  //       user: userId,
+  //       quiz: quizId,
+  //       score: ((score / quiz.questions.length) * maxScore).toFixed(2),
+  //     });
+  //     await userScore.save();
+
+  //     return userScore;
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
   static submitQuiz = async (quizId, userId, answer) => {
     try {
       const quiz = await Quiz.findById(quizId);
       if (!quiz) throw new NotFoundError("no quiz found");
-
+  
       let score = 0;
       const maxScore = 10; // Điểm số tối đa
-
+  
       for (let i = 0; i < quiz.questions.length; i++) {
-        if (quiz.questions[i].answer === answer[i]) {
+        const question = quiz.questions[i];
+        const userAnswer = answer[i][Object.keys(answer[i])[0]];
+  
+        if (question.answer === userAnswer) {
           score++;
         }
       }
-
+  
       const userScore = new Score({
         user: userId,
         quiz: quizId,
         score: ((score / quiz.questions.length) * maxScore).toFixed(2),
+        answers: answer, 
       });
       await userScore.save();
-
+  
       return userScore;
     } catch (error) {
       console.log(error);
     }
   };
+
+  static getScoreByUser = async (userId) => {
+    try {
+      const scores = await Score.find({ user: userId })
+        .populate("quiz")
+        .lean();
+
+      if (!scores) throw new NotFoundError("scores not found");
+
+      return scores;
+    } catch (error) {
+      throw new BadRequestError("Failed to get scores", error);
+    }
+  }
 }
 
 exports.QuizService = QuizService;

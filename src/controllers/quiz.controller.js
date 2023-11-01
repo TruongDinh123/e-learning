@@ -56,6 +56,19 @@ class QuizController {
       console.log(error);
     }
   };
+
+  getScoreByUser = async (req, res, next) => {
+    try {
+      const userId = req.headers["x-client-id"];
+
+      new SuccessReponse({
+        message: "Get score successfully",
+        metadata: await QuizService.getScoreByUser(userId),
+      }).send(res);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 }
 
 module.exports = new QuizController();

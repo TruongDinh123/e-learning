@@ -5,9 +5,11 @@ const { CourseService } = require("../services/course/course.service");
 
 class CourseController {
   createCourse = async (req, res, next) => {
+    const { name, title } = req.body;
+    const teacher = req.headers["x-client-id"];
     new Created({
       message: "Course Created!",
-      metadata: await CourseService.createCourse(req.body),
+      metadata: await CourseService.createCourse({ name, title, teacher }),
       options: {
         limit: 10,
       },
@@ -15,9 +17,11 @@ class CourseController {
   };
 
   getCourses = async (req, res, next) => {
+    const teacherId = req.headers["x-client-id"];
+
     new Created({
       message: "Success!",
-      metadata: await CourseService.getCourse(),
+      metadata: await CourseService.getCourse({teacherId}),
       options: {
         limit: 10,
       },

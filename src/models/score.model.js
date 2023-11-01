@@ -21,6 +21,10 @@ const scoreSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  answers: {
+    type: Array,
+    required: true,
+  },
 });
 
 const Score = mongoose.model("Score", scoreSchema);

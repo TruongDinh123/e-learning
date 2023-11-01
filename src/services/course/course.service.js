@@ -5,9 +5,9 @@ const User = require("../../models/user.model");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 class CourseService {
-  static createCourse = async ({ name, title }) => {
+  static createCourse = async ({ name, title, teacher}) => {
     try {
-      const course = await courseModel.create({ name, title });
+      const course = await courseModel.create({ name, title, teacher });
       const createCourse = course.save();
 
       return createCourse;
@@ -16,9 +16,9 @@ class CourseService {
     }
   };
 
-  static getCourse = async () => {
+  static getCourse = async ({teacherId}) => {
     try {
-      const courses = await courseModel.find().populate("students", "lastName");
+      const courses = await courseModel.find({teacher: teacherId}).populate("students", "lastName");
 
       if (!courses) throw new NotFoundError("Courses not found");
       return courses;
