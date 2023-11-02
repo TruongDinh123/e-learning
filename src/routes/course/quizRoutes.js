@@ -41,4 +41,10 @@ router.get(
   asyncHandler(quizController.getScoreByUser)
 );
 
+router.get(
+  "/e-learning/:userId/score",
+  permission(["Admin", "Mentor", "Trainee"]),
+  asyncHandler(quizController.getScoreByUserId)
+);
+
 module.exports = router;

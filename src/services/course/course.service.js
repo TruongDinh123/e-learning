@@ -85,7 +85,7 @@ class CourseService {
           email,
           lastName: "User" + Math.floor(Math.random() * 10000),
           password: passwordHash,
-          roles: ["trainee"],
+          roles: ["Trainee"],
         });
 
         const transporter = nodemailer.createTransport({
@@ -125,7 +125,6 @@ class CourseService {
 
       return user;
     } catch (error) {
-      console.log("🚀 ~ error:", error);
       throw new BadRequestError("Failed to add student to course");
     }
   };

@@ -16,11 +16,10 @@ const courseSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    // center: {
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   ref: "Center",
-    //   required: true,
-    // },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+    },
     lessons: [
       {
         type: mongoose.Schema.Types.ObjectId,

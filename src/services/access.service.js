@@ -17,7 +17,7 @@ const validateMongoDbId = require("../config/validateMongoDbId");
 
 class AccessService {
   static login = async ({ email, password, refreshToken = null } = null) => {
-    const foundAccount = await findByEmail({ email });
+    const foundAccount = await findByEmail({ email, status: "active" });
     if (!foundAccount) {
       throw new BadRequestError("Error: account not found");
     }

@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-// const cors = require("cors");
+const cors = require("cors");
 const dotenv = require("dotenv");
 
 //init middleware
@@ -10,23 +10,21 @@ app.use(express.urlencoded({ extended: true }));
 
 dotenv.config();
 
-const cors = (req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, PUT, PATCH, POST, DELETE");
-  res.header("Access-Control-Allow-Headers", "Origin, Content-Type, x-api-key");
+// const cors = (req, res, next) => {
+//   res.header("Access-Control-Allow-Origin", "*");
+//   res.header("Access-Control-Allow-Methods", "GET, PUT, PATCH, POST, DELETE");
+//   res.header("Access-Control-Allow-Headers", "Origin, Content-Type, x-api-key");
 
-  next();
-};
+//   next();
+// };
 
-app.use(cors);
-
-// app.use(
-//   cors({
-//     origin: "*",
-//     // credentials: true,
-//     methods: "GET,POST,PUT,DELETE,OPTIONS",
-//   })
-// );
+app.use(
+  cors({
+    origin: [process.env.CLIENT_URL],
+    credentials: true,
+    methods: "GET,POST,PUT,DELETE",
+  })
+);
 
 app.use("/uploads", express.static("uploads"));
 

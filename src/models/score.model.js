@@ -7,11 +7,6 @@ const scoreSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
-  // course: {
-  //   type: mongoose.Schema.Types.ObjectId,
-  //   ref: "Course",
-  //   required: true,
-  // },
   quiz: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Quiz",
