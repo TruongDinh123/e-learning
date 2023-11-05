@@ -42,7 +42,7 @@ router.get(
 );
 
 router.get(
-  "/e-learning/:userId/score",
+  "/e-learning/:quizId/:userId/score",
   permission(["Admin", "Mentor", "Trainee"]),
   asyncHandler(quizController.getScoreByUserId)
 );

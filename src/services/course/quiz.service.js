@@ -154,17 +154,19 @@ class QuizService {
     }
   };
 
-  static getScoreByUserId = async (userId) => {
+  static getScoreByUserId = async (userId, quizId) => {
     try {
-      const scores = await Score.find({ user: userId }).populate("quiz").lean();
+      const scores = await Score.find({ user: userId, quiz: quizId })
+        .populate("quiz")
+        .lean();
 
       if (!scores) throw new NotFoundError("scores not found");
 
       const scoreAndAnswers = scores.map((score) => ({
         score: score.score,
         answers: score.answers,
+        quiz: score.quiz,
       }));
-      console.log("🚀 ~ scoreAndAnswers:", scoreAndAnswers);
 
       return scoreAndAnswers;
     } catch (error) {

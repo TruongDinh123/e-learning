@@ -72,16 +72,17 @@ class QuizController {
 
   getScoreByUserId = async (req, res, next) => {
     try {
-      const { userId } = req.params;
+      const { userId, quizId } = req.params;
 
       new SuccessReponse({
         message: "Get score successfully",
-        metadata: await QuizService.getScoreByUser(userId),
+        metadata: await QuizService.getScoreByUserId(userId, quizId),
       }).send(res);
     } catch (error) {
       console.log(error);
     }
   };
+
 }
 
 module.exports = new QuizController();
