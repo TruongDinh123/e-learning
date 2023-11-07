@@ -4,13 +4,9 @@ const { SuccessReponse } = require("../core/success.reponse");
 
 class AccessController {
   login = async (req, res, next) => {
-    try {
-      new SuccessReponse({
-        metadata: await AccessService.login(req.body),
-      }).send(res);
-    } catch (error) {
-      console.error(error);
-    }
+    new SuccessReponse({
+      metadata: await AccessService.login(req.body),
+    }).send(res);
   };
 
   signUp = async (req, res, next) => {
