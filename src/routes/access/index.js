@@ -32,6 +32,12 @@ router.delete(
   asyncHandler(accessController.deleteUser)
 );
 
+router.put(
+  "/e-learning/update-user/:id",
+  permission(["Admin", "Mentor"]),
+  asyncHandler(accessController.updateUser)
+);
+
 router.post("/e-learning/logout", asyncHandler(accessController.logOut));
 
 module.exports = router;

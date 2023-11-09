@@ -182,6 +182,17 @@ class AccessService {
       throw new BadRequestError(error);
     }
   };
+
+  static updateUser = async ({ id, lastName, email }) => {
+    const user = await User.findById(id);
+    if (!user) {
+      throw new NotFoundError("User not found");
+    }
+    user.lastName = lastName;
+    user.email = email;
+    const updateUser = await user.save();
+    return updateUser;
+  };
 }
 
 module.exports = AccessService;

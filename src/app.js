@@ -20,7 +20,7 @@ dotenv.config();
 
 app.use(
   cors({
-    origin: "https://ui-ux-quiz-user--luminous-taffy-e9fabd.netlify.app",
+    origin: [process.env.CLIENT_URL],
     credentials: true,
     methods: "GET,POST,PUT,DELETE",
   })

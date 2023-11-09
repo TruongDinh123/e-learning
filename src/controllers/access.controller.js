@@ -56,5 +56,15 @@ class AccessController {
       metadata: await AccessService.deleteUser({ id }),
     }).send(res);
   };
+
+  updateUser = async (req, res, next) => {
+    const { id } = req.params;
+    const { lastName, email } = req.body;
+
+    new SuccessReponse({
+      message: "Update user success",
+      metadata: await AccessService.updateUser({ id, lastName, email }),
+    }).send(res);
+  };
 }
 module.exports = new AccessController();
