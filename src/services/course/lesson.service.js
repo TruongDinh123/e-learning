@@ -2,6 +2,7 @@ const courseModel = require("../../models/course.model");
 const lessonModel = require("../../models/lesson.model");
 const validateMongoDbId = require("../../config/validateMongoDbId");
 const { NotFoundError, BadRequestError } = require("../../core/error.response");
+const videoLessonModel = require("../../models/video-lesson.model");
 
 class LessonService {
   static createLesson = async ({ name, content, courseId }) => {
@@ -83,6 +84,7 @@ class LessonService {
       });
 
       const findLesson = await lessonModel.findByIdAndDelete(lessonId);
+      await videoLessonModel.deleteMany({ lesson: lessonId });
     } catch (error) {}
   };
 
