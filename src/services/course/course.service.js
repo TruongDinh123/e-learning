@@ -167,19 +167,23 @@ class CourseService {
 
       return user;
     } catch (error) {
-      console.log("🚀 ~ error:", error);
       throw new BadRequestError("Failed to remove student from course");
     }
   };
 
   static getStudentCourses = async (userId) => {
     try {
-      const user = await User.findById(userId).populate("courses");
+      const user = await User.findById(userId).populate({
+        path: "courses",
+        populate: {
+          path: "teacher",
+          model: "User"
+        }
+      });
       if (!user) throw new NotFoundError("User not found");
 
       return user.courses;
     } catch (error) {
-      console.log("🚀 ~ error:", error);
       throw new BadRequestError("Failed to get student courses");
     }
   };

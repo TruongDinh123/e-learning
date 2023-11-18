@@ -66,6 +66,7 @@ class AccessService {
         email,
         lastName,
         password: passwordHash,
+        roles: "Trainee",
       });
 
       if (newAccount) {
