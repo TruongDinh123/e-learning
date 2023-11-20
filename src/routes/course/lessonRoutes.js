@@ -32,6 +32,12 @@ router.get(
   asyncHandler(lessonController.getALession)
 );
 
+router.put(
+  "/e-learning/complete-lesson/:lessonId",
+  permission(["Mentor", "Admin", "Trainee"]),
+  asyncHandler(lessonController.completeLesson)
+);
+
 //video-lessons
 
 router.post(

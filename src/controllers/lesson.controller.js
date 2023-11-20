@@ -75,6 +75,19 @@ class LessonController {
       }),
     }).send(res);
   };
+
+  completeLesson = async (req, res, next) => {
+    const { lessonId } = req.params;
+    const userId = req.headers["x-client-id"];
+
+    new SuccessReponse({
+      message: "Lesson Complete!",
+      metadata: await LessonService.completeLesson({
+        lessonId,
+        userId,
+      }),
+    }).send(res);
+  }
 }
 
 module.exports = new LessonController();

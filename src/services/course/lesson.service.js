@@ -3,6 +3,7 @@ const lessonModel = require("../../models/lesson.model");
 const validateMongoDbId = require("../../config/validateMongoDbId");
 const { NotFoundError, BadRequestError } = require("../../core/error.response");
 const videoLessonModel = require("../../models/video-lesson.model");
+const userLessonModel = require("../../models/userLesson.model");
 
 class LessonService {
   static createLesson = async ({ name, content, courseId }) => {
@@ -100,6 +101,22 @@ class LessonService {
       return updateLesson;
     } catch (error) {
       throw new BadRequestError("Failed to update lesson", error);
+    }
+  };
+
+  static completeLesson = async ({ userId, lessonId }) => {
+    validateMongoDbId(userId);
+    validateMongoDbId(lessonId);
+    try {
+      let userLesson = await userLessonModel.findOne({ user: userId, lesson: lessonId });
+      if (!userLesson) {
+        userLesson = new userLessonModel({ user: userId, lesson: lessonId });
+      }
+      userLesson.completed = true;
+      await userLesson.save();
+      return userLesson;
+    } catch (error) {
+      throw new BadRequestError("Failed to complete lesson", error);
     }
   };
 }

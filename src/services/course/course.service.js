@@ -4,6 +4,8 @@ const lessonModel = require("../../models/lesson.model");
 const User = require("../../models/user.model");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
+const userLessonModel = require("../../models/userLesson.model");
+const validateMongoDbId = require("../../config/validateMongoDbId");
 class CourseService {
   static createCourse = async ({ name, title, teacher }) => {
     try {
@@ -19,7 +21,9 @@ class CourseService {
   static getCourse = async ({ teacherId }) => {
     try {
       const courses = await courseModel
-        .find({ teacher: teacherId })
+        .find({
+          teacher: teacherId,
+        })
         .populate("students", "lastName")
         .populate("lessons");
 
@@ -177,14 +181,43 @@ class CourseService {
         path: "courses",
         populate: {
           path: "teacher",
-          model: "User"
-        }
+          model: "User",
+        },
       });
       if (!user) throw new NotFoundError("User not found");
 
       return user.courses;
     } catch (error) {
       throw new BadRequestError("Failed to get student courses");
+    }
+  };
+
+  static getCourseCompletion = async ({ courseId, userId }) => {
+    validateMongoDbId(courseId);
+    validateMongoDbId(userId);
+    try {
+      const course = await courseModel.findById(courseId).populate("lessons");
+      if (!course) {
+        throw new NotFoundError("Course not found");
+      }
+      const totalLessons = course.lessons.length;
+      const completedLessons = await userLessonModel.countDocuments({
+        user: userId,
+        lesson: { $in: course.lessons.map((lesson) => lesson._id) },
+        completed: true,
+      });
+      const userLessonInfo = await userLessonModel.find({
+        user: userId,
+        lesson: { $in: course.lessons.map((lesson) => lesson._id) },
+      });
+      const completionPercentage = (completedLessons / totalLessons) * 100;
+      return {
+        completedLessons,
+        completionPercentage,
+        userLessonInfo,
+      };
+    } catch (error) {
+      throw new BadRequestError("Failed to get course completion", error);
     }
   };
 }

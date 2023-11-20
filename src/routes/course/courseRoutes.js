@@ -54,4 +54,10 @@ router.get(
   asyncHandler(courseController.getstudentCourses)
 )
 
+router.get(
+  "/e-learning/get-complete-course/:courseId",
+  permission(["Mentor", "Admin", "Trainee"]),
+  asyncHandler(courseController.getCourseCompletion)
+)
+
 module.exports = router;

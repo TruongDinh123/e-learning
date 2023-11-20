@@ -19,12 +19,12 @@ class AccessService {
   static login = async ({ email, password, refreshToken = null } = null) => {
     const foundAccount = await findByEmail({ email, status: "active" });
     if (!foundAccount) {
-      throw new BadRequestError("Error: account not found");
+      throw new BadRequestError("Email or Password is not correct");
     }
 
     const match = await bcrypt.compare(password, foundAccount.password);
     if (!match) {
-      throw new AuthFailureError("Error: password is incorrect");
+      throw new AuthFailureError("Email or Password is not correct");
     }
 
     const privateKey = crypto.randomBytes(64).toString("hex");

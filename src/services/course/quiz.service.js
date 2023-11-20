@@ -113,11 +113,13 @@ class QuizService {
 
   static submitQuiz = async (quizId, userId, answer) => {
     try {
+      let score = 0;
+      const maxScore = 10; // Điểm số tối đa
+
       const quiz = await Quiz.findById(quizId);
       if (!quiz) throw new NotFoundError("no quiz found");
 
-      let score = 0;
-      const maxScore = 10; // Điểm số tối đa
+      const existingScore = await Score.findOne({ user: userId, quiz: quizId });
 
       for (let i = 0; i < quiz.questions.length; i++) {
         const question = quiz.questions[i];
@@ -128,15 +130,25 @@ class QuizService {
         }
       }
 
-      const userScore = new Score({
-        user: userId,
-        quiz: quizId,
-        score: ((score / quiz.questions.length) * maxScore).toFixed(2),
-        answers: answer,
-      });
-      await userScore.save();
+      if (existingScore) {
+        existingScore.score = (
+          (score / quiz.questions.length) *
+          maxScore
+        ).toFixed(2);
+        existingScore.answers = answer;
+        await existingScore.save();
+        return existingScore;
+      } else {
+        const userScore = new Score({
+          user: userId,
+          quiz: quizId,
+          score: ((score / quiz.questions.length) * maxScore).toFixed(2),
+          answers: answer,
+        });
+        await userScore.save();
 
-      return userScore;
+        return userScore;
+      }
     } catch (error) {
       console.log(error);
     }

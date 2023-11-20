@@ -97,6 +97,16 @@ class CourseController {
       metadata: await CourseService.getStudentCourses(userId),
     }).send(res);
   };
+
+  getCourseCompletion = async (req, res, next) => {
+    const { courseId } = req.params;
+    const userId = req.headers["x-client-id"];
+
+    new SuccessReponse({
+      message: "Get course completion successfully!",
+      metadata: await CourseService.getCourseCompletion({ courseId, userId }),
+    }).send(res);
+  }
 }
 
 module.exports = new CourseController();
