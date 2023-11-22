@@ -49,6 +49,14 @@ class AccessController {
     }
   };
 
+  getAUser = async (req, res, next) => {
+    const { id } = req.params;
+    new SuccessReponse({
+      message: "Get a user success",
+      metadata: await AccessService.getAUser(id),
+    }).send(res);
+  }
+
   deleteUser = async (req, res, next) => {
     const { id } = req.params;
     new SuccessReponse({

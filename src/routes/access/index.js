@@ -26,6 +26,12 @@ router.get(
   asyncHandler(accessController.getAllUser)
 );
 
+router.get(
+  "/e-learning/user/:id",
+  permission(["Admin", "Mentor"]),
+  asyncHandler(accessController.getAUser)
+);
+
 router.delete(
   "/e-learning/user/:id",
   permission(["Admin", "Mentor"]),

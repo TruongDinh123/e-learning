@@ -1,5 +1,6 @@
 const { NotFoundError } = require("../core/error.response");
 const Role = require("../models/role.model");
+const User = require("../models/user.model");
 
 class RoleService {
   static createRole = async ({ name }) => {
@@ -23,6 +24,10 @@ class RoleService {
 
     if (!role) throw new Error("Role not found");
 
+    const existingRole = await Role.findOne({ name, isActive: true });
+
+    if (existingRole) throw new Error("Role already exists");
+
     role.name = name;
 
     const updateRole = await role.save();
@@ -43,9 +48,14 @@ class RoleService {
   static deleteRole = async ({ id }) => {
     const role = await Role.findById(id);
     if (!role) throw new Error("Role not found");
-
+  
+    const usersWithRole = await User.find({ roles: role.name });
+    if (usersWithRole.length > 0) {
+      throw new Error("Cannot delete role as it is assigned to users");
+    }
+  
     role.isActive = false;
-
+  
     await role.save();
     return role;
   };

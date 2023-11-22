@@ -32,6 +32,10 @@ const courseSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    showCourse: {
+      type: Boolean,
+      required: true,
+    }
   },
   {
     timestamps: true,

@@ -107,6 +107,29 @@ class CourseController {
       metadata: await CourseService.getCourseCompletion({ courseId, userId }),
     }).send(res);
   }
+
+  buttonShowCourse = async (req, res, next) => {
+    const {courseId} = req.params;
+    new SuccessReponse({
+      message: "Get course public successfully!",
+      metadata: await CourseService.buttonShowCourse(courseId),
+    }).send(res);
+  }
+
+  buttonPrivateCourse = async (req, res, next) => {
+    const {courseId} = req.params;
+    new SuccessReponse({
+      message: "Get course private successfully!",
+      metadata: await CourseService.buttonPrivateCourse(courseId),
+    }).send(res);
+  }
+
+  getCoursePublic = async (req, res, next) => {
+    new SuccessReponse({
+      message: "Get course private successfully!",
+      metadata: await CourseService.getCoursePublic(),
+    }).send(res);
+  }
 }
 
 module.exports = new CourseController();

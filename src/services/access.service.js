@@ -17,9 +17,13 @@ const validateMongoDbId = require("../config/validateMongoDbId");
 
 class AccessService {
   static login = async ({ email, password, refreshToken = null } = null) => {
-    const foundAccount = await findByEmail({ email, status: "active" });
+    const foundAccount = await findByEmail({ email });
     if (!foundAccount) {
       throw new BadRequestError("Email or Password is not correct");
+    }
+
+    if (foundAccount.status === "inactive") {
+      throw new AuthFailureError("Account not found");
     }
 
     const match = await bcrypt.compare(password, foundAccount.password);
@@ -168,17 +172,25 @@ class AccessService {
     }
   };
 
+  static getAUser = async (id) => {
+    validateMongoDbId(id);
+    try {
+      const user = await User.findOne({ status: "active", _id: id }).lean();
+
+      return user;
+    } catch (error) {
+      throw new BadRequestError("Failed to get a user", error);
+    }
+  };
+
   static deleteUser = async ({ id }) => {
     try {
-      const user = await User.findOneAndUpdate(
-        { _id: id },
-        { status: "inactive" }
-      );
+      const user = await User.findById(id);
       if (!user) {
         throw new NotFoundError("User not found");
       }
-
-      user.save();
+  
+      await user.deactivate();
     } catch (error) {
       throw new BadRequestError(error);
     }

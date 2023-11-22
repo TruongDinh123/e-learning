@@ -60,4 +60,23 @@ router.get(
   asyncHandler(courseController.getCourseCompletion)
 )
 
+router.post(
+  "/e-learning/public-course/:courseId",
+  permission(["Mentor", "Admin"]),
+  asyncHandler(courseController.buttonShowCourse)
+)
+
+router.post(
+  "/e-learning/priavte-course/:courseId",
+  permission(["Mentor", "Admin"]),
+  asyncHandler(courseController.buttonPrivateCourse)
+)
+
+router.get(
+  "/e-learning/public-course",
+  permission(["Mentor", "Admin", "Trainee"]),
+  asyncHandler(courseController.getCoursePublic)
+)
+
+
 module.exports = router;

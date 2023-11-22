@@ -49,6 +49,39 @@ class CourseService {
     }
   };
 
+  static buttonShowCourse = async (courseId) => {
+    const updatedCourse = await courseModel.findById(courseId);
+    if(!updatedCourse) throw new NotFoundError("Course not found");
+
+    if(updatedCourse.showCourse === true) throw new BadRequestError("Course is already public");
+
+    updatedCourse.showCourse = true;
+
+    await updatedCourse.save();
+
+    return updatedCourse;
+  }
+
+  static buttonPrivateCourse = async (courseId) => {
+    const course = await courseModel.findById(courseId);
+    if(!course) throw new NotFoundError("Course not found");
+
+    if(course.showCourse === false) throw new BadRequestError("Course is already private");
+
+    course.showCourse = false;
+
+    await course.save();
+    return course;
+  }
+
+  static getCoursePublic = async () => {
+    const course = await courseModel.find({
+      showCourse: true
+    });
+    return course;
+  }
+
+
   static updateCourse = async ({ id, name, title }) => {
     try {
       const course = await courseModel.findById(id);
@@ -80,6 +113,11 @@ class CourseService {
   static addStudentToCours = async ({ courseId, email }) => {
     try {
       let user = await User.findOne({ email });
+
+      if (user && user.status === "inactive") {
+        user.status = "active";
+        await user.save();
+      }
 
       const course = await courseModel.findById(courseId);
       if (!course) throw new NotFoundError("Course not found");

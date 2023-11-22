@@ -26,10 +26,11 @@ class LessonController {
   getAllCourseLeesion = async (req, res, next) => {
     try {
       const { courseId } = req.params;
+      const userId = req.headers["x-client-id"];
 
       new SuccessReponse({
         message: "Get all lesson successfully!",
-        metadata: await LessonService.getAllCourseLeesion({ courseId }),
+        metadata: await LessonService.getAllCourseLeesion({ courseId, userId }),
       }).send(res);
     } catch (error) {
       throw new BadRequestError(error);

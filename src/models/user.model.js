@@ -67,4 +67,16 @@ const userSchema = new mongoose.Schema(
   }
 );
 
+
+userSchema.methods.deactivate = async function() {
+  this.status = "inactive";
+  await this.save();
+
+  // Remove all the related docs
+  await this.model('Course').updateMany({ students: this._id }, { $pull: { students: this._id } });
+  await this.model('UserLesson').deleteMany({ user: this._id });
+  await this.model('Score').deleteMany({ user: this._id });
+}
+
+
 module.exports = mongoose.model("User", userSchema);

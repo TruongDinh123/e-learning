@@ -4,6 +4,7 @@ const validateMongoDbId = require("../../config/validateMongoDbId");
 const { NotFoundError, BadRequestError } = require("../../core/error.response");
 const videoLessonModel = require("../../models/video-lesson.model");
 const userLessonModel = require("../../models/userLesson.model");
+const userModel = require("../../models/user.model");
 
 class LessonService {
   static createLesson = async ({ name, content, courseId }) => {
@@ -35,6 +36,7 @@ class LessonService {
 
   static getAllCourseLeesion = async ({
     courseId,
+    userId,
     select = {
       name: 1,
       title: 1,
@@ -42,7 +44,18 @@ class LessonService {
     },
   }) => {
     validateMongoDbId(courseId);
+    validateMongoDbId(userId);
     try {
+
+      const user = await userModel.findById(userId);
+      if (!user) {
+        throw new NotFoundError("User not found");
+      }
+  
+      if (!user.courses.includes(courseId)) {
+        throw new BadRequestError("User does not have this course");
+      }
+
       const findCourse = await courseModel.findById(courseId);
 
       if (!findCourse) {
