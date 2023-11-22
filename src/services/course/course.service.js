@@ -12,6 +12,12 @@ class CourseService {
       const course = await courseModel.create({ name, title, teacher });
       const createCourse = course.save();
 
+      const teacherUser = await User.findById(teacher);
+      if(!teacherUser) throw new NotFoundError("Teacher not found");
+
+      teacherUser.courses.push(course._id);
+      await teacherUser.save();
+
       return createCourse;
     } catch (error) {
       throw new BadRequestError("Failed to create course", error);

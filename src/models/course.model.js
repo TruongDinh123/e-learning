@@ -34,7 +34,7 @@ const courseSchema = new mongoose.Schema(
     ],
     showCourse: {
       type: Boolean,
-      required: true,
+      default: false,
     }
   },
   {
