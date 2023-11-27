@@ -77,8 +77,6 @@ class AccessService {
         const privateKey = crypto.randomBytes(64).toString("hex");
         const publicKey = crypto.randomBytes(64).toString("hex");
 
-        console.log({ privateKey, publicKey });
-
         const keyAccount = await KeyTokenService.createKeyToken({
           userId: newAccount._id,
           publicKey,

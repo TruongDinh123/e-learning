@@ -10,7 +10,14 @@ const scoreSchema = new mongoose.Schema({
   quiz: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Quiz",
-    required: true,
+  },
+  assignment: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Assignment",
+  },
+  timeLimit: {
+    type: Number,
+    required: false,
   },
   score: {
     type: Number,
@@ -20,9 +27,12 @@ const scoreSchema = new mongoose.Schema({
     type: Array,
     required: true,
   },
+  isComplete: {
+    type: Boolean,
+    required: false,
+  }
 });
 
 const Score = mongoose.model("Score", scoreSchema);
-
 
 module.exports = Score;

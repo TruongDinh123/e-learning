@@ -35,7 +35,11 @@ const courseSchema = new mongoose.Schema(
     showCourse: {
       type: Boolean,
       default: false,
-    }
+    },
+    assignment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Assignment",
+    },
   },
   {
     timestamps: true,
