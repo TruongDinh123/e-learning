@@ -20,8 +20,8 @@ dotenv.config();
 
 app.use(
   cors({
-    // origin: "https://web-rtc--idyllic-kringle-98ca49.netlify.app",
-    origin: [process.env.CLIENT_URL],
+    origin: "https://web-rtc--idyllic-kringle-98ca49.netlify.app",
+    // origin: [process.env.CLIENT_URL],
     credentials: true,
     methods: "GET,POST,PUT,DELETE",
   })
