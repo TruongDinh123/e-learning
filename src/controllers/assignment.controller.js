@@ -34,6 +34,40 @@ class AssignmentController {
     }).send(res);
   };
 
+  updateQuiz = async (req, res, next) => {
+    const { assignmentId } = req.params;
+    const { questions, name } = req.body;
+
+    new SuccessReponse({
+      message: "Update quiz successfully",
+      metadata: await AssignmentService.updateAssignment(assignmentId, {
+        questions,
+        name,
+      }),
+    }).send(res);
+  };
+
+  deleteAssignment = async (req, res, next) => {
+    const { assignmentId } = req.params;
+
+    new SuccessReponse({
+      message: "Delete quiz successfully",
+      metadata: await AssignmentService.deleteAssignment({ assignmentId }),
+    }).send(res);
+  };
+
+  deleteQuestionAssignment = async (req, res, next) => {
+    const { assignmentId, questionId } = req.params;
+
+    new SuccessReponse({
+      message: "Delete quiz successfully",
+      metadata: await AssignmentService.deleteQuestionAssignment(
+        assignmentId,
+        questionId
+      ),
+    }).send(res);
+  };
+
   submitAssignment = async (req, res, next) => {
     try {
       const { assignmentId } = req.params;

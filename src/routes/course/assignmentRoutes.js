@@ -27,4 +27,22 @@ router.post(
   asyncHandler(assignmentController.submitAssignment)
 );
 
+router.put(
+  "/e-learning/assignment/:assignmentId",
+  permission(["Admin", "Mentor"]),
+  asyncHandler(assignmentController.updateQuiz)
+);
+
+router.delete(
+  "/e-learning/assignment/:assignmentId",
+  permission(["Admin", "Mentor"]),
+  asyncHandler(assignmentController.deleteAssignment)
+);
+
+router.delete(
+  "/e-learning/assignment/:assignmentId/question/:questionId",
+  permission(["Admin", "Mentor"]),
+  asyncHandler(assignmentController.deleteQuestionAssignment)
+);
+
 module.exports = router;

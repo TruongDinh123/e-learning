@@ -4,6 +4,7 @@ const assignmentModel = require("../../models/assignment.model");
 const courseModel = require("../../models/course.model");
 const Score = require("../../models/score.model");
 const { NotFoundError, BadRequestError } = require("../../core/error.response");
+const validateMongoDbId = require("../../config/validateMongoDbId");
 
 class AssignmentService {
   static createAssignment = async ({
@@ -13,6 +14,10 @@ class AssignmentService {
     timeLimit,
     questions,
   }) => {
+    const existingAssignment = await assignmentModel.findOne({ courseId });
+    if (existingAssignment) {
+      throw new BadRequestError(`Assignment ${name} already exists`);
+    }
     const formattedQuestions = [];
     for (const question of questions) {
       const formattedQuestion = {
@@ -84,6 +89,77 @@ class AssignmentService {
     }
   };
 
+  static deleteQuestionAssignment = async (assignmentId, questionId) => {
+    try {
+      const assignment = await assignmentModel.findById(assignmentId);
+      if (!assignment) throw new NotFoundError("assignment not found");
+
+      const questionExists = assignment.questions.some(
+        (question) => question._id.toString() === questionId
+      );
+
+      if (!questionExists) throw new NotFoundError("question not found");
+
+      assignment.questions = assignment.questions.filter(
+        (question) => question._id.toString() !== questionId
+      );
+
+      if (assignment.questions.length === 0) {
+        await assignmentModel.findByIdAndDelete(assignmentId);
+      } else {
+        await assignment.save();
+      }
+
+      return assignment;
+    } catch (error) {
+      throw new BadRequestError("Failed to delete question", error);
+    }
+  };
+
+  static deleteAssignment = async ({ assignmentId }) => {
+    try {
+      validateMongoDbId(assignmentId);
+
+      const assignment = await assignmentModel.findById(assignmentId);
+      if (!assignment) throw new NotFoundError("Assignment not found");
+
+      const findCourse = await courseModel.findByIdAndUpdate(
+        assignment.courseId,
+        {
+          assignment: null,
+        }
+      );
+
+      const findAssignment = await assignmentModel.findByIdAndDelete(
+        assignmentId
+      );
+      return findAssignment;
+    } catch (error) {
+      throw new BadRequestError("Failed to delete assignment", error);
+    }
+  };
+
+  static updateAssignment = async (assignmentId, updatedQuizData) => {
+    const { name, questions } = updatedQuizData;
+
+    const formattedQuestions = questions.map((question) => ({
+      question: question.question,
+      options: question.options,
+      answer: question.answer,
+    }));
+
+    const assignment = await assignmentModel.findById(assignmentId);
+
+    if (!assignment) throw new NotFoundError("assignment not found");
+
+    assignment.name = name;
+    assignment.questions.push(...formattedQuestions);
+
+    const updatedAssignment = await assignment.save();
+
+    return updatedAssignment;
+  };
+
   static submitAssignment = async (assignmentId, userId, answer, timeLimit) => {
     try {
       let score = 0;
@@ -92,13 +168,6 @@ class AssignmentService {
       const assignment = await assignmentModel.findById(assignmentId);
 
       if (!assignment) throw new NotFoundError("assignment not found");
-
-      if (
-        timeLimit &&
-        new Date() - assignment.createdAt > timeLimit * 60 * 1000
-      ) {
-        throw new BadRequestError("Time limit exceeded");
-      }
 
       for (let i = 0; i < assignment.questions.length; i++) {
         const question = assignment.questions[i];

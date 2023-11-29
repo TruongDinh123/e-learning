@@ -33,6 +33,15 @@ class QuizController {
     }).send(res);
   };
 
+  deleteQuiz = async (req, res, next) => {
+    const { quizId } = req.params;
+
+    new SuccessReponse({
+      message: "Delete quiz successfully",
+      metadata: await QuizService.deleteQuiz({ quizId }),
+    }).send(res);
+  };
+
   deleteQuestion = async (req, res, next) => {
     const { quizId, questionId } = req.params;
 
@@ -82,7 +91,6 @@ class QuizController {
       console.log(error);
     }
   };
-
 }
 
 module.exports = new QuizController();

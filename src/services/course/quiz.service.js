@@ -1,5 +1,5 @@
 "use strict";
-const { Types } = require("mongoose");
+const validateMongoDbId = require("../../config/validateMongoDbId");
 const { NotFoundError, BadRequestError } = require("../../core/error.response");
 const lessonModel = require("../../models/lesson.model");
 const Quiz = require("../../models/quiz.model");
@@ -7,6 +7,11 @@ const Score = require("../../models/score.model");
 
 class QuizService {
   static createQuiz = async ({ lessonId, name, questions }) => {
+    const existingQuiz = await Quiz.findOne({ lessonId });
+    if (existingQuiz) {
+      throw new BadRequestError(`Quiz ${name} already exists`);
+    }
+
     const formattedQuestions = [];
 
     for (const question of questions) {
@@ -82,6 +87,25 @@ class QuizService {
     const updatedQuiz = await quiz.save();
 
     return updatedQuiz;
+  };
+
+  static deleteQuiz = async ({ quizId }) => {
+    try {
+      validateMongoDbId(quizId);
+      // Find the quiz first to get the lessonId
+      const quiz = await Quiz.findById(quizId);
+      if (!quiz) throw new NotFoundError("Quiz not found");
+
+      // Use the lessonId from the quiz to update the lesson
+      const findLesson = await lessonModel.findByIdAndUpdate(quiz.lessonId, {
+        quiz: null,
+      });
+
+      const findQuiz = await Quiz.findByIdAndDelete(quizId);
+      return findQuiz;
+    } catch (error) {
+      throw new BadRequestError("Failed to delete quiz", error);
+    }
   };
 
   static deleteQuestion = async (quizId, questionId) => {
