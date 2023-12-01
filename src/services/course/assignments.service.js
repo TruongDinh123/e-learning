@@ -139,24 +139,52 @@ class AssignmentService {
     }
   };
 
+  // static updateAssignment = async (assignmentId, updatedQuizData) => {
+  //   const { name, questions } = updatedQuizData;
+
+  //   const formattedQuestions = questions.map((question) => ({
+  //     question: question.question,
+  //     options: question.options,
+  //     answer: question.answer,
+  //   }));
+
+  //   const assignment = await assignmentModel.findById(assignmentId);
+
+  //   if (!assignment) throw new NotFoundError("assignment not found");
+
+  //   assignment.name = name;
+  //   assignment.questions.push(...formattedQuestions);
+
+  //   const updatedAssignment = await assignment.save();
+
+  //   return updatedAssignment;
+  // };
+
   static updateAssignment = async (assignmentId, updatedQuizData) => {
     const { name, questions } = updatedQuizData;
-
-    const formattedQuestions = questions.map((question) => ({
-      question: question.question,
-      options: question.options,
-      answer: question.answer,
-    }));
-
+  
     const assignment = await assignmentModel.findById(assignmentId);
-
+  
     if (!assignment) throw new NotFoundError("assignment not found");
-
+  
     assignment.name = name;
-    assignment.questions.push(...formattedQuestions);
-
+  
+    for (const updatedQuestion of questions) {
+      const questionIndex = assignment.questions.findIndex(
+        (question) => question._id.toString() === updatedQuestion._id
+      );
+  
+      if (questionIndex !== -1) {
+        // Update existing question
+        assignment.questions[questionIndex] = updatedQuestion;
+      } else {
+        // Add new question
+        assignment.questions.push(updatedQuestion);
+      }
+    }
+  
     const updatedAssignment = await assignment.save();
-
+  
     return updatedAssignment;
   };
 

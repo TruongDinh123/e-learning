@@ -34,7 +34,7 @@ class AssignmentController {
     }).send(res);
   };
 
-  updateQuiz = async (req, res, next) => {
+  updateAssignment = async (req, res, next) => {
     const { assignmentId } = req.params;
     const { questions, name } = req.body;
 

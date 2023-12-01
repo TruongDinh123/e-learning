@@ -70,20 +70,23 @@ class QuizService {
 
   static updateQuiz = async (quizId, updatedQuizData) => {
     const { name, questions } = updatedQuizData;
-
-    const formattedQuestions = questions.map((question) => ({
-      question: question.question,
-      options: question.options,
-      answer: question.answer,
-    }));
-
     const quiz = await Quiz.findById(quizId);
 
-    if (!quiz) throw new NotFoundError("quiz not found");
+    if (!quiz) {
+      throw new NotFoundError("quiz not found");
+    }
 
     quiz.name = name;
-    quiz.questions.push(...formattedQuestions);
-
+    for (const updateQuestion of questions) {
+      const questionIndex = quiz.questions.findIndex(
+        (question) => question._id.toString() === updateQuestion._id
+      );
+      if (questionIndex !== -1) {
+        quiz.questions[questionIndex] = updateQuestion;
+      } else {
+        quiz.questions.push(updateQuestion);
+      }
+    }
     const updatedQuiz = await quiz.save();
 
     return updatedQuiz;

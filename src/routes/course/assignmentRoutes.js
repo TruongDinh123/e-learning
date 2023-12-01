@@ -30,7 +30,7 @@ router.post(
 router.put(
   "/e-learning/assignment/:assignmentId",
   permission(["Admin", "Mentor"]),
-  asyncHandler(assignmentController.updateQuiz)
+  asyncHandler(assignmentController.updateAssignment)
 );
 
 router.delete(
