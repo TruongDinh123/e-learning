@@ -24,6 +24,7 @@ const lessonSchema = new mongoose.Schema({
   quiz: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Quiz",
+    required: false,
   },
 });
 

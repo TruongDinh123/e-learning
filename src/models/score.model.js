@@ -31,6 +31,8 @@ const scoreSchema = new mongoose.Schema({
     type: Boolean,
     required: false,
   }
+}, {
+  timestamps: true,
 });
 
 const Score = mongoose.model("Score", scoreSchema);

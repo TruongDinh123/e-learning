@@ -5,21 +5,57 @@ const { QuizService } = require("../services/course/quiz.service");
 
 class QuizController {
   createQuiz = async (req, res, next) => {
-    const { lessonId } = req.params;
-    const { questions, name } = req.body;
+    const {
+      type,
+      courseIds,
+      studentIds,
+      essay,
+      questions,
+      name,
+      submissionTime,
+    } = req.body;
 
     new SuccessReponse({
       message: "Create quiz successfully",
-      metadata: await QuizService.createQuiz({ lessonId, questions, name }),
+      metadata: await QuizService.createQuiz({
+        type,
+        courseIds,
+        studentIds,
+        essay,
+        questions,
+        name,
+        submissionTime,
+      }),
     }).send(res);
   };
 
-  getQuizsByLesson = async (req, res, next) => {
-    const { lessonId } = req.params;
+  getQuizsByCourse = async (req, res, next) => {
+    const { courseIds } = req.params;
 
     new SuccessReponse({
       message: "Get quizs successfully",
-      metadata: await QuizService.getQuizsByLesson(lessonId),
+      metadata: await QuizService.getQuizsByCourse(courseIds),
+    }).send(res);
+  };
+
+  getQuizzesByStudentAndCourse = async (req, res, next) => {
+    const { courseId } = req.params;
+    const studentId = req.headers["x-client-id"];
+    new SuccessReponse({
+      message: "Get quiz by student successfully",
+      metadata: await QuizService.getQuizzesByStudentAndCourse(
+        studentId,
+        courseId
+      ),
+    }).send(res);
+  };
+
+  getAQuizByCourse = async (req, res, next) => {
+    const { quizId } = req.params;
+
+    new SuccessReponse({
+      message: "Get a quiz successfully",
+      metadata: await QuizService.getAQuizByCourse(quizId),
     }).send(res);
   };
 

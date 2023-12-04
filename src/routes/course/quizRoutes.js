@@ -3,18 +3,31 @@
 const express = require("express");
 const { permission, asyncHandler } = require("../../auth/checkAuthen");
 const quizController = require("../../controllers/quiz.controller");
+const { uploadMiddleware } = require("../../middlewares/upload");
 const router = express.Router();
 
 router.post(
-  "/e-learning/lesson/:lessonId/quiz",
+  "/e-learning/quiz",
   permission(["Admin", "Mentor"]),
   asyncHandler(quizController.createQuiz)
 );
 
 router.get(
-  "/e-learning/lesson/:lessonId/quizs",
+  "/e-learning/course/:courseIds/quizzes",
   permission(["Admin", "Mentor", "Trainee"]),
-  asyncHandler(quizController.getQuizsByLesson)
+  asyncHandler(quizController.getQuizsByCourse)
+);
+
+router.get(
+  "/e-learning/course/:courseId/list-quizzes",
+  permission(["Trainee"]),
+  asyncHandler(quizController.getQuizzesByStudentAndCourse)
+);
+
+router.get(
+  "/e-learning/quiz/:quizId",
+  permission(["Admin", "Mentor", "Trainee"]),
+  asyncHandler(quizController.getAQuizByCourse)
 );
 
 router.put(

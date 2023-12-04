@@ -1,44 +1,123 @@
 "use strict";
 const validateMongoDbId = require("../../config/validateMongoDbId");
 const { NotFoundError, BadRequestError } = require("../../core/error.response");
-const lessonModel = require("../../models/lesson.model");
+const courseModel = require("../../models/course.model");
 const Quiz = require("../../models/quiz.model");
 const Score = require("../../models/score.model");
+const userModel = require("../../models/user.model");
+const nodemailer = require("nodemailer");
+const { v2: cloudinary } = require("cloudinary");
+
+cloudinary.config({
+  cloud_name: "dvsvd87sm",
+  api_key: "243392977754277",
+  api_secret: "YnSIAsvn7hRPqxTdIQBX9gBzihE",
+});
 
 class QuizService {
-  static createQuiz = async ({ lessonId, name, questions }) => {
-    const existingQuiz = await Quiz.findOne({ lessonId });
-    if (existingQuiz) {
-      throw new BadRequestError(`Quiz ${name} already exists`);
+  static createQuiz = async ({
+    type,
+    courseIds,
+    studentIds,
+    name,
+    essay,
+    questions,
+    submissionTime,
+  }) => {
+    try {
+      let quiz;
+      if (type === "multiple_choice") {
+        const formattedQuestions = [];
+
+        for (const question of questions) {
+          const formattedQuestion = {
+            question: question.question,
+            options: question.options,
+            answer: question.answer,
+          };
+          formattedQuestions.push(formattedQuestion);
+        }
+
+        quiz = new Quiz({
+          type,
+          name,
+          courseIds,
+          studentIds,
+          questions: formattedQuestions,
+          submissionTime,
+        });
+      } else if (type === "essay") {
+
+        const formattedEssay = {
+          title: essay.title,
+          content: essay.content,
+          attachment: essay.attachment,
+        };
+
+        quiz = new Quiz({
+          type,
+          name,
+          courseIds,
+          studentIds,
+          essay: formattedEssay,
+          submissionTime,
+        });
+      } else {
+        throw new BadRequestError("Invalid quiz type");
+      }
+
+      const emailPromises = studentIds.map(async (studentId) => {
+        const student = await userModel.findById(studentId);
+        if (!student) throw new NotFoundError("student not found");
+
+        const transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: "kimochi2033@gmail.com",
+            pass: "fmthngflsjewmpyl",
+          },
+        });
+
+        const mailOptions = {
+          from: "kimochi2033@gmail.com",
+          to: student.email,
+          subject: "Bài tập mới",
+          text: `Một bài tập ${name} đã được giao cho bạn. hãy hoàn thành trước ${submissionTime}`,
+        };
+
+        return transporter.sendMail(mailOptions);
+      });
+
+      await Promise.all(emailPromises);
+
+      const savedQuiz = await quiz.save();
+
+      for (const studentId of studentIds) {
+        const student = await userModel.findById(studentId);
+        student.quizzes.push(savedQuiz._id);
+        await student.save();
+      }
+
+      for (const courseId of courseIds) {
+        const course = await courseModel
+          .findByIdAndUpdate(
+            courseId,
+            {
+              $push: { quizzes: savedQuiz._id },
+            },
+            { new: true }
+          )
+          .populate("quizzes")
+          .populate("students");
+
+        if (!course) throw new NotFoundError("course not found");
+      }
+
+      return savedQuiz;
+    } catch (error) {
+      console.error(error);
+      throw new BadRequestError("Failed to create quiz", error);
     }
-
-    const formattedQuestions = [];
-
-    for (const question of questions) {
-      const formattedQuestion = {
-        question: question.question,
-        options: question.options,
-        answer: question.answer,
-      };
-      formattedQuestions.push(formattedQuestion);
-    }
-
-    const quiz = new Quiz({ name, lessonId, questions: formattedQuestions });
-    const savedQuiz = await quiz.save();
-
-    const lesson = await lessonModel
-      .findByIdAndUpdate(
-        lessonId,
-        {
-          quiz: savedQuiz,
-        },
-        { new: true }
-      )
-      .populate("quiz");
-
-    if (!lesson) throw new NotFoundError("lesson not found");
-
-    return lesson;
   };
 
   static getAllQuizs = async () => {
@@ -53,10 +132,9 @@ class QuizService {
     }
   };
 
-  static getQuizsByLesson = async (lessonId) => {
+  static getQuizsByCourse = async (courseIds) => {
     try {
-      const quizs = await Quiz.find()
-        .where({ lessonId: lessonId })
+      const quizs = await Quiz.find({ courseIds: courseIds })
         .populate("questions")
         .lean();
 
@@ -66,6 +144,17 @@ class QuizService {
     } catch (error) {
       throw new BadRequestError("Failed to get quizs", error);
     }
+  };
+
+  static getAQuizByCourse = async (quizId) => {
+    const quizs = await Quiz.find()
+      .where({ _id: quizId })
+      .populate("questions")
+      .lean();
+
+    if (!quizs) throw new NotFoundError("quizs not found");
+
+    return quizs;
   };
 
   static updateQuiz = async (quizId, updatedQuizData) => {
@@ -100,8 +189,8 @@ class QuizService {
       if (!quiz) throw new NotFoundError("Quiz not found");
 
       // Use the lessonId from the quiz to update the lesson
-      const findLesson = await lessonModel.findByIdAndUpdate(quiz.lessonId, {
-        quiz: null,
+      const findCourse = await courseModel.findByIdAndUpdate(quiz.courseId, {
+        quizzes: null,
       });
 
       const findQuiz = await Quiz.findByIdAndDelete(quizId);
@@ -163,7 +252,14 @@ class QuizService {
           maxScore
         ).toFixed(2);
         existingScore.answers = answer;
+        existingScore.isComplete = true;
         await existingScore.save();
+
+        if (existingScore.createdAt > quiz.submissionTime) {
+          existingScore.isComplete = false;
+          throw new BadRequestError("Submission time has passed");
+        }
+
         return existingScore;
       } else {
         const userScore = new Score({
@@ -171,8 +267,14 @@ class QuizService {
           quiz: quizId,
           score: ((score / quiz.questions.length) * maxScore).toFixed(2),
           answers: answer,
+          isComplete: true,
         });
         await userScore.save();
+
+        if (userScore.createdAt > quiz.submissionTime) {
+          userScore.isComplete = false;
+          throw new BadRequestError("Submission time has passed");
+        }
 
         return userScore;
       }
@@ -213,6 +315,43 @@ class QuizService {
       return scoreAndAnswers;
     } catch (error) {
       throw new BadRequestError("Failed to get scores and answers", error);
+    }
+  };
+
+  static getQuizzesByStudentAndCourse = async (studentId, courseId) => {
+    try {
+      // Validate studentId and courseId
+      validateMongoDbId(studentId);
+      validateMongoDbId(courseId);
+
+      // Find the student
+      const student = await userModel.findById(studentId);
+      if (!student) throw new NotFoundError("Student not found");
+
+      // Find the course
+      const course = await courseModel.findById(courseId);
+      if (!course) throw new NotFoundError("Course not found");
+
+      // Find quizzes that belong to the course and assigned to the student
+      const quizzes = await Quiz.find({
+        _id: { $in: student.quizzes },
+        courseIds: courseId,
+      })
+        .populate("questions")
+        .lean();
+
+      if (!quizzes.length)
+        throw new NotFoundError(
+          "No quizzes found for the student in this course"
+        );
+
+      return quizzes;
+    } catch (error) {
+      console.error(error);
+      throw new BadRequestError(
+        "Failed to get quizzes by student and course",
+        error
+      );
     }
   };
 }

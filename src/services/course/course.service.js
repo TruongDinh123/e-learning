@@ -13,7 +13,7 @@ class CourseService {
       const createCourse = course.save();
 
       const teacherUser = await User.findById(teacher);
-      if(!teacherUser) throw new NotFoundError("Teacher not found");
+      if (!teacherUser) throw new NotFoundError("Teacher not found");
 
       teacherUser.courses.push(course._id);
       await teacherUser.save();
@@ -47,7 +47,8 @@ class CourseService {
           _id: id,
         })
         .populate("students", "lastName email")
-        .populate("lessons");
+        .populate("lessons")
+        .populate("quizzes");
 
       return aCourse;
     } catch (error) {
@@ -57,36 +58,37 @@ class CourseService {
 
   static buttonShowCourse = async (courseId) => {
     const updatedCourse = await courseModel.findById(courseId);
-    if(!updatedCourse) throw new NotFoundError("Course not found");
+    if (!updatedCourse) throw new NotFoundError("Course not found");
 
-    if(updatedCourse.showCourse === true) throw new BadRequestError("Course is already public");
+    if (updatedCourse.showCourse === true)
+      throw new BadRequestError("Course is already public");
 
     updatedCourse.showCourse = true;
 
     await updatedCourse.save();
 
     return updatedCourse;
-  }
+  };
 
   static buttonPrivateCourse = async (courseId) => {
     const course = await courseModel.findById(courseId);
-    if(!course) throw new NotFoundError("Course not found");
+    if (!course) throw new NotFoundError("Course not found");
 
-    if(course.showCourse === false) throw new BadRequestError("Course is already private");
+    if (course.showCourse === false)
+      throw new BadRequestError("Course is already private");
 
     course.showCourse = false;
 
     await course.save();
     return course;
-  }
+  };
 
   static getCoursePublic = async () => {
     const course = await courseModel.find({
-      showCourse: true
+      showCourse: true,
     });
     return course;
-  }
-
+  };
 
   static updateCourse = async ({ id, name, title }) => {
     try {

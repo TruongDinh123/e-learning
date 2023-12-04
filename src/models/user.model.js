@@ -37,6 +37,14 @@ const userSchema = new mongoose.Schema(
         ref: "Course",
       },
     ],
+
+    quizzes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Quiz",
+      },
+    ],
+    
     roles: {
       type: [String],
       required: true

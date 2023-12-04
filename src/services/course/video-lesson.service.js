@@ -22,7 +22,6 @@ class VideoLessonService {
       const result = await cloudinary.uploader.upload(filename, {
         resource_type: "video",
       });
-      console.log("result::", result);
       const videoLesson = await videoLessonModel.create({
         filename: result.public_id,
         url: result.secure_url,
