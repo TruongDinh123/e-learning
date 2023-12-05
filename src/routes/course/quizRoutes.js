@@ -12,6 +12,13 @@ router.post(
   asyncHandler(quizController.createQuiz)
 );
 
+router.post(
+  "/e-learning/quiz/:quizId/upload-file",
+  permission(["Mentor", "Admin"]),
+  uploadMiddleware.single("filename"),
+  asyncHandler(quizController.uploadFileQuiz)
+);
+
 router.get(
   "/e-learning/course/:courseIds/quizzes",
   permission(["Admin", "Mentor", "Trainee"]),
@@ -54,6 +61,12 @@ router.post(
   asyncHandler(quizController.submitQuiz)
 );
 
+router.post(
+  "/e-learning/quiz/:quizId/submit-essay",
+  permission(["Admin", "Mentor", "Trainee"]),
+  asyncHandler(quizController.submitQuizEssay)
+);
+
 router.get(
   "/e-learning/score",
   permission(["Admin", "Mentor", "Trainee"]),
@@ -64,6 +77,12 @@ router.get(
   "/e-learning/:quizId/:userId/score",
   permission(["Admin", "Mentor", "Trainee"]),
   asyncHandler(quizController.getScoreByUserId)
+);
+
+router.get(
+  "/e-learning/quiz/:quizId/all-score",
+  permission(["Admin", "Mentor"]),
+  asyncHandler(quizController.getScoreByQuizId)
 );
 
 module.exports = router;

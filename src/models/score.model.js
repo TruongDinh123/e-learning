@@ -21,11 +21,15 @@ const scoreSchema = new mongoose.Schema({
   },
   score: {
     type: Number,
-    required: true,
+    required: false,
   },
   answers: {
     type: Array,
-    required: true,
+    required: false,
+  },
+  essayAnswer: {
+    type: String,
+    required: false,
   },
   isComplete: {
     type: Boolean,

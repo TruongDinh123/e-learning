@@ -29,6 +29,16 @@ class QuizController {
     }).send(res);
   };
 
+  uploadFileQuiz = async (req, res, next) => {
+    const { quizId } = req.params;
+    const { path: filename } = req.file;
+
+    new SuccessReponse({
+      message: "Upload file successfully",
+      metadata: await QuizService.uploadFile({ quizId, filename }),
+    }).send(res);
+  };
+
   getQuizsByCourse = async (req, res, next) => {
     const { courseIds } = req.params;
 
@@ -102,6 +112,25 @@ class QuizController {
     }
   };
 
+  submitQuizEssay = async (req, res, next) => {
+    try {
+      const { quizId } = req.params;
+      const { essayAnswer } = req.body;
+      const userId = req.headers["x-client-id"];
+
+      new SuccessReponse({
+        message: "Submit quiz successfully",
+        metadata: await QuizService.submitQuizEssay({
+          quizId,
+          userId,
+          essayAnswer,
+        }),
+      }).send(res);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   getScoreByUser = async (req, res, next) => {
     try {
       const userId = req.headers["x-client-id"];
@@ -127,6 +156,19 @@ class QuizController {
       console.log(error);
     }
   };
+
+  getScoreByQuizId = async (req, res, next) => {
+    try {
+      const { quizId } = req.params;
+
+      new SuccessReponse({
+        message: "Get score successfully",
+        metadata: await QuizService.getScoreByQuizId(quizId),
+      }).send(res);
+    } catch (error) {
+      console.log(error);
+    }
+  }
 }
 
 module.exports = new QuizController();

@@ -63,6 +63,10 @@ const quizSchema = new mongoose.Schema(
         type: String,
         required: false,
       },
+      filename: {
+        type: String,
+        required: false,
+      },
     },
   },
   {

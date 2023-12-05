@@ -27,7 +27,6 @@ class VideoLessonService {
         url: result.secure_url,
         lesson: lessonId,
       });
-      console.log("videoLesson::", videoLesson);
 
       await videoLesson.save();
 

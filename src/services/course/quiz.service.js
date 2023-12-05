@@ -47,7 +47,6 @@ class QuizService {
           submissionTime,
         });
       } else if (type === "essay") {
-
         const formattedEssay = {
           title: essay.title,
           content: essay.content,
@@ -117,6 +116,26 @@ class QuizService {
     } catch (error) {
       console.error(error);
       throw new BadRequestError("Failed to create quiz", error);
+    }
+  };
+
+  static uploadFile = async ({ filename, quizId }) => {
+    validateMongoDbId(quizId);
+    try {
+      const findQuiz = await Quiz.findById(quizId);
+      if (!findQuiz) {
+        throw new NotFoundError("Quiz not found");
+      }
+
+      const result = await cloudinary.uploader.upload(filename, {
+        resource_type: "raw",
+      });
+      findQuiz.essay.attachment = result.secure_url;
+      await findQuiz.save();
+
+      return { findQuiz };
+    } catch (error) {
+      throw new BadRequestError(error);
     }
   };
 
@@ -283,6 +302,32 @@ class QuizService {
     }
   };
 
+  static submitQuizEssay = async ({ userId, quizId, essayAnswer }) => {
+    try {
+      const quiz = await Quiz.findById(quizId);
+      if (!quiz) throw new NotFoundError("no quiz found");
+
+      const existingScore = await Score.findOne({ user: userId, quiz: quizId });
+
+      if (existingScore) {
+        existingScore.essayAnswer = essayAnswer;
+        await existingScore.save();
+        return existingScore;
+      } else {
+        const userScore = new Score({
+          user: userId,
+          quiz: quizId,
+          essayAnswer: essayAnswer,
+          isComplete: true,
+        });
+        await userScore.save();
+        return userScore;
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   static getScoreByUser = async (userId) => {
     try {
       const scores = await Score.find({ user: userId })
@@ -315,6 +360,19 @@ class QuizService {
       return scoreAndAnswers;
     } catch (error) {
       throw new BadRequestError("Failed to get scores and answers", error);
+    }
+  };
+
+  static getScoreByQuizId = async (quizId) => {
+    try {
+      const scores = await Score.find({ quiz: quizId }).populate("quiz").lean();
+      console.log("🚀 ~ scores:", scores);
+
+      if (!scores) throw new NotFoundError("scores not found");
+
+      return scores;
+    } catch (error) {
+      throw new BadRequestError("Failed to get scores", error);
     }
   };
 
