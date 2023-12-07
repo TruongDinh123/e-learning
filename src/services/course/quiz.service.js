@@ -302,6 +302,28 @@ class QuizService {
     }
   };
 
+  static uploadFileUserSubmit = async ({ filename, quizId }) => {
+    validateMongoDbId(quizId);
+    try {
+      const findQuiz = await Quiz.findById(quizId);
+      if (!findQuiz) {
+        throw new NotFoundError("Quiz not found");
+      }
+
+      const result = await cloudinary.uploader.upload(filename, {
+        resource_type: "raw",
+      });
+      const score = await Score.findOne({ quiz: quizId });
+      score.filename = result.secure_url;
+
+      await score.save();
+
+      return score;
+    } catch (error) {
+      throw new BadRequestError(error);
+    }
+  };
+
   static submitQuizEssay = async ({ userId, quizId, essayAnswer }) => {
     try {
       const quiz = await Quiz.findById(quizId);
@@ -365,8 +387,10 @@ class QuizService {
 
   static getScoreByQuizId = async (quizId) => {
     try {
-      const scores = await Score.find({ quiz: quizId }).populate("quiz").lean();
-      console.log("🚀 ~ scores:", scores);
+      const scores = await Score.find({ quiz: quizId })
+        .populate("quiz")
+        .populate("user")
+        .lean();
 
       if (!scores) throw new NotFoundError("scores not found");
 
@@ -410,6 +434,29 @@ class QuizService {
         "Failed to get quizzes by student and course",
         error
       );
+    }
+  };
+
+  static updateScore = async (scoresToUpdate) => {
+    try {
+      if (!Array.isArray(scoresToUpdate)) {
+        throw new BadRequestError("scoresToUpdate must be an array");
+      }
+
+      const updateScores = [];
+
+      for (const { scoreId, updateScore } of scoresToUpdate) {
+        const score = await Score.findById(scoreId);
+        if (!score) throw new NotFoundError("score not found");
+
+        score.score = updateScore;
+        await score.save();
+        updateScores.push(score);
+      }
+
+      return updateScores;
+    } catch (error) {
+      throw new BadRequestError("Failed to update score", error);
     }
   };
 }

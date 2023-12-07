@@ -39,6 +39,16 @@ class QuizController {
     }).send(res);
   };
 
+  uploadFileUserSubmit = async (req, res, next) => {
+    const { quizId } = req.params;
+    const { path: filename } = req.file;
+
+    new SuccessReponse({
+      message: "Upload file successfully",
+      metadata: await QuizService.uploadFileUserSubmit({ quizId, filename }),
+    }).send(res);
+  };
+
   getQuizsByCourse = async (req, res, next) => {
     const { courseIds } = req.params;
 
@@ -168,7 +178,20 @@ class QuizController {
     } catch (error) {
       console.log(error);
     }
-  }
+  };
+
+  updateScore = async (req, res, next) => {
+    try {
+      const scoresToUpdate = req.body;
+
+      new SuccessReponse({
+        message: "Update score successfully",
+        metadata: await QuizService.updateScore(scoresToUpdate),
+      }).send(res);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 }
 
 module.exports = new QuizController();

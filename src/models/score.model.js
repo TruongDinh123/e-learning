@@ -31,6 +31,10 @@ const scoreSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
+  filename: {
+    type: String,
+    required: false,
+  },
   isComplete: {
     type: Boolean,
     required: false,

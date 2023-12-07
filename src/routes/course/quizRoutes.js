@@ -85,4 +85,17 @@ router.get(
   asyncHandler(quizController.getScoreByQuizId)
 );
 
+router.put(
+  "/e-learning/score/update",
+  permission(["Admin", "Mentor"]),
+  asyncHandler(quizController.updateScore)
+);
+
+router.post(
+  "/e-learning/quiz/:quizId/upload-file-user",
+  permission(["Trainee"]),
+  uploadMiddleware.single("filename"),
+  asyncHandler(quizController.uploadFileUserSubmit)
+);
+
 module.exports = router;
