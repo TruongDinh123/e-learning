@@ -6,10 +6,10 @@ const { CourseService } = require("../services/course/course.service");
 class CourseController {
   createCourse = async (req, res, next) => {
     const { name, title } = req.body;
-    const teacher = req.headers["x-client-id"];
+    // const teacher = req.headers["x-client-id"];
     new Created({
       message: "Course Created!",
-      metadata: await CourseService.createCourse({ name, title, teacher }),
+      metadata: await CourseService.createCourse({ name, title}),
       options: {
         limit: 10,
       },
@@ -17,11 +17,11 @@ class CourseController {
   };
 
   getCourses = async (req, res, next) => {
-    const teacherId = req.headers["x-client-id"];
+    // const teacherId = req.headers["x-client-id"];
 
     new Created({
       message: "Success!",
-      metadata: await CourseService.getCourse({teacherId}),
+      metadata: await CourseService.getCourse(),
       options: {
         limit: 10,
       },
@@ -77,6 +77,19 @@ class CourseController {
     }).send(res);
   };
 
+  addTeacherToCourse = async (req, res, next) => {
+    const { courseId } = req.params;
+    const { email } = req.body;
+
+    new SuccessReponse({
+      message: "Teacher added to course successfully!",
+      metadata: await CourseService.addTeacherToCours({
+        courseId,
+        email,
+      }),
+    }).send(res);
+  };
+
   removeStudentFromCourse = async (req, res, next) => {
     const { courseId, userId } = req.params;
 
@@ -106,30 +119,30 @@ class CourseController {
       message: "Get course completion successfully!",
       metadata: await CourseService.getCourseCompletion({ courseId, userId }),
     }).send(res);
-  }
+  };
 
   buttonShowCourse = async (req, res, next) => {
-    const {courseId} = req.params;
+    const { courseId } = req.params;
     new SuccessReponse({
       message: "Get course public successfully!",
       metadata: await CourseService.buttonShowCourse(courseId),
     }).send(res);
-  }
+  };
 
   buttonPrivateCourse = async (req, res, next) => {
-    const {courseId} = req.params;
+    const { courseId } = req.params;
     new SuccessReponse({
       message: "Get course private successfully!",
       metadata: await CourseService.buttonPrivateCourse(courseId),
     }).send(res);
-  }
+  };
 
   getCoursePublic = async (req, res, next) => {
     new SuccessReponse({
       message: "Get course private successfully!",
       metadata: await CourseService.getCoursePublic(),
     }).send(res);
-  }
+  };
 }
 
 module.exports = new CourseController();

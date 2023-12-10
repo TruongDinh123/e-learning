@@ -7,16 +7,16 @@ const nodemailer = require("nodemailer");
 const userLessonModel = require("../../models/userLesson.model");
 const validateMongoDbId = require("../../config/validateMongoDbId");
 class CourseService {
-  static createCourse = async ({ name, title, teacher }) => {
+  static createCourse = async ({ name, title }) => {
     try {
-      const course = await courseModel.create({ name, title, teacher });
+      const course = await courseModel.create({ name, title });
       const createCourse = course.save();
 
-      const teacherUser = await User.findById(teacher);
-      if (!teacherUser) throw new NotFoundError("Teacher not found");
+      // const teacherUser = await User.findById(teacher);
+      // if (!teacherUser) throw new NotFoundError("Teacher not found");
 
-      teacherUser.courses.push(course._id);
-      await teacherUser.save();
+      // teacherUser.courses.push(course._id);
+      // await teacherUser.save();
 
       return createCourse;
     } catch (error) {
@@ -24,12 +24,10 @@ class CourseService {
     }
   };
 
-  static getCourse = async ({ teacherId }) => {
+  static getCourse = async () => {
     try {
       const courses = await courseModel
-        .find({
-          teacher: teacherId,
-        })
+        .find()
         .populate("students", "lastName")
         .populate("lessons");
 
@@ -46,7 +44,8 @@ class CourseService {
         .findById({
           _id: id,
         })
-        .populate("students", "lastName email")
+        .populate("students", "lastName email roles")
+        .populate("teacher")
         .populate("lessons")
         .populate("quizzes");
 
@@ -175,6 +174,65 @@ class CourseService {
         course.students.push(user._id);
         await course.save();
       }
+
+      return user;
+    } catch (error) {
+      throw new BadRequestError("Failed to add student to course");
+    }
+  };
+
+  static addTeacherToCours = async ({ courseId, email }) => {
+    try {
+      let user = await User.findOne({ email });
+
+      if (user && user.status === "inactive") {
+        user.status = "active";
+        await user.save();
+      }
+
+      const course = await courseModel.findById(courseId);
+      if (!course) throw new NotFoundError("Course not found");
+
+      if (!user) {
+        const password = Math.random().toString(36).slice(-8);
+        const passwordHash = await bcrypt.hash(password, 10);
+
+        user = await User.create({
+          email,
+          lastName: "User" + Math.floor(Math.random() * 10000),
+          password: passwordHash,
+          roles: ["Mentor"],
+          courses: [courseId],
+        });
+
+        const transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: "kimochi2033@gmail.com",
+            pass: "fmthngflsjewmpyl",
+          },
+        });
+
+        const mailOptions = {
+          from: "kimochi2033@gmail.com",
+          to: email,
+          subject: `Chào mừng bạn đến khóa học ${course.name}`,
+          text: `Chào mừng bạn đến khóa học. Tài khoản của bạn là: ${email}, mật khẩu của bạn là: ${password}`,
+        };
+
+        transporter.sendMail(mailOptions, function (error, info) {
+          if (error) {
+            console.log(error);
+            throw new BadRequestError("Failed to send email", error);
+          } else {
+            console.log("Email sent: " + info.response);
+          }
+        });
+      }
+
+      course.teacher = user._id;
+
+      course.save();
 
       return user;
     } catch (error) {

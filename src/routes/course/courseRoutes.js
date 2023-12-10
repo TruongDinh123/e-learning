@@ -8,7 +8,7 @@ const router = express.Router();
 //courses
 router.post(
   "/e-learning/course",
-  permission(["Mentor", "Admin"]),
+  permission(["Admin"]),
   asyncHandler(courseController.createCourse)
 );
 
@@ -42,6 +42,12 @@ router.post(
   asyncHandler(courseController.addStudentToCourse)
 );
 
+router.post(
+  "/e-learning/invite-teacher-course/:courseId",
+  permission(["Admin"]),
+  asyncHandler(courseController.addTeacherToCourse)
+);
+
 router.delete(
   "/e-learning/delete-user-course/user/:userId/course/:courseId",
   permission(["Mentor", "Admin"]),
@@ -52,31 +58,30 @@ router.get(
   "/e-learning/get-student-course",
   permission(["Trainee"]),
   asyncHandler(courseController.getstudentCourses)
-)
+);
 
 router.get(
   "/e-learning/get-complete-course/:courseId",
   permission(["Mentor", "Admin", "Trainee"]),
   asyncHandler(courseController.getCourseCompletion)
-)
+);
 
 router.post(
   "/e-learning/public-course/:courseId",
   permission(["Mentor", "Admin"]),
   asyncHandler(courseController.buttonShowCourse)
-)
+);
 
 router.post(
   "/e-learning/priavte-course/:courseId",
   permission(["Mentor", "Admin"]),
   asyncHandler(courseController.buttonPrivateCourse)
-)
+);
 
 router.get(
   "/e-learning/public-course",
   permission(["Mentor", "Admin", "Trainee"]),
   asyncHandler(courseController.getCoursePublic)
-)
-
+);
 
 module.exports = router;
