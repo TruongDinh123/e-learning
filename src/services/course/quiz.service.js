@@ -176,30 +176,85 @@ class QuizService {
     return quizs;
   };
 
-  static updateQuiz = async (quizId, updatedQuizData) => {
-    const { name, questions } = updatedQuizData;
-    const quiz = await Quiz.findById(quizId);
+  // static updateQuiz = async (quizId, updatedQuizData) => {
+  //   const { name, questions } = updatedQuizData;
+  //   const quiz = await Quiz.findById(quizId);
 
+  //   if (!quiz) {
+  //     throw new NotFoundError("quiz not found");
+  //   }
+
+  //   const score = await Score.findOne({ quiz: quizId, isComplete: true });
+  //   if (score) {
+  //     throw new BadRequestError("Cannot update quiz as it has already been completed by a student");
+  //   }
+
+  //   quiz.name = name;
+  //   for (const updateQuestion of questions) {
+  //     const questionIndex = quiz.questions.findIndex(
+  //       (question) => question._id.toString() === updateQuestion._id
+  //     );
+  //     if (questionIndex !== -1) {
+  //       quiz.questions[questionIndex] = updateQuestion;
+  //     } else {
+  //       quiz.questions.push(updateQuestion);
+  //     }
+  //   }
+  //   const updatedQuiz = await quiz.save();
+
+  //   return updatedQuiz;
+  // };
+
+  static updateQuiz = async (quizId, updatedQuizData) => {
+    const { name, questions, submissionTime, essay } = updatedQuizData;
+    const quiz = await Quiz.findById(quizId);
+  
     if (!quiz) {
       throw new NotFoundError("quiz not found");
     }
-
-    quiz.name = name;
-    for (const updateQuestion of questions) {
-      const questionIndex = quiz.questions.findIndex(
-        (question) => question._id.toString() === updateQuestion._id
-      );
-      if (questionIndex !== -1) {
-        quiz.questions[questionIndex] = updateQuestion;
-      } else {
-        quiz.questions.push(updateQuestion);
-      }
+  
+    const score = await Score.findOne({ quiz: quizId, isComplete: true });
+    if (score) {
+      throw new BadRequestError("Cannot update quiz as it has already been completed by a student");
     }
-    const updatedQuiz = await quiz.save();
+  
+    quiz.name = name;
+    quiz.submissionTime = submissionTime;
+    // for (const updateQuestion of questions) {
+    //   const questionIndex = quiz.questions.findIndex(
+    //     (question) => question._id.toString() === updateQuestion._id
+    //   );
+    //   if (questionIndex !== -1) {
+    //     quiz.questions[questionIndex] = updateQuestion;
+    //   } else {
+    //     quiz.questions.push(updateQuestion);
+    //   }
+    // }
 
+    if (quiz.type === "multiple_choice") {
+      for (const updateQuestion of questions) {
+        const questionIndex = quiz.questions.findIndex(
+          (question) => question._id.toString() === updateQuestion._id
+        );
+        if (questionIndex !== -1) {
+          quiz.questions[questionIndex] = updateQuestion;
+        } else {
+          quiz.questions.push(updateQuestion);
+        }
+      }
+    } else if (quiz.type === "essay") {
+      quiz.essay = {
+        title: essay.title,
+        content: essay.content,
+        attachment: essay.attachment,
+      };
+    }
+  
+    const updatedQuiz = await quiz.save();
+  
     return updatedQuiz;
   };
-
+  
   static deleteQuiz = async ({ quizId }) => {
     try {
       validateMongoDbId(quizId);

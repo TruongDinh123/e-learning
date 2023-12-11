@@ -81,13 +81,23 @@ class QuizController {
 
   updateQuiz = async (req, res, next) => {
     const { quizId } = req.params;
-    const { questions, name } = req.body;
+    const { questions, name,  submissionTime, essay  } = req.body;
 
     new SuccessReponse({
       message: "Update quiz successfully",
-      metadata: await QuizService.updateQuiz(quizId, { questions, name }),
+      metadata: await QuizService.updateQuiz(quizId, { questions, name, submissionTime, essay  }),
     }).send(res);
   };
+
+  // updateQuiz = async (req, res, next) => {
+  //   const { quizId } = req.params;
+  //   const { type, courseIds, studentIds, name, essay, questions, submissionTime } = req.body;
+  
+  //   new SuccessReponse({
+  //     message: "Update quiz successfully",
+  //     metadata: await QuizService.updateQuiz(quizId, { type, courseIds, studentIds, name, essay, questions, submissionTime }),
+  //   }).send(res);
+  // };
 
   deleteQuiz = async (req, res, next) => {
     const { quizId } = req.params;
