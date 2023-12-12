@@ -21,8 +21,8 @@ dotenv.config();
 app.use(
   cors({
     // origin: "https://product-v1-0--chic-pithivier-458dd2.netlify.app",
-    // origin: [process.env.CLIENT_URL],
-    origin: "https://e-learning-fe.onrender.com",
+    origin: [process.env.CLIENT_URL],
+    // origin: "https://e-learning-fe.onrender.com",
     // origin: "*",
     credentials: true,
     methods: "GET,POST,PUT,DELETE",

@@ -208,16 +208,18 @@ class QuizService {
   static updateQuiz = async (quizId, updatedQuizData) => {
     const { name, questions, submissionTime, essay } = updatedQuizData;
     const quiz = await Quiz.findById(quizId);
-  
+
     if (!quiz) {
       throw new NotFoundError("quiz not found");
     }
-  
+
     const score = await Score.findOne({ quiz: quizId, isComplete: true });
     if (score) {
-      throw new BadRequestError("Cannot update quiz as it has already been completed by a student");
+      throw new BadRequestError(
+        "Không thể cập nhật khóa học vì đã có học sinh làm bài."
+      );
     }
-  
+
     quiz.name = name;
     quiz.submissionTime = submissionTime;
     // for (const updateQuestion of questions) {
@@ -249,12 +251,12 @@ class QuizService {
         attachment: essay.attachment,
       };
     }
-  
+
     const updatedQuiz = await quiz.save();
-  
+
     return updatedQuiz;
   };
-  
+
   static deleteQuiz = async ({ quizId }) => {
     try {
       validateMongoDbId(quizId);
