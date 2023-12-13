@@ -46,12 +46,11 @@ class LessonService {
     validateMongoDbId(courseId);
     validateMongoDbId(userId);
     try {
-
       const user = await userModel.findById(userId);
       if (!user) {
         throw new NotFoundError("User not found");
       }
-  
+
       if (!user.courses.includes(courseId)) {
         throw new BadRequestError("User does not have this course");
       }
@@ -70,6 +69,7 @@ class LessonService {
 
       return lessons;
     } catch (error) {
+      console.log("🚀 ~ error:", error);
       throw new BadRequestError("Failed to get all lesson", error);
     }
   };
@@ -121,7 +121,10 @@ class LessonService {
     validateMongoDbId(userId);
     validateMongoDbId(lessonId);
     try {
-      let userLesson = await userLessonModel.findOne({ user: userId, lesson: lessonId });
+      let userLesson = await userLessonModel.findOne({
+        user: userId,
+        lesson: lessonId,
+      });
       if (!userLesson) {
         userLesson = new userLessonModel({ user: userId, lesson: lessonId });
       }
