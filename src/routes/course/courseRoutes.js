@@ -56,7 +56,7 @@ router.delete(
 
 router.get(
   "/e-learning/get-student-course",
-  permission(["Trainee"]),
+  permission(["Trainee" , "Mentor", "Admin"]),
   asyncHandler(courseController.getstudentCourses)
 );
 
@@ -83,5 +83,11 @@ router.get(
   permission(["Mentor", "Admin", "Trainee"]),
   asyncHandler(courseController.getCoursePublic)
 );
+
+router.post(
+  "/e-learning/course/:courseId/notifications",
+  permission(["Mentor", "Admin"]),
+  asyncHandler(courseController.createNotification)
+)
 
 module.exports = router;

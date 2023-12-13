@@ -27,7 +27,7 @@ router.get(
 
 router.get(
   "/e-learning/course/:courseId/list-quizzes",
-  permission(["Trainee"]),
+  permission(["Admin", "Mentor", "Trainee"]),
   asyncHandler(quizController.getQuizzesByStudentAndCourse)
 );
 

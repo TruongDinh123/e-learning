@@ -44,7 +44,7 @@ class CourseService {
         .findById({
           _id: id,
         })
-        .populate("students", "lastName email roles")
+        .populate("students", "lastName email roles notifications")
         .populate("teacher")
         .populate("lessons")
         .populate("quizzes");
@@ -322,6 +322,50 @@ class CourseService {
       };
     } catch (error) {
       throw new BadRequestError("Failed to get course completion", error);
+    }
+  };
+
+  static createNotification = async ({ courseId, message }) => {
+    validateMongoDbId(courseId);
+    try {
+      const course = await courseModel.findById(courseId);
+      if (!course) {
+        throw new NotFoundError("Course not found");
+      }
+
+      // Get the emails of all students in the course
+      const students = await User.find({ _id: { $in: course.students } });
+      const studentEmails = students.map((student) => student.email);
+
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: "kimochi2033@gmail.com",
+          pass: "fmthngflsjewmpyl",
+        },
+      });
+
+      const mailOptions = {
+        from: "kimochi2033@gmail.com",
+        to: studentEmails,
+        subject: `Có thông báo mới từ giáo viên`,
+        text: message,
+      };
+
+      transporter.sendMail(mailOptions, function (error, info) {
+        if (error) {
+          console.log(error);
+          throw new BadRequestError("Failed to send email", error);
+        } else {
+          console.log("Email sent: " + info.response);
+        }
+      });
+
+      course.notifications.push({ message });
+      await course.save();
+    } catch (error) {
+      console.log("🚀 ~ error:", error);
+      throw new BadRequestError("Failed to create notification", error);
     }
   };
 }

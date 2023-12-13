@@ -143,6 +143,19 @@ class CourseController {
       metadata: await CourseService.getCoursePublic(),
     }).send(res);
   };
+
+  createNotification = async(req, res, next) => {
+    const { courseId } = req.params;
+    const { message } = req.body;
+
+    new SuccessReponse({
+      message: "Create notification successfully",
+      metadata: await CourseService.createNotification({
+        courseId,
+        message,
+      }),
+    }).send(res);
+  }
 }
 
 module.exports = new CourseController();

@@ -359,8 +359,9 @@ class QuizService {
     }
   };
 
-  static uploadFileUserSubmit = async ({ filename, quizId }) => {
+  static uploadFileUserSubmit = async ({ filename, quizId, userId }) => {
     validateMongoDbId(quizId);
+    validateMongoDbId(userId);
     try {
       const findQuiz = await Quiz.findById(quizId);
       if (!findQuiz) {
@@ -370,7 +371,7 @@ class QuizService {
       const result = await cloudinary.uploader.upload(filename, {
         resource_type: "raw",
       });
-      const score = await Score.findOne({ quiz: quizId });
+      const score = await Score.findOne({ quiz: quizId, user: userId });
       score.filename = result.secure_url;
 
       await score.save();

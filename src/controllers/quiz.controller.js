@@ -42,10 +42,15 @@ class QuizController {
   uploadFileUserSubmit = async (req, res, next) => {
     const { quizId } = req.params;
     const { path: filename } = req.file;
+    const userId = req.headers["x-client-id"];
 
     new SuccessReponse({
       message: "Upload file successfully",
-      metadata: await QuizService.uploadFileUserSubmit({ quizId, filename }),
+      metadata: await QuizService.uploadFileUserSubmit({
+        quizId,
+        filename,
+        userId,
+      }),
     }).send(res);
   };
 
@@ -81,18 +86,23 @@ class QuizController {
 
   updateQuiz = async (req, res, next) => {
     const { quizId } = req.params;
-    const { questions, name,  submissionTime, essay  } = req.body;
+    const { questions, name, submissionTime, essay } = req.body;
 
     new SuccessReponse({
       message: "Update quiz successfully",
-      metadata: await QuizService.updateQuiz(quizId, { questions, name, submissionTime, essay  }),
+      metadata: await QuizService.updateQuiz(quizId, {
+        questions,
+        name,
+        submissionTime,
+        essay,
+      }),
     }).send(res);
   };
 
   // updateQuiz = async (req, res, next) => {
   //   const { quizId } = req.params;
   //   const { type, courseIds, studentIds, name, essay, questions, submissionTime } = req.body;
-  
+
   //   new SuccessReponse({
   //     message: "Update quiz successfully",
   //     metadata: await QuizService.updateQuiz(quizId, { type, courseIds, studentIds, name, essay, questions, submissionTime }),
