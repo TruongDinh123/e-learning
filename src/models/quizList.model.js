@@ -1,7 +1,7 @@
 "use strict";
 const mongoose = require("mongoose");
 
-const quizSchema = new mongoose.Schema(
+const quizListSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -12,33 +12,6 @@ const quizSchema = new mongoose.Schema(
       type: String,
       enum: ["essay", "multiple_choice"],
       required: true,
-    },
-
-    courseIds: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Course",
-        required: false,
-      },
-    ],
-
-    studentIds: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: false,
-      },
-    ],
-
-    quizList: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "QuizList",
-      required: false,
-    },
-
-    submissionTime: {
-      type: Date,
-      required: false,
     },
 
     questions: [
@@ -84,6 +57,8 @@ const quizSchema = new mongoose.Schema(
   }
 );
 
-const Quiz = mongoose.model("Quiz", quizSchema);
+const QuizList = mongoose.model("QuizList", quizListSchema);
 
-module.exports = Quiz;
+module.exports = QuizList;
+
+
