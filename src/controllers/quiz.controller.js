@@ -13,6 +13,7 @@ class QuizController {
       questions,
       name,
       submissionTime,
+      quizTemplateId,
     } = req.body;
 
     new SuccessReponse({
@@ -25,7 +26,15 @@ class QuizController {
         questions,
         name,
         submissionTime,
+        quizTemplateId,
       }),
+    }).send(res);
+  };
+
+  getAllQuizTemplates = async (req, res, next) => {
+    new SuccessReponse({
+      message: "Get all quiz templates successfully",
+      metadata: await QuizService.getAllQuizTemplates(),
     }).send(res);
   };
 

@@ -30,9 +30,9 @@ const quizSchema = new mongoose.Schema(
       },
     ],
 
-    quizList: {
+    quizTemplate: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "QuizList",
+      ref: "QuizTemplate",
       required: false,
     },
 

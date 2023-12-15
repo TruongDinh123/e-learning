@@ -1,7 +1,7 @@
 "use strict";
 const mongoose = require("mongoose");
 
-const quizListSchema = new mongoose.Schema(
+const quizTemplateSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -57,8 +57,8 @@ const quizListSchema = new mongoose.Schema(
   }
 );
 
-const QuizList = mongoose.model("QuizList", quizListSchema);
+const QuizTemplate = mongoose.model("QuizTemplate", quizTemplateSchema);
 
-module.exports = QuizList;
+module.exports = QuizTemplate;
 
 

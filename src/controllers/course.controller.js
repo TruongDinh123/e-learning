@@ -6,10 +6,10 @@ const { CourseService } = require("../services/course/course.service");
 class CourseController {
   createCourse = async (req, res, next) => {
     const { name, title } = req.body;
-    // const teacher = req.headers["x-client-id"];
+    const userId = req.headers["x-client-id"];
     new Created({
       message: "Course Created!",
-      metadata: await CourseService.createCourse({ name, title}),
+      metadata: await CourseService.createCourse({ name, title, userId }),
       options: {
         limit: 10,
       },
@@ -144,7 +144,7 @@ class CourseController {
     }).send(res);
   };
 
-  createNotification = async(req, res, next) => {
+  createNotification = async (req, res, next) => {
     const { courseId } = req.params;
     const { message } = req.body;
 
@@ -155,7 +155,7 @@ class CourseController {
         message,
       }),
     }).send(res);
-  }
+  };
 }
 
 module.exports = new CourseController();

@@ -12,6 +12,12 @@ router.post(
   asyncHandler(quizController.createQuiz)
 );
 
+router.get(
+  "/e-learning/quiz/templates",
+  permission(["Admin", "Mentor"]),
+  asyncHandler(quizController.getAllQuizTemplates)
+);
+
 router.post(
   "/e-learning/quiz/:quizId/upload-file",
   permission(["Mentor", "Admin"]),

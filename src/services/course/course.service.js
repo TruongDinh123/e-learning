@@ -7,19 +7,20 @@ const nodemailer = require("nodemailer");
 const userLessonModel = require("../../models/userLesson.model");
 const validateMongoDbId = require("../../config/validateMongoDbId");
 class CourseService {
-  static createCourse = async ({ name, title }) => {
+  static createCourse = async ({ name, title, userId }) => {
     try {
       const course = await courseModel.create({ name, title });
       const createCourse = course.save();
 
-      // const teacherUser = await User.findById(teacher);
-      // if (!teacherUser) throw new NotFoundError("Teacher not found");
+      const user = await User.findById(userId);
+      if (!user) throw new NotFoundError("User not found");
 
-      // teacherUser.courses.push(course._id);
-      // await teacherUser.save();
+      user.courses.push(course._id);
+      await user.save();
 
       return createCourse;
     } catch (error) {
+      console.log("🚀 ~ error:", error);
       throw new BadRequestError("Failed to create course", error);
     }
   };

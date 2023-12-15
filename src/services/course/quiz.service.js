@@ -7,6 +7,7 @@ const Score = require("../../models/score.model");
 const userModel = require("../../models/user.model");
 const nodemailer = require("nodemailer");
 const { v2: cloudinary } = require("cloudinary");
+const QuizTemplate = require("../../models/quizTemplate.model");
 
 cloudinary.config({
   cloud_name: "dvsvd87sm",
@@ -23,46 +24,77 @@ class QuizService {
     essay,
     questions,
     submissionTime,
+    quizTemplateId,
   }) => {
     try {
       let quiz;
-      if (type === "multiple_choice") {
-        const formattedQuestions = [];
+      if (quizTemplateId) {
+        const quizTemplate = await QuizTemplate.findById(quizTemplateId);
+        if (!quizTemplate) throw new NotFoundError("Quiz tempalte not found");
 
-        for (const question of questions) {
-          const formattedQuestion = {
-            question: question.question,
-            options: question.options,
-            answer: question.answer,
-          };
-          formattedQuestions.push(formattedQuestion);
-        }
+        const combinedQuestions = [...quizTemplate.questions, ...questions];
 
         quiz = new Quiz({
-          type,
-          name,
+          type: quizTemplate.type,
+          name: quizTemplate.name,
           courseIds,
           studentIds,
-          questions: formattedQuestions,
+          questions: combinedQuestions,
+          essay: quizTemplate.essay,
           submissionTime,
-        });
-      } else if (type === "essay") {
-        const formattedEssay = {
-          title: essay.title,
-          content: essay.content,
-          attachment: essay.attachment,
-        };
-
-        quiz = new Quiz({
-          type,
-          name,
-          courseIds,
-          studentIds,
-          essay: formattedEssay,
-          submissionTime,
+          quizTemplate: quizTemplateId,
         });
       } else {
-        throw new BadRequestError("Invalid quiz type");
+        if (type === "multiple_choice") {
+          const formattedQuestions = [];
+
+          for (const question of questions) {
+            const formattedQuestion = {
+              question: question.question,
+              options: question.options,
+              answer: question.answer,
+            };
+            formattedQuestions.push(formattedQuestion);
+          }
+
+          if (
+            (!studentIds || !studentIds.length) &&
+            (!courseIds || !courseIds.length) &&
+            !submissionTime
+          ) {
+            quiz = new QuizTemplate({
+              type,
+              name,
+              questions: formattedQuestions,
+            });
+          } else {
+            quiz = new Quiz({
+              type,
+              name,
+              courseIds,
+              studentIds,
+              questions: formattedQuestions,
+              submissionTime,
+            });
+          }
+        } else if (type === "essay") {
+          const formattedEssay = {
+            title: essay.title,
+            content: essay.content,
+            attachment: essay.attachment,
+          };
+
+          quiz = new Quiz({
+            type,
+            name,
+            courseIds,
+            studentIds,
+            essay: formattedEssay,
+            submissionTime,
+          });
+        } else {
+          throw new BadRequestError("Invalid quiz type");
+        }
       }
 
       const emailPromises = studentIds.map(async (studentId) => {
@@ -116,6 +148,18 @@ class QuizService {
     } catch (error) {
       console.error(error);
       throw new BadRequestError("Failed to create quiz", error);
+    }
+  };
+
+  static getAllQuizTemplates = async () => {
+    try {
+      const quizTemplate = await QuizTemplate.find().lean();
+      if (!quizTemplate) throw new NotFoundError("quizTemplate not found");
+
+      return quizTemplate;
+    } catch (error) {
+      console.log("🚀 ~ error:", error);
+      throw new BadRequestError("Failed to get quiz template", error);
     }
   };
 

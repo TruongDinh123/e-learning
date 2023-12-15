@@ -51,7 +51,11 @@ class LessonService {
         throw new NotFoundError("User not found");
       }
 
-      if (!user.courses.includes(courseId)) {
+      // if (!user.courses.includes(courseId)) {
+      //   throw new BadRequestError("User does not have this course");
+      // }
+
+      if (!user.roles.includes("Admin") && !user.roles.includes("Mentor") && !user.courses.includes(courseId)) {
         throw new BadRequestError("User does not have this course");
       }
 
