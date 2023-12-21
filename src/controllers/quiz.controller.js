@@ -38,6 +38,28 @@ class QuizController {
     }).send(res);
   };
 
+  deleteQuizTemplates = async (req, res, next) => {
+    const { quizTemplateId } = req.params;
+
+    new SuccessReponse({
+      message: "Delete quiz template successfully",
+      metadata: await QuizService.deleteQuizTemplates(quizTemplateId),
+    }).send(res);
+  };
+
+  updateQuizTemplate = async (req, res, next) => {
+    const { quizTemplateId } = req.params;
+    const { questions, name } = req.body;
+
+    new SuccessReponse({
+      message: "Update quiz template successfully",
+      metadata: await QuizService.updateQuizTemplate(quizTemplateId, {
+        questions,
+        name,
+      }),
+    }).send(res);
+  };
+
   uploadFileQuiz = async (req, res, next) => {
     const { quizId } = req.params;
     const { path: filename } = req.file;

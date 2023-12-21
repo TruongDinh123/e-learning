@@ -163,6 +163,42 @@ class QuizService {
     }
   };
 
+  static deleteQuizTemplates = async (quizTemplateId) => {
+    try {
+      const findQuizTemplate = await QuizTemplate.findByIdAndDelete(
+        quizTemplateId
+      );
+      if (!findQuizTemplate) throw new NotFoundError("No quiz template found");
+    } catch (error) {}
+  };
+
+  static updateQuizTemplate = async (quizTemplateId, updateQuizTemplate) => {
+    const { name, questions } = updateQuizTemplate;
+    const quizTemplate = await QuizTemplate.findById(quizTemplateId);
+
+    if (!quizTemplate) {
+      throw new NotFoundError("quiz template not found");
+    }
+    quizTemplate.name = name;
+
+    if (quizTemplate.type === "multiple_choice") {
+      for (const updateQuestion of questions) {
+        const questionIndex = quizTemplate.questions.findIndex(
+          (question) => question._id.toString() === updateQuestion._id
+        );
+        if (questionIndex !== -1) {
+          quizTemplate.questions[questionIndex] = updateQuestion;
+        } else {
+          quizTemplate.questions.push(updateQuestion);
+        }
+      }
+    }
+
+    const updatedQuizTemplate = await quizTemplate.save();
+
+    return updatedQuizTemplate;
+  };
+
   static uploadFile = async ({ filename, quizId }) => {
     validateMongoDbId(quizId);
     try {

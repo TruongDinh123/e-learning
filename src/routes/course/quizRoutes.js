@@ -104,4 +104,18 @@ router.post(
   asyncHandler(quizController.uploadFileUserSubmit)
 );
 
+//quiz templates
+router.delete(
+  "/e-learning/quiz/templates/:quizTemplateId",
+  permission(["Admin", "Mentor"]),
+  asyncHandler(quizController.deleteQuizTemplates)
+);
+
+router.put(
+  "/e-learning/quiz/templates/:quizTemplateId",
+  permission(["Admin", "Mentor"]),
+  asyncHandler(quizController.updateQuizTemplate)
+);
+
+
 module.exports = router;
