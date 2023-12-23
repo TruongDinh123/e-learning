@@ -34,4 +34,9 @@ router.delete(
 
 router.post("/e-learning/logout", asyncHandler(accessController.logOut));
 
+router.post(
+  "/e-learning/refreshToken",
+  asyncHandler(accessController.handlerRefreshToken)
+);
+
 module.exports = router;

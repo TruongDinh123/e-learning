@@ -4,18 +4,55 @@ const User = require("../models/user.model");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const KeyTokenService = require("./keyToken.service");
-const { createTokenPair } = require("../auth/authUtils");
+const { createTokenPair, verifyJwt } = require("../auth/authUtils");
 const { getInfoData } = require("../utils");
 const {
   BadRequestError,
   AuthFailureError,
   NotFoundError,
+  ForbiddenError,
 } = require("../core/error.response");
 const { findByEmail } = require("./user.service");
 const Role = require("../models/role.model");
-const validateMongoDbId = require("../config/validateMongoDbId");
 
 class AccessService {
+  static handleRefreshToken = async ({ keyAccount, user, refreshToken }) => {
+    const { userId, email } = user;
+
+    if (keyAccount.refreshTokensUsed.includes(refreshToken)) {
+      await KeyTokenService.deleteKeyById(userId);
+      throw new ForbiddenError("Refresh token has been used!! pls relogin");
+    }
+
+    if (keyAccount.refreshToken !== refreshToken) {
+      throw new ForbiddenError("Refresh token has been used!! pls relogin");
+    }
+
+    const foundAccount = await findByEmail({ email });
+    if (!foundAccount) throw new AuthFailureError("Refresh token not found");
+
+    //create 1 cap moi
+    const tokens = await createTokenPair(
+      { userId, email },
+      keyAccount.publicKey,
+      keyAccount.privateKey
+    );
+    //update token
+    await keyAccount.updateOne({
+      $set: {
+        refreshToken: tokens.refreshToken,
+      },
+      $addToSet: {
+        refreshTokensUsed: refreshToken,
+      },
+    });
+
+    return {
+      user,
+      tokens,
+    };
+  };
+
   static login = async ({ email, password, refreshToken = null } = null) => {
     const foundAccount = await findByEmail({ email });
     if (!foundAccount) {

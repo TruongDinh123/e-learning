@@ -36,3 +36,4 @@ lerna-debug.log*
 
 /uploads
 .babelrc
+/e:/Course-nodejs/src/controllers
