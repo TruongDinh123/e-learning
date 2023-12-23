@@ -9,10 +9,24 @@ class CourseController {
     const userId = req.headers["x-client-id"];
     new Created({
       message: "Course Created!",
-      metadata: await CourseService.createCourse({ name, title, userId }),
+      metadata: await CourseService.createCourse({
+        name,
+        title,
+        userId,
+      }),
       options: {
         limit: 10,
       },
+    }).send(res);
+  };
+
+  uploadImageCourse = async (req, res, next) => {
+    const { courseId } = req.params;
+    const { path: filename } = req.file;
+
+    new SuccessReponse({
+      message: "Upload image course successfully",
+      metadata: await CourseService.uploadImageCourse({ courseId, filename }),
     }).send(res);
   };
 

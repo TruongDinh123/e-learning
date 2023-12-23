@@ -256,6 +256,17 @@ class QuizService {
     return quizs;
   };
 
+  static getAQuizTemplate = async (quizTemplateId) => {
+    const quizs = await QuizTemplate.find()
+      .where({ _id: quizTemplateId })
+      .populate("questions")
+      .lean();
+
+    if (!quizs) throw new NotFoundError("Không tồn tại");
+
+    return quizs;
+  };
+
   // static updateQuiz = async (quizId, updatedQuizData) => {
   //   const { name, questions } = updatedQuizData;
   //   const quiz = await Quiz.findById(quizId);
@@ -448,10 +459,20 @@ class QuizService {
         throw new NotFoundError("Quiz not found");
       }
 
+
+      const score = await Score.findOne({ quiz: quizId, user: userId });
+
+      if (score.filename) {
+        // Delete the old image from Cloudinary
+        await cloudinary.uploader.destroy(score.filename, {
+          resource_type: "score",
+        });
+      }
+      
       const result = await cloudinary.uploader.upload(filename, {
         resource_type: "raw",
       });
-      const score = await Score.findOne({ quiz: quizId, user: userId });
+
       score.filename = result.secure_url;
 
       await score.save();

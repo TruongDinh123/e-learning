@@ -43,6 +43,12 @@ router.get(
   asyncHandler(quizController.getAQuizByCourse)
 );
 
+router.get(
+  "/e-learning/quiz-template/:quizTemplateId",
+  permission(["Admin", "Mentor"]),
+  asyncHandler(quizController.getAQuizTemplate)
+);
+
 router.put(
   "/e-learning/quiz/:quizId",
   permission(["Admin", "Mentor"]),

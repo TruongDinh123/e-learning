@@ -11,6 +11,12 @@ const courseSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    filename: {
+      type: String,
+    },
+    image_url: {
+      type: String,
+    },
     teacher: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -46,7 +52,7 @@ const courseSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Assignment",
     },
-    
+
     notifications: [
       {
         message: {
@@ -62,7 +68,7 @@ const courseSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  },
+  }
 );
 
 module.exports = mongoose.model("Course", courseSchema);

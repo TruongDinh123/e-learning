@@ -3,6 +3,7 @@
 const express = require("express");
 const { permission, asyncHandler } = require("../../auth/checkAuthen");
 const courseController = require("../../controllers/course.controller");
+const { uploadMiddleware } = require("../../middlewares/upload");
 const router = express.Router();
 
 //courses
@@ -10,6 +11,13 @@ router.post(
   "/e-learning/course",
   permission(["Admin"]),
   asyncHandler(courseController.createCourse)
+);
+
+router.post(
+  "/e-learning/course/:courseId/upload-image",
+  permission(["Mentor", "Admin"]),
+  uploadMiddleware.single("filename"),
+  asyncHandler(courseController.uploadImageCourse)
 );
 
 router.get(
@@ -56,7 +64,7 @@ router.delete(
 
 router.get(
   "/e-learning/get-student-course",
-  permission(["Trainee" , "Mentor", "Admin"]),
+  permission(["Trainee", "Mentor", "Admin"]),
   asyncHandler(courseController.getstudentCourses)
 );
 
@@ -88,6 +96,6 @@ router.post(
   "/e-learning/course/:courseId/notifications",
   permission(["Mentor", "Admin"]),
   asyncHandler(courseController.createNotification)
-)
+);
 
 module.exports = router;

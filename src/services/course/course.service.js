@@ -6,10 +6,21 @@ const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const userLessonModel = require("../../models/userLesson.model");
 const validateMongoDbId = require("../../config/validateMongoDbId");
+const { v2: cloudinary } = require("cloudinary");
+
+cloudinary.config({
+  cloud_name: "dvsvd87sm",
+  api_key: "243392977754277",
+  api_secret: "YnSIAsvn7hRPqxTdIQBX9gBzihE",
+});
+
 class CourseService {
   static createCourse = async ({ name, title, userId }) => {
     try {
-      const course = await courseModel.create({ name, title });
+      const course = await courseModel.create({
+        name,
+        title,
+      });
       const createCourse = course.save();
 
       const user = await User.findById(userId);
@@ -22,6 +33,35 @@ class CourseService {
     } catch (error) {
       console.log("🚀 ~ error:", error);
       throw new BadRequestError("Failed to create course", error);
+    }
+  };
+
+  static uploadImageCourse = async ({ filename, courseId }) => {
+    validateMongoDbId(courseId);
+    try {
+      const findCourse = await courseModel.findById(courseId);
+      if (!findCourse) {
+        throw new NotFoundError("Course not found");
+      }
+
+      if (findCourse.filename && findCourse.image_url) {
+        // Delete the old image from Cloudinary
+        await cloudinary.uploader.destroy(findCourse.filename, {
+          resource_type: "image",
+        });
+      }
+
+      const result = await cloudinary.uploader.upload(filename, {
+        resource_type: "image",
+      });
+      findCourse.filename = result.public_id;
+      findCourse.image_url = result.secure_url;
+
+      await findCourse.save();
+
+      return { findCourse };
+    } catch (error) {
+      throw new BadRequestError(error);
     }
   };
 
@@ -121,6 +161,12 @@ class CourseService {
       await lessonModel.deleteMany({ courseId: id });
 
       const course = await courseModel.findByIdAndDelete(id);
+      const publicId = course.filename;
+      const result = await cloudinary.uploader.destroy(publicId, {
+        resource_type: "image",
+      });
+      console.log("Deleted video from Cloudinary:", result);
+
       if (!course) throw new NotFoundError("Course not found");
     } catch (error) {
       throw new BadRequestError(error);

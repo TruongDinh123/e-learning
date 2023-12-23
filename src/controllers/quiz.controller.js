@@ -47,19 +47,6 @@ class QuizController {
     }).send(res);
   };
 
-  updateQuizTemplate = async (req, res, next) => {
-    const { quizTemplateId } = req.params;
-    const { questions, name } = req.body;
-
-    new SuccessReponse({
-      message: "Update quiz template successfully",
-      metadata: await QuizService.updateQuizTemplate(quizTemplateId, {
-        questions,
-        name,
-      }),
-    }).send(res);
-  };
-
   uploadFileQuiz = async (req, res, next) => {
     const { quizId } = req.params;
     const { path: filename } = req.file;
@@ -115,6 +102,15 @@ class QuizController {
     }).send(res);
   };
 
+  getAQuizTemplate = async (req, res, next) => {
+    const { quizTemplateId } = req.params;
+
+    new SuccessReponse({
+      message: "Get a quiz template successfully",
+      metadata: await QuizService.getAQuizTemplate(quizTemplateId),
+    }).send(res);
+  };
+
   updateQuiz = async (req, res, next) => {
     const { quizId } = req.params;
     const { questions, name, submissionTime, essay } = req.body;
@@ -126,6 +122,19 @@ class QuizController {
         name,
         submissionTime,
         essay,
+      }),
+    }).send(res);
+  };
+
+  updateQuizTemplate = async (req, res, next) => {
+    const { quizTemplateId } = req.params;
+    const { questions, name } = req.body;
+
+    new SuccessReponse({
+      message: "Update quiz template successfully",
+      metadata: await QuizService.updateQuizTemplate(quizTemplateId, {
+        questions,
+        name,
       }),
     }).send(res);
   };
