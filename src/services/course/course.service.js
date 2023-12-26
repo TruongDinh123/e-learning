@@ -173,11 +173,16 @@ class CourseService {
     }
   };
 
-  static addStudentToCours = async ({ courseId, email }) => {
+  static addStudentToCours = async ({ courseId, email, userId }) => {
     try {
       let user = await User.findOne({ email });
 
-      if (user?.roles?.includes("Mentor") || user?.roles?.includes("Admin")) {
+      const course = await courseModel.findById(courseId);
+      if (!course) throw new NotFoundError("Khóa học không tồn tại");
+
+      const loggedInUser = await User.findById(userId);
+
+      if (!(loggedInUser.toString() === course.teacher.toString() || loggedInUser?.roles?.includes("Admin"))) {
         throw new BadRequestError("Không thể thêm người dùng này vào khóa học");
       }
 
@@ -185,9 +190,6 @@ class CourseService {
         user.status = "active";
         await user.save();
       }
-
-      const course = await courseModel.findById(courseId);
-      if (!course) throw new NotFoundError("Khóa học không tồn tại");
 
       if (!user) {
         const password = Math.random().toString(36).slice(-8);
@@ -331,25 +333,6 @@ class CourseService {
       throw new BadRequestError("Failed to remove student from course");
     }
   };
-
-  // static removeStudentFromCourse = async ({ courseId, userId }) => {
-  //   try {
-  //     const user = await User.findById(userId);
-  //     const course = await courseModel.findById(courseId);
-
-  //     if (!user) throw new NotFoundError("User not found");
-  //     if (!course) throw new NotFoundError("Course not found");
-
-  //     user.courses.pull(courseId);
-  //     course.students.pull(userId);
-
-  //     await Promise.all([user.save(), course.save()]);
-
-  //     return user;
-  //   } catch (error) {
-  //     throw new BadRequestError("Failed to remove student from course");
-  //   }
-  // };
 
   static getStudentCourses = async (userId) => {
     try {
