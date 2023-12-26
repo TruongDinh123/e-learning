@@ -81,12 +81,14 @@ class CourseController {
   addStudentToCourse = async (req, res, next) => {
     const { courseId } = req.params;
     const { email } = req.body;
+    const userId = req.headers["x-client-id"];
 
     new SuccessReponse({
       message: "Student added to course successfully!",
       metadata: await CourseService.addStudentToCours({
         courseId,
         email,
+        userId
       }),
     }).send(res);
   };
