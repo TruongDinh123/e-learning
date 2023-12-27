@@ -181,8 +181,15 @@ class CourseService {
       if (!course) throw new NotFoundError("Khóa học không tồn tại");
 
       const loggedInUser = await User.findById(userId);
+      console.log("🚀 ~ loggedInUser:", loggedInUser);
+      console.log("🚀 ~ course.teacher:", course.teacher);
 
-      if (!(loggedInUser.toString() === course.teacher.toString() || loggedInUser?.roles?.includes("Admin"))) {
+      if (
+        !(
+          loggedInUser._id.toString() === course.teacher.toString() ||
+          loggedInUser?.roles?.includes("Admin")
+        )
+      ) {
         throw new BadRequestError("Không thể thêm người dùng này vào khóa học");
       }
 
