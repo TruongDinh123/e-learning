@@ -20,6 +20,24 @@ class AccessController {
     }).send(res);
   };
 
+  changePassword = async (req, res, next) => {
+    try {
+      const { oldPassword, newPassword } = req.body;
+      const currentUserId = req.user.userId;
+
+      const updatedUser = await AccessService.changePassword({
+        oldPassword,
+        newPassword,
+        currentUserId,
+      });
+      return res.status(200).json(updatedUser);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  };
+  
+
   updateUserRoles = async (req, res, next) => {
     try {
       const { userId, roleId } = req.body;

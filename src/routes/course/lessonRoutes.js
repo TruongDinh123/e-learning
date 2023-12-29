@@ -26,6 +26,12 @@ router.get(
   asyncHandler(lessonController.getAllCourseLeesion)
 );
 
+router.put(
+  "/e-learning/lesson/:lessonId",
+  permission(["Mentor", "Admin"]),
+  asyncHandler(lessonController.updateLesson)
+);
+
 router.get(
   "/e-learning/lesson/:lessonId",
   permission(["Mentor", "Admin", "Trainee"]),

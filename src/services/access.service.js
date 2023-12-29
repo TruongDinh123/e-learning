@@ -58,6 +58,23 @@ class AccessService {
     };
   };
 
+  static changePassword = async ({ currentUserId, oldPassword, newPassword }) => {
+    const user = await User.findById(currentUserId);
+    if (!user) {
+      throw new NotFoundError("User not found");
+    }
+  
+    const match = await bcrypt.compare(oldPassword, user.password);
+    if (!match) {
+      throw new AuthFailureError("Old password is not correct");
+    }
+  
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    user.password = passwordHash;
+    const updatedUser = await user.save();
+    return updatedUser;
+  };
+
   static signUp = async ({ lastName, email, password }) => {
     try {
       const holderAccount = await User.findOne({ email }).lean();

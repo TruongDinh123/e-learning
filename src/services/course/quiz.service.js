@@ -341,6 +341,7 @@ class QuizService {
         content: essay.content,
         attachment: essay.attachment,
       };
+      quiz.name = essay.title;
     }
 
     const updatedQuiz = await quiz.save();
@@ -459,7 +460,6 @@ class QuizService {
         throw new NotFoundError("Quiz not found");
       }
 
-
       const score = await Score.findOne({ quiz: quizId, user: userId });
 
       if (score.filename) {
@@ -468,7 +468,7 @@ class QuizService {
           resource_type: "score",
         });
       }
-      
+
       const result = await cloudinary.uploader.upload(filename, {
         resource_type: "raw",
       });

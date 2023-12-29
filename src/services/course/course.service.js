@@ -45,7 +45,6 @@ class CourseService {
       }
 
       if (findCourse.filename && findCourse.image_url) {
-        // Delete the old image from Cloudinary
         await cloudinary.uploader.destroy(findCourse.filename, {
           resource_type: "image",
         });

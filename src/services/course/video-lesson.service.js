@@ -19,6 +19,12 @@ class VideoLessonService {
         throw new NotFoundError("Lesson not found");
       }
 
+      if (findLesson.filename && findLesson.url) {
+        await cloudinary.uploader.destroy(findLesson.filename, {
+          resource_type: "video",
+        });
+      }
+
       const result = await cloudinary.uploader.upload(filename, {
         resource_type: "video",
       });
@@ -65,7 +71,9 @@ class VideoLessonService {
 
       const publicId = findVideoLesson.filename;
       console.log("publicId::", publicId);
-      const result = await cloudinary.uploader.destroy(publicId,{ resource_type: "video"});
+      const result = await cloudinary.uploader.destroy(publicId, {
+        resource_type: "video",
+      });
 
       console.log("Deleted video from Cloudinary:", result);
     } catch (error) {

@@ -20,6 +20,12 @@ router.put(
   asyncHandler(accessController.updateUserRoles)
 );
 
+router.post(
+  "/e-learning/change-password",
+  permission(["Admin", "Mentor", "Trainee"]),
+  asyncHandler(accessController.changePassword)
+);
+
 router.get(
   "/e-learning/users",
   permission(["Admin", "Mentor"]),
@@ -28,7 +34,7 @@ router.get(
 
 router.get(
   "/e-learning/user/:id",
-  permission(["Admin", "Mentor"]),
+  permission(["Admin", "Mentor", "Trainee"]),
   asyncHandler(accessController.getAUser)
 );
 
@@ -40,7 +46,7 @@ router.delete(
 
 router.put(
   "/e-learning/update-user/:id",
-  permission(["Admin", "Mentor"]),
+  permission(["Admin", "Mentor", "Trainee"]),
   asyncHandler(accessController.updateUser)
 );
 
