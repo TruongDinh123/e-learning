@@ -56,6 +56,12 @@ router.post(
   asyncHandler(courseController.addTeacherToCourse)
 );
 
+router.put(
+  "/e-learning/update-teacher-course/:courseId",
+  permission(["Admin"]),
+  asyncHandler(courseController.updateCourseTeacher)
+);
+
 router.delete(
   "/e-learning/delete-user-course/user/:userId/course/:courseId",
   permission(["Mentor", "Admin"]),

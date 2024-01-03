@@ -106,6 +106,19 @@ class CourseController {
     }).send(res);
   };
 
+  updateCourseTeacher = async (req, res, next) => {
+    const { courseId } = req.params;
+    const { email } = req.body;
+
+    new SuccessReponse({
+      message: "Teacher added to course successfully!",
+      metadata: await CourseService.updateCourseTeacher({
+        courseId,
+        email,
+      }),
+    }).send(res);
+  };
+
   removeStudentFromCourse = async (req, res, next) => {
     const { courseId, userId } = req.params;
 

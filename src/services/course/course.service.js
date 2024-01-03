@@ -321,6 +321,82 @@ class CourseService {
     }
   };
 
+  static updateCourseTeacher = async ({ courseId, email }) => {
+    try {
+      let user = await User.findOne({ email });
+
+      if (user && user.status === "inactive") {
+        user.status = "active";
+        await user.save();
+      }
+
+      if (user?.roles?.includes("Trainee")) {
+        throw new BadRequestError("Không thể thêm người dùng này vào khóa học");
+      }
+
+      const course = await courseModel.findById(courseId);
+      if (!course) throw new NotFoundError("Course not found");
+
+      if (course.teacher) {
+        let currentTeacher = await User.findById(course.teacher);
+        if (currentTeacher) {
+          currentTeacher.courses.pull(courseId);
+          await currentTeacher.save();
+        }
+      }
+
+      if (!user) {
+        const password = Math.random().toString(36).slice(-8);
+        const passwordHash = await bcrypt.hash(password, 10);
+
+        user = await User.create({
+          email,
+          lastName: "User" + Math.floor(Math.random() * 10000),
+          password: passwordHash,
+          roles: ["Mentor"],
+          courses: [courseId],
+        });
+
+        const transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: "kimochi2033@gmail.com",
+            pass: "fmthngflsjewmpyl",
+          },
+        });
+
+        const mailOptions = {
+          from: "kimochi2033@gmail.com",
+          to: email,
+          subject: `Chào mừng bạn đến khóa học ${course.name}`,
+          text: `Chào mừng bạn đến khóa học. Tài khoản của bạn là: ${email}, mật khẩu của bạn là: ${password}`,
+        };
+
+        transporter.sendMail(mailOptions, function (error, info) {
+          if (error) {
+            console.log(error);
+            throw new BadRequestError("Failed to send email", error);
+          } else {
+            console.log("Email sent: " + info.response);
+          }
+        });
+      }
+
+      if (!user.courses.includes(courseId)) {
+        user.courses.push(courseId);
+        await user.save();
+      }
+
+      course.teacher = user._id;
+
+      course.save();
+
+      return user;
+    } catch (error) {
+      throw new BadRequestError("Không thể thêm người dùng này vào khóa học");
+    }
+  };
+
   static removeStudentFromCourse = async ({ courseId, userId }) => {
     try {
       const user = await User.findById(userId);
