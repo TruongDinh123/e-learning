@@ -7,7 +7,6 @@ const createApiKey = async (permissions) => {
   const newKey = await apiKeyModel.create({
     key: crypto.randomBytes(64).toString("hex"),
   });
-  console.log("🚀 ~ newKey:", newKey);
 
   return newKey;
 };

@@ -4,6 +4,7 @@ const express = require("express");
 const accessController = require("../../controllers/access.controller");
 const { permission, asyncHandler, apiKey } = require("../../auth/checkAuthen");
 const { authentication } = require("../../auth/authUtils");
+const { uploadMiddleware } = require("../../middlewares/upload");
 const router = express.Router();
 
 //signUp
@@ -18,6 +19,13 @@ router.put(
   "/e-learning/user/update-user-role",
   permission(["Admin", "Mentor"]),
   asyncHandler(accessController.updateUserRoles)
+);
+
+router.post(
+  "/e-learning/user/:userId/upload-image",
+  permission(["Mentor", "Admin", "Trainee"]),
+  uploadMiddleware.single("filename"),
+  asyncHandler(accessController.uploadImageUser)
 );
 
 router.post(

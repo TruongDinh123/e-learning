@@ -73,7 +73,6 @@ class LessonService {
 
       return lessons;
     } catch (error) {
-      console.log("🚀 ~ error:", error);
       throw new BadRequestError("Failed to get all lesson", error);
     }
   };

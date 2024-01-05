@@ -158,7 +158,6 @@ class QuizService {
 
       return quizTemplate;
     } catch (error) {
-      console.log("🚀 ~ error:", error);
       throw new BadRequestError("Failed to get quiz template", error);
     }
   };

@@ -3,20 +3,20 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
-    // firstName: {
-    //   type: String,
-    //   required: true,
-    //   nullable: true,
-    // },
+    firstName: {
+      type: String,
+      required: false,
+    },
     lastName: {
       type: String,
       required: true,
     },
-    // user_image: {
-    //   type: String,
-    //   default: "",
-    //   required: true,
-    // },
+    filename: {
+      type: String,
+    },
+    image_url: {
+      type: String,
+    },
     email: {
       type: String,
       required: true,
@@ -44,11 +44,11 @@ const userSchema = new mongoose.Schema(
         ref: "Quiz",
       },
     ],
-    
+
     roles: {
       type: [String],
-      required: true
-   },
+      required: true,
+    },
     // profession: {
     //   type: String,
     //   required: true,
@@ -75,16 +75,17 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-
-userSchema.methods.deactivate = async function() {
+userSchema.methods.deactivate = async function () {
   this.status = "inactive";
   await this.save();
 
   // Remove all the related docs
-  await this.model('Course').updateMany({ students: this._id }, { $pull: { students: this._id } });
-  await this.model('UserLesson').deleteMany({ user: this._id });
-  await this.model('Score').deleteMany({ user: this._id });
-}
-
+  await this.model("Course").updateMany(
+    { students: this._id },
+    { $pull: { students: this._id } }
+  );
+  await this.model("UserLesson").deleteMany({ user: this._id });
+  await this.model("Score").deleteMany({ user: this._id });
+};
 
 module.exports = mongoose.model("User", userSchema);

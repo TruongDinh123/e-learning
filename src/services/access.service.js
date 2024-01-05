@@ -14,6 +14,13 @@ const {
 const { findByEmail } = require("./user.service");
 const Role = require("../models/role.model");
 const validateMongoDbId = require("../config/validateMongoDbId");
+const { v2: cloudinary } = require("cloudinary");
+
+cloudinary.config({
+  cloud_name: "dvsvd87sm",
+  api_key: "243392977754277",
+  api_secret: "YnSIAsvn7hRPqxTdIQBX9gBzihE",
+});
 
 class AccessService {
   static login = async ({ email, password, refreshToken = null } = null) => {
@@ -58,17 +65,21 @@ class AccessService {
     };
   };
 
-  static changePassword = async ({ currentUserId, oldPassword, newPassword }) => {
+  static changePassword = async ({
+    currentUserId,
+    oldPassword,
+    newPassword,
+  }) => {
     const user = await User.findById(currentUserId);
     if (!user) {
       throw new NotFoundError("User not found");
     }
-  
+
     const match = await bcrypt.compare(oldPassword, user.password);
     if (!match) {
-      throw new AuthFailureError("Old password is not correct");
+      throw new AuthFailureError("Mật khẩu không đúng");
     }
-  
+
     const passwordHash = await bcrypt.hash(newPassword, 10);
     user.password = passwordHash;
     const updatedUser = await user.save();
@@ -204,22 +215,49 @@ class AccessService {
       if (!user) {
         throw new NotFoundError("User not found");
       }
-  
+
       await user.deactivate();
     } catch (error) {
       throw new BadRequestError(error);
     }
   };
 
-  static updateUser = async ({ id, lastName, email }) => {
+  static updateUser = async ({ id, lastName, email, firstName }) => {
     const user = await User.findById(id);
     if (!user) {
       throw new NotFoundError("User not found");
     }
     user.lastName = lastName;
     user.email = email;
+    user.firstName = firstName;
     const updateUser = await user.save();
     return updateUser;
+  };
+
+  static uploadImageUser = async ({ filename, userId }) => {
+    validateMongoDbId(userId);
+    try {
+      const user = await User.findById(userId);
+      if (!user) {
+        throw new NotFoundError("User not found");
+      }
+
+      if (user.filename && user.image_url) {
+        await cloudinary.uploader.destroy(user.filename, {
+          resource_type: "image",
+        });
+      }
+      const result = await cloudinary.uploader.upload(filename, {
+        folder: "user",
+        resource_type: "image",
+      });
+      user.filename = result.public_id;
+      user.image_url = result.secure_url;
+      await user.save();
+      return user;
+    } catch (error) {
+      throw new BadRequestError(error);
+    }
   };
 }
 

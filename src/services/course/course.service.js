@@ -31,7 +31,6 @@ class CourseService {
 
       return createCourse;
     } catch (error) {
-      console.log("🚀 ~ error:", error);
       throw new BadRequestError("Failed to create course", error);
     }
   };
@@ -126,7 +125,6 @@ class CourseService {
       await course.save();
       return course;
     } catch (error) {
-      console.log("🚀 ~ error:", error);
       throw new BadRequestError("Course is failed", error);
     }
   };
@@ -180,8 +178,6 @@ class CourseService {
       if (!course) throw new NotFoundError("Khóa học không tồn tại");
 
       const loggedInUser = await User.findById(userId);
-      console.log("🚀 ~ loggedInUser:", loggedInUser);
-      console.log("🚀 ~ course.teacher:", course.teacher);
 
       if (
         !(
@@ -501,7 +497,6 @@ class CourseService {
       course.notifications.push({ message });
       await course.save();
     } catch (error) {
-      console.log("🚀 ~ error:", error);
       throw new BadRequestError("Failed to create notification", error);
     }
   };
