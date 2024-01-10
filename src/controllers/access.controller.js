@@ -46,7 +46,6 @@ class AccessController {
       });
       return res.status(200).json(updatedUser);
     } catch (error) {
-      console.error(error);
       return res.status(500).json({ message: "Internal server error" });
     }
   };
@@ -58,7 +57,6 @@ class AccessController {
         metadata: await AccessService.getAllUser(),
       }).send(res);
     } catch (error) {
-      console.error(error);
       return res.status(500).json({ message: "Internal server error" });
     }
   };

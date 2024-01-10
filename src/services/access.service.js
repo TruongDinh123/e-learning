@@ -179,7 +179,6 @@ class AccessService {
 
       return user;
     } catch (error) {
-      console.error(error);
       throw error;
     }
   };

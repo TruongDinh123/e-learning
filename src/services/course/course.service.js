@@ -179,6 +179,8 @@ class CourseService {
 
       const loggedInUser = await User.findById(userId);
 
+      const teacherName = loggedInUser.lastName;
+
       if (
         !(
           loggedInUser._id.toString() === course.teacher.toString() ||
@@ -187,6 +189,9 @@ class CourseService {
       ) {
         throw new BadRequestError("Không thể thêm người dùng này vào khóa học");
       }
+
+      console.log("🚀 ~ loggedInUser", loggedInUser._id.toString());
+      console.log("🚀 ~ loggedIcourse.teachernUser", course.teacher.toString());
 
       if (user && user.status === "inactive") {
         user.status = "active";
@@ -216,7 +221,42 @@ class CourseService {
           from: "kimochi2033@gmail.com",
           to: email,
           subject: `Chào mừng bạn đến khóa học ${course.name}`,
-          text: `Chào mừng bạn đến khóa học. Tài khoản của bạn là: ${email}, mật khẩu của bạn là: ${password}`,
+          html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Chào mừng đến với 247learn.vn</title>
+                <style>
+                    body { font-family: Arial, sans-serif; }
+                    .container { width: 600px; margin: auto; }
+                    .header { background-color: #002C6A; color: white; padding: 10px; text-align: center; }
+                    .content { padding: 20px; }
+                    .footer { background-color: #f2f2f2; padding: 10px; text-align: center; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>Chào mừng đến với 247learn.vn</h1>
+                    </div>
+                    <div class="content">
+                        <p>Xin chào,</p>
+                        <p>Chúng tôi rất vui mừng thông báo rằng bạn đã được đăng ký thành công vào khoá học <strong>${course.name}</strong> do giáo viên <strong>${teacherName}</strong> hướng dẫn.</p>
+                        <p>Dưới đây là thông tin tài khoản của bạn để truy cập vào hệ thống:</p>
+                        <ul>
+                            <li>Tài khoản: <strong>${email}</strong></li>
+                            <li>Mật khẩu: <strong>${password}</strong></li>
+                        </ul>
+                        <p>Vui lòng không chia sẻ thông tin tài khoản của bạn với người khác. Bạn có thể đổi mật khẩu sau khi đăng nhập lần đầu.</p>
+                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">247learn.vn@gmail.com</a>.</p>
+                    </div>
+                    <div class="footer">
+                        <p>&copy; 2024 247learn.vn. All rights reserved.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+          `,
         };
 
         transporter.sendMail(mailOptions, function (error, info) {

@@ -146,7 +146,6 @@ class QuizService {
 
       return savedQuiz;
     } catch (error) {
-      console.error(error);
       throw new BadRequestError("Failed to create quiz", error);
     }
   };
@@ -587,7 +586,6 @@ class QuizService {
 
       return quizzes;
     } catch (error) {
-      console.error(error);
       throw new BadRequestError(
         "Failed to get quizzes by student and course",
         error
