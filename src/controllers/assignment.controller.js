@@ -84,7 +84,7 @@ class AssignmentController {
         ),
       }).send(res);
     } catch (error) {
-      console.log(error);
+      
     }
   };
 }

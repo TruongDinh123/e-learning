@@ -178,7 +178,7 @@ class QuizController {
         metadata: await QuizService.submitQuiz(quizId, userId, answer),
       }).send(res);
     } catch (error) {
-      console.log(error);
+      
     }
   };
 
@@ -197,7 +197,7 @@ class QuizController {
         }),
       }).send(res);
     } catch (error) {
-      console.log(error);
+      
     }
   };
 
@@ -210,7 +210,7 @@ class QuizController {
         metadata: await QuizService.getScoreByUser(userId),
       }).send(res);
     } catch (error) {
-      console.log(error);
+      
     }
   };
 
@@ -223,7 +223,7 @@ class QuizController {
         metadata: await QuizService.getScoreByUserId(userId, quizId),
       }).send(res);
     } catch (error) {
-      console.log(error);
+      
     }
   };
 
@@ -236,7 +236,7 @@ class QuizController {
         metadata: await QuizService.getScoreByQuizId(quizId),
       }).send(res);
     } catch (error) {
-      console.log(error);
+      
     }
   };
 
@@ -249,7 +249,7 @@ class QuizController {
         metadata: await QuizService.updateScore(scoresToUpdate),
       }).send(res);
     } catch (error) {
-      console.log(error);
+      
     }
   };
 }

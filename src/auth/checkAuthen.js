@@ -27,7 +27,7 @@ const apiKey = async (req, res, next) => {
     req.objKey = objKey;
     return next();
   } catch (error) {
-    console.log(error);
+    
     return res.status(500).json({
       message: "Internal Server Error",
     });
@@ -56,7 +56,7 @@ const permission = (roles) => {
 
       return next();
     } catch (error) {
-      console.log(error);
+      
       return res.status(500).json({
         message: "Internal Server Error",
       });

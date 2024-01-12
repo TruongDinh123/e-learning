@@ -445,7 +445,7 @@ class QuizService {
         return userScore;
       }
     } catch (error) {
-      console.log(error);
+      
     }
   };
 
@@ -503,7 +503,7 @@ class QuizService {
         return userScore;
       }
     } catch (error) {
-      console.log(error);
+      
     }
   };
 

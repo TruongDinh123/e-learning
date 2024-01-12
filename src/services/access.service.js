@@ -221,14 +221,25 @@ class AccessService {
     }
   };
 
-  static updateUser = async ({ id, lastName, email, firstName }) => {
+  static updateUser = async ({
+    id,
+    lastName,
+    email,
+    firstName,
+    dob,
+    phoneNumber,
+    gender,
+  }) => {
     const user = await User.findById(id);
     if (!user) {
       throw new NotFoundError("User not found");
     }
     user.lastName = lastName;
-    user.email = email;
     user.firstName = firstName;
+    user.email = email;
+    user.dob = dob;
+    user.phoneNumber = phoneNumber;
+    user.gender = gender;
     const updateUser = await user.save();
     return updateUser;
   };

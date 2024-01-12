@@ -79,7 +79,14 @@ class AccessController {
 
   updateUser = async (req, res, next) => {
     const { id } = req.params;
-    const { lastName, email, firstName } = req.body;
+    const {
+      lastName,
+      email,
+      firstName,
+      dob,
+      phoneNumber,
+      gender,
+    } = req.body;
 
     new SuccessReponse({
       message: "Update user success",
@@ -88,6 +95,9 @@ class AccessController {
         lastName,
         email,
         firstName,
+        dob,
+        phoneNumber,
+        gender
       }),
     }).send(res);
   };

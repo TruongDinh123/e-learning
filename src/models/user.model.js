@@ -11,6 +11,20 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    dob: {
+      type: Date,
+      required: false,
+    },
+    phoneNumber: {
+      type: String,
+      required: false,
+    },
+    gender: {
+      type: String,
+      enum: ["Nam", "Nữ", "Khác"],
+      required: false,
+    },
+
     filename: {
       type: String,
     },
