@@ -5,7 +5,7 @@ const { CourseService } = require("../services/course/course.service");
 
 class CourseController {
   createCourse = async (req, res, next) => {
-    const { name, title } = req.body;
+    const { name, title, categoryId } = req.body;
     const userId = req.headers["x-client-id"];
     new Created({
       message: "Course Created!",
@@ -13,6 +13,7 @@ class CourseController {
         name,
         title,
         userId,
+        categoryId,
       }),
       options: {
         limit: 10,
@@ -66,16 +67,10 @@ class CourseController {
 
   deleteCourse = async (req, res, next) => {
     const { id } = req.params;
-    try {
-      const deleteCourse = await CourseService.deleteCourse({ id });
-
-      return res.status(200).json({
-        status: true,
-        message: "Course Deleted!",
-      });
-    } catch (error) {
-      throw new Error(error);
-    }
+    return res.status(200).json({
+      message: "Course Deleted!",
+      metadata: await CourseService.deleteCourse(id),
+    });
   };
 
   addStudentToCourse = async (req, res, next) => {
@@ -88,7 +83,7 @@ class CourseController {
       metadata: await CourseService.addStudentToCours({
         courseId,
         email,
-        userId
+        userId,
       }),
     }).send(res);
   };

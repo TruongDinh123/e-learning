@@ -7,6 +7,8 @@ const nodemailer = require("nodemailer");
 const userLessonModel = require("../../models/userLesson.model");
 const validateMongoDbId = require("../../config/validateMongoDbId");
 const { v2: cloudinary } = require("cloudinary");
+const categoryModel = require("../../models/category.model");
+const { convertToObjectIdMongodb } = require("../../utils");
 
 cloudinary.config({
   cloud_name: "dvsvd87sm",
@@ -15,11 +17,12 @@ cloudinary.config({
 });
 
 class CourseService {
-  static createCourse = async ({ name, title, userId }) => {
+  static createCourse = async ({ name, title, userId, categoryId }) => {
     try {
       const course = await courseModel.create({
         name,
         title,
+        category: categoryId,
       });
       const createCourse = course.save();
 
@@ -28,6 +31,12 @@ class CourseService {
 
       user.courses.push(course._id);
       await user.save();
+
+      const category = await categoryModel.findById(categoryId);
+      if (!category) throw new NotFoundError("category not found");
+
+      category.courses.push(course._id);
+      await category.save();
 
       return createCourse;
     } catch (error) {
@@ -153,18 +162,33 @@ class CourseService {
     }
   };
 
-  static deleteCourse = async ({ id }) => {
+  static deleteCourse = async (id) => {
     try {
       await lessonModel.deleteMany({ courseId: id });
 
-      const course = await courseModel.findByIdAndDelete(id);
-      const publicId = course.filename;
-      const result = await cloudinary.uploader.destroy(publicId, {
-        resource_type: "image",
-      });
-      console.log("Deleted video from Cloudinary:", result);
-
+      const course = await courseModel.findById(id);
       if (!course) throw new NotFoundError("Course not found");
+
+      if (course.filename) {
+        const publicId = course.filename;
+        await cloudinary.uploader.destroy(publicId, {
+          resource_type: "image",
+        });
+      }
+      // Find the category that contains the course
+      const category = await categoryModel.findOne({
+        courses: convertToObjectIdMongodb(id),
+      });
+
+      if (category) {
+        // Remove the course from the category's course list
+        category.courses = category.courses.filter((courseId) => {
+          return courseId.toString() !== id.toString();
+        });
+        await category.save();
+      }
+
+      await courseModel.findByIdAndDelete(id);
     } catch (error) {
       throw new BadRequestError(error);
     }
@@ -179,7 +203,7 @@ class CourseService {
 
       const loggedInUser = await User.findById(userId);
 
-      const teacherName = loggedInUser.lastName;
+      const teacherName = loggedInUser.firstName;
 
       if (
         !(
@@ -189,9 +213,6 @@ class CourseService {
       ) {
         throw new BadRequestError("Không thể thêm người dùng này vào khóa học");
       }
-
-      console.log("🚀 ~ loggedInUser", loggedInUser._id.toString());
-      console.log("🚀 ~ loggedIcourse.teachernUser", course.teacher.toString());
 
       if (user && user.status === "inactive") {
         user.status = "active";
@@ -204,7 +225,7 @@ class CourseService {
 
         user = await User.create({
           email,
-          lastName: "User" + Math.floor(Math.random() * 10000),
+          firstName: "User" + Math.floor(Math.random() * 10000),
           password: passwordHash,
           roles: ["Trainee"],
         });
@@ -261,7 +282,6 @@ class CourseService {
 
         transporter.sendMail(mailOptions, function (error, info) {
           if (error) {
-            
             throw new BadRequestError("Failed to send email", error);
           } else {
             console.log("Email sent: " + info.response);
@@ -311,7 +331,7 @@ class CourseService {
 
         user = await User.create({
           email,
-          lastName: "User" + Math.floor(Math.random() * 10000),
+          firstName: "User" + Math.floor(Math.random() * 10000),
           password: passwordHash,
           roles: ["Mentor"],
           courses: [courseId],
@@ -369,7 +389,6 @@ class CourseService {
 
         transporter.sendMail(mailOptions, function (error, info) {
           if (error) {
-            
             throw new BadRequestError("Failed to send email", error);
           } else {
             console.log("Email sent: " + info.response);
@@ -422,7 +441,7 @@ class CourseService {
 
         user = await User.create({
           email,
-          lastName: "User" + Math.floor(Math.random() * 10000),
+          firstName: "User" + Math.floor(Math.random() * 10000),
           password: passwordHash,
           roles: ["Mentor"],
           courses: [courseId],
@@ -445,7 +464,6 @@ class CourseService {
 
         transporter.sendMail(mailOptions, function (error, info) {
           if (error) {
-            
             throw new BadRequestError("Failed to send email", error);
           } else {
             console.log("Email sent: " + info.response);
@@ -562,7 +580,6 @@ class CourseService {
 
       transporter.sendMail(mailOptions, function (error, info) {
         if (error) {
-          
           throw new BadRequestError("Failed to send email", error);
         } else {
           console.log("Email sent: " + info.response);
