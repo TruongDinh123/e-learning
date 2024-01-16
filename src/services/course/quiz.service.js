@@ -444,9 +444,7 @@ class QuizService {
 
         return userScore;
       }
-    } catch (error) {
-      
-    }
+    } catch (error) {}
   };
 
   static uploadFileUserSubmit = async ({ filename, quizId, userId }) => {
@@ -502,9 +500,7 @@ class QuizService {
         await userScore.save();
         return userScore;
       }
-    } catch (error) {
-      
-    }
+    } catch (error) {}
   };
 
   static getScoreByUser = async (userId) => {
@@ -558,39 +554,28 @@ class QuizService {
   };
 
   static getQuizzesByStudentAndCourse = async (studentId, courseId) => {
-    try {
-      // Validate studentId and courseId
-      validateMongoDbId(studentId);
-      validateMongoDbId(courseId);
+    // Validate studentId and courseId
+    validateMongoDbId(studentId);
+    validateMongoDbId(courseId);
 
-      // Find the student
-      const student = await userModel.findById(studentId);
-      if (!student) throw new NotFoundError("Student not found");
+    // Find the student
+    const student = await userModel.findById(studentId);
+    if (!student) throw new NotFoundError("Student not found");
 
-      // Find the course
-      const course = await courseModel.findById(courseId);
-      if (!course) throw new NotFoundError("Course not found");
+    // Find the course
+    const course = await courseModel.findById(courseId);
+    if (!course) throw new NotFoundError("Course not found");
 
-      // Find quizzes that belong to the course and assigned to the student
-      const quizzes = await Quiz.find({
-        _id: { $in: student.quizzes },
-        courseIds: courseId,
-      })
-        .populate("questions")
-        .lean();
+    // Find quizzes that belong to the course and assigned to the student
+    const quizzes = await Quiz.find({
+      _id: { $in: student.quizzes },
+      courseIds: courseId,
+    })
+      .populate("questions")
+      .lean();
 
-      if (!quizzes.length)
-        throw new NotFoundError(
-          "No quizzes found for the student in this course"
-        );
 
-      return quizzes;
-    } catch (error) {
-      throw new BadRequestError(
-        "Failed to get quizzes by student and course",
-        error
-      );
-    }
+    return quizzes.length ? quizzes : [];
   };
 
   static updateScore = async (scoresToUpdate) => {
