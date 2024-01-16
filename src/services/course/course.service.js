@@ -145,14 +145,22 @@ class CourseService {
     return course;
   };
 
-  static updateCourse = async ({ id, name, title }) => {
+  static updateCourse = async ({ id, name, title, categoryId }) => {
     try {
       const course = await courseModel.findById(id);
 
       if (!course) throw new BadRequestError("Course not found");
 
+      const findCategory = await categoryModel.findById(categoryId);
+
+      if (findCategory) {
+        findCategory.courses.push(id);
+        await findCategory.save();
+      }
+
       course.name = name;
       course.title = title;
+      course.category = categoryId;
 
       const updateCourse = await course.save();
 

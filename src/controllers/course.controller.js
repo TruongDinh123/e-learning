@@ -45,11 +45,11 @@ class CourseController {
 
   updateCourse = async (req, res, next) => {
     const { id } = req.params;
-    const { name, title } = req.body;
+    const { name, title, categoryId } = req.body;
 
     return res
       .status(200)
-      .json(await CourseService.updateCourse({ id, name, title }));
+      .json(await CourseService.updateCourse({ id, name, title, categoryId }));
   };
 
   getACourse = async (req, res, next) => {
