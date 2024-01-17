@@ -9,6 +9,7 @@ const findByEmail = async ({
     email: 1,
     password: 1,
     lastName: 1,
+    firstName: 1,
     roles: 1,
     status: 1,
   },
@@ -44,7 +45,6 @@ const sendEmail = async ({ to, subject, text }) => {
 
   transporter.sendMail(mailOptions, function (error, info) {
     if (error) {
-      
     } else {
       console.log("Email sent: " + info.response);
     }

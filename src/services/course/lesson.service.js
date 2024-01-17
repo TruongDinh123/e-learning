@@ -34,7 +34,7 @@ class LessonService {
     }
   };
 
-  static getAllCourseLeesion = async ({
+  static getAllCourseLeesons = async ({
     courseId,
     userId,
     select = {
@@ -55,7 +55,11 @@ class LessonService {
       //   throw new BadRequestError("User does not have this course");
       // }
 
-      if (!user.roles.includes("Admin") && !user.roles.includes("Mentor") && !user.courses.includes(courseId)) {
+      if (
+        !user.roles.includes("Admin") &&
+        !user.roles.includes("Mentor") &&
+        !user.courses.includes(courseId)
+      ) {
         throw new BadRequestError("User does not have this course");
       }
 
@@ -64,6 +68,36 @@ class LessonService {
       if (!findCourse) {
         throw new NotFoundError("Course not found");
       }
+      const lessons = await courseModel
+        .find()
+        .where({ _id: findCourse })
+        .select(select)
+        .populate("lessons")
+        .lean();
+
+      return lessons;
+    } catch (error) {
+      throw new BadRequestError("Failed to get all lesson", error);
+    }
+  };
+
+  static getAllCourseLeesonForStudents = async ({
+    courseId,
+    select = {
+      name: 1,
+      title: 1,
+      lessons: 1,
+    },
+  }) => {
+    validateMongoDbId(courseId);
+    try {
+
+      const findCourse = await courseModel.findById(courseId);
+
+      if (!findCourse) {
+        throw new NotFoundError("Course not found");
+      }
+
       const lessons = await courseModel
         .find()
         .where({ _id: findCourse })

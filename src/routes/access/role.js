@@ -1,11 +1,12 @@
 "use strict";
 
 const express = require("express");
-const { permission, asyncHandler } = require("../../auth/checkAuthen");
+const { permission, asyncHandler, apiKey } = require("../../auth/checkAuthen");
 const { authentication } = require("../../auth/authUtils");
 const roleController = require("../../controllers/role.controller");
 const router = express.Router();
 
+router.use(apiKey);
 router.use(authentication);
 
 router.post(

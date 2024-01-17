@@ -1,10 +1,14 @@
 "use strict";
 
 const express = require("express");
-const { permission, asyncHandler } = require("../../auth/checkAuthen");
+const { permission, asyncHandler, apiKey } = require("../../auth/checkAuthen");
 const courseController = require("../../controllers/course.controller");
 const { uploadMiddleware } = require("../../middlewares/upload");
+const { authentication } = require("../../auth/authUtils");
 const router = express.Router();
+
+router.use(apiKey);
+router.use(authentication);
 
 //courses
 router.post(
@@ -90,12 +94,6 @@ router.post(
   "/e-learning/priavte-course/:courseId",
   permission(["Mentor", "Admin"]),
   asyncHandler(courseController.buttonPrivateCourse)
-);
-
-router.get(
-  "/e-learning/public-course",
-  permission(["Mentor", "Admin", "Trainee"]),
-  asyncHandler(courseController.getCoursePublic)
 );
 
 router.post(

@@ -5,12 +5,40 @@ const accessController = require("../../controllers/access.controller");
 const { permission, asyncHandler, apiKey } = require("../../auth/checkAuthen");
 const { authentication } = require("../../auth/authUtils");
 const { uploadMiddleware } = require("../../middlewares/upload");
+const lessonController = require("../../controllers/lesson.controller");
+const categoryController = require("../../controllers/category.controller");
+const courseController = require("../../controllers/course.controller");
 const router = express.Router();
 
 //signUp
 router.post("/e-learning/signup", asyncHandler(accessController.signUp));
 
-router.post("/e-learning/login", apiKey, asyncHandler(accessController.login));
+//Các API không yêu cầu xác thực
+
+router.get(
+  "/e-learning/lessons/:courseId",
+  asyncHandler(lessonController.getAllCourseLeesonForStudents)
+);
+
+router.get(
+  "/e-learning/lesson/:lessonId",
+  asyncHandler(lessonController.getALession)
+);
+
+router.get(
+  "/e-learning/get-all-categories",
+  asyncHandler(categoryController.getAllCategoryAndSubCourses)
+);
+
+router.get(
+  "/e-learning/public-course",
+  asyncHandler(courseController.getCoursePublic)
+);
+
+/////////
+router.use(apiKey);
+
+router.post("/e-learning/login", asyncHandler(accessController.login));
 
 //authentication//
 router.use(authentication);

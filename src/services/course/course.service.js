@@ -139,9 +139,11 @@ class CourseService {
   };
 
   static getCoursePublic = async () => {
-    const course = await courseModel.find({
-      showCourse: true,
-    });
+    const course = await courseModel
+      .find({
+        showCourse: true,
+      })
+      .populate("category", "name");
     return course;
   };
 

@@ -23,20 +23,35 @@ class LessonController {
     }
   };
 
-  getAllCourseLeesion = async (req, res, next) => {
+  getAllCourseLeesons = async (req, res, next) => {
     try {
       const { courseId } = req.params;
       const userId = req.headers["x-client-id"];
 
       new SuccessReponse({
         message: "Get all lesson successfully!",
-        metadata: await LessonService.getAllCourseLeesion({ courseId, userId }),
+        metadata: await LessonService.getAllCourseLeesons({ courseId, userId }),
       }).send(res);
     } catch (error) {
       throw new BadRequestError(error);
     }
   };
-  
+
+  getAllCourseLeesonForStudents = async (req, res, next) => {
+    try {
+      const { courseId } = req.params;
+
+      new SuccessReponse({
+        message: "Get all lesson successfully!",
+        metadata: await LessonService.getAllCourseLeesonForStudents({
+          courseId,
+        }),
+      }).send(res);
+    } catch (error) {
+      throw new BadRequestError(error);
+    }
+  };
+
   getALession = async (req, res, next) => {
     const { lessonId } = req.params;
 
@@ -88,7 +103,7 @@ class LessonController {
         userId,
       }),
     }).send(res);
-  }
+  };
 }
 
 module.exports = new LessonController();

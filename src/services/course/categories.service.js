@@ -54,7 +54,7 @@ class CategoryService {
       .find()
       .populate({
         path: "courses",
-        select: "name title image_url teacher lessons -_id",
+        select: "name title image_url teacher lessons showCourse _id",
       })
       .lean();
     return categories;

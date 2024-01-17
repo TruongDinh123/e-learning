@@ -1,19 +1,23 @@
 "use strict";
 const express = require("express");
-const { permission, asyncHandler } = require("../../auth/checkAuthen");
+const { permission, asyncHandler, apiKey } = require("../../auth/checkAuthen");
 const categoryController = require("../../controllers/category.controller");
+const { authentication } = require("../../auth/authUtils");
 const router = express.Router();
 
-router.post(
-  "/e-learning/create-category",
-  permission(["Mentor", "Admin"]),
-  asyncHandler(categoryController.createCategoryAndSubCourse)
-);
+router.use(apiKey);
+router.use(authentication);
 
 router.get(
   "/e-learning/get-all-categories/:categoryId",
   permission(["Mentor", "Admin", "Trainee"]),
   asyncHandler(categoryController.getAllCategoryAndSubCoursesById)
+);
+
+router.post(
+  "/e-learning/create-category",
+  permission(["Mentor", "Admin"]),
+  asyncHandler(categoryController.createCategoryAndSubCourse)
 );
 
 router.delete(
@@ -26,12 +30,6 @@ router.put(
   "/e-learning/update-category/:categoryId",
   permission(["Mentor", "Admin"]),
   asyncHandler(categoryController.updateCategory)
-);
-
-router.get(
-  "/e-learning/get-all-categories",
-  permission(["Mentor", "Admin", "Trainee"]),
-  asyncHandler(categoryController.getAllCategoryAndSubCourses)
 );
 
 router.get(

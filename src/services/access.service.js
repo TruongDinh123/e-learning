@@ -58,7 +58,7 @@ class AccessService {
 
     return {
       account: getInfoData({
-        fileds: ["_id", "email", "lastName", "roles"],
+        fileds: ["_id", "firstName", "email", "lastName", "roles"],
         object: foundAccount,
       }),
       tokens,

@@ -1,10 +1,14 @@
 "use strict";
 
 const express = require("express");
-const { permission, asyncHandler } = require("../../auth/checkAuthen");
+const { permission, asyncHandler, apiKey } = require("../../auth/checkAuthen");
 const quizController = require("../../controllers/quiz.controller");
 const { uploadMiddleware } = require("../../middlewares/upload");
+const { authentication } = require("../../auth/authUtils");
 const router = express.Router();
+
+router.use(apiKey);
+router.use(authentication);
 
 router.post(
   "/e-learning/quiz",
@@ -122,6 +126,5 @@ router.put(
   permission(["Admin", "Mentor"]),
   asyncHandler(quizController.updateQuizTemplate)
 );
-
 
 module.exports = router;

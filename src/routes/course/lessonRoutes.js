@@ -1,11 +1,15 @@
 "use strict";
 
 const express = require("express");
-const { permission, asyncHandler } = require("../../auth/checkAuthen");
+const { permission, asyncHandler, apiKey } = require("../../auth/checkAuthen");
 const lessonController = require("../../controllers/lesson.controller");
 const VideoLessonController = require("../../controllers/video-lesson.controller");
 const { uploadMiddleware } = require("../../middlewares/upload");
+const { authentication } = require("../../auth/authUtils");
 const router = express.Router();
+
+router.use(apiKey);
+router.use(authentication);
 
 //lesson
 router.post(
@@ -14,28 +18,22 @@ router.post(
   asyncHandler(lessonController.createLesson)
 );
 
+router.get(
+  "/e-learning/lessons/:courseId",
+  permission(["Mentor", "Admin", "Trainee"]),
+  asyncHandler(lessonController.getAllCourseLeesons)
+);
+
 router.delete(
   "/e-learning/lesson/:courseId/:lessonId",
   permission(["Mentor", "Admin"]),
   asyncHandler(lessonController.deleteALesson)
 );
 
-router.get(
-  "/e-learning/lessons/:courseId",
-  permission(["Mentor", "Admin", "Trainee"]),
-  asyncHandler(lessonController.getAllCourseLeesion)
-);
-
 router.put(
   "/e-learning/lesson/:lessonId",
   permission(["Mentor", "Admin"]),
   asyncHandler(lessonController.updateLesson)
-);
-
-router.get(
-  "/e-learning/lesson/:lessonId",
-  permission(["Mentor", "Admin", "Trainee"]),
-  asyncHandler(lessonController.getALession)
 );
 
 router.put(
