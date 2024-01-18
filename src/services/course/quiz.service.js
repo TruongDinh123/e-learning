@@ -350,17 +350,21 @@ class QuizService {
   static deleteQuiz = async ({ quizId }) => {
     try {
       validateMongoDbId(quizId);
-      // Find the quiz first to get the lessonId
+      
       const quiz = await Quiz.findById(quizId);
       if (!quiz) throw new NotFoundError("Quiz not found");
 
-      // Use the lessonId from the quiz to update the lesson
-      const findCourse = await courseModel.findByIdAndUpdate(quiz.courseId, {
-        quizzes: null,
-      });
+      // const findCourse = await courseModel.findByIdAndUpdate(quiz.quizId, {
+      //   quizzes: null,
+      // });
 
-      const findQuiz = await Quiz.findByIdAndDelete(quizId);
-      return findQuiz;
+      await courseModel.updateMany(
+        { quizzes: quizId },
+        { $pull: { quizzes: quizId } }
+      );
+
+      const deletedQuiz = await Quiz.findByIdAndDelete(quizId);
+      return deletedQuiz;
     } catch (error) {
       throw new BadRequestError("Failed to delete quiz", error);
     }

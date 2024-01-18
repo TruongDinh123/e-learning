@@ -76,7 +76,7 @@ class CourseService {
     try {
       const courses = await courseModel
         .find()
-        .populate("students", "lastName")
+        .populate("students", "firstName lastName")
         .populate("lessons");
 
       if (!courses) throw new NotFoundError("Courses not found");
