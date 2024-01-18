@@ -1,4 +1,64 @@
-Step 1: git clone https://github.com/95ideal/95elearning.git
-step 2: git connect database mongodb compass mongodb:127.0.0.1:27017/elearning_dev
-step 3: git install
-step 4: npm run dev
+# 95elearning
+
+## Mô tả nghiệp vụ E-learning
+### Các chức năng chính 
+
+Quản lý người dùng:
+ - Administrator (người quản trị) có quyền CRUD (Tạo, Đọc, Cập nhật, Xóa) người dùng với hai vai trò là học viên và giảng viên.
+ - Administrator cũng có quyền kích hoạt (active) và hủy kích hoạt (inactive) người dùng (học viên và giảng viên).
+
+Quản lý video:
+ - Các video được quản lý theo CRUD (Tạo, Đọc, Cập nhật, Xóa).
+ - Mô tả video: mỗi video sẽ có phần mô tả chi tiết về nội dung.
+ - Quản lý theo category: mỗi video sẽ thuộc về một category riêng biệt, và các category này cũng được quản lý theo CRUD.
+
+Hệ thống điểm:
+ - Điểm sẽ được tính dựa trên việc xem video, thực hiện quiz, và có thể được cộng thêm bởi giảng viên.
+
+Quản lý quiz và bài tập:
+ - Có chức năng thêm quiz cho từng video hoặc từng category video.
+ - Có chức năng tạo bài tập tự luận và chỗ để người dùng submit bài tập.
+
+Download video
+ - Không được download video, kể cả inspect lên để copy link tải
+
+
+### Các màn hình (screen) dự kiến
+
+Admin (Người quản trị):
+ - Màn hình quản lý người dùng: Admin có thể thực hiện việc tạo mới, xem, cập nhật, xóa, kích hoạt/tắt kích hoạt người dùng.
+    - Có loai user: Trainee (học viên) và mentor (giảng viên)
+ - Màn hình quản lý video: Admin có thể thêm, xóa, cập nhật video.
+ - Màn hình phân quyền video: Admin có thể chỉ định học viên nào được phép xem video nào hoặc category nào.
+
+Giảng viên:
+ - Màn hình quản lý video: Giảng viên có thể thêm, xóa, cập nhật video.
+ - Màn hình quản lý điểm số: Giảng viên có thể xem, cập nhật điểm số của học viên.
+ - Màn hình quản lý bài quiz: Giảng viên có thể tạo, xem, cập nhật, xóa bài quiz.
+ - Màn hình quản lý bài tập: Giảng viên có thể tạo, xem, cập nhật, xóa bài tập.
+ - Màn hình phân quyền video: Giảng viên có thể chỉ định học viên nào được phép xem video nào hoặc category nào.
+
+Học viên:
+ - Màn hình danh sách video: Học viên có thể xem danh sách tất cả video mà họ có quyền truy cập.
+ - Màn hình chi tiết video: Học viên có thể xem chi tiết video, bao gồm nội dung video, thông tin về video. 
+   - Tại đây, có số xử lý: không cho học viên tắt browser, nếu tua nhanh video sẽ hiện warning, không xem hết video sẽ không thể làm quiz, bài tập (tham khảo code xử lý phần này trong source)
+ - Màn hình bài quiz: Học viên có thể xem và làm bài quiz.
+ - Màn hình danh sách bài quiz đã làm: Học viên có thể xem lại các bài quiz đã làm.
+ - Màn hình danh sách điểm số: Học viên có thể xem danh sách điểm số của mình theo từng category.
+
+
+### Setting up the development environment
+ - Install Node.js and npm (Node Package Manager) to manage dependencies.
+ - Install and configure an appropriate Integrated Development Environment (IDE), such as Visual Studio Code.
+
+### Setting up the project
+ - Create a new Node.js project and install the necessary dependencies. For a web application, you will need packages like Express.js (a framework for Node.js), Mongoose (for connecting MongoDB with Node.js), passport (for user authentication), etc.
+ - Create a new frontend project using Bootstrap. You can use existing templates or create a design using dark blue and white.
+
+### Developing the application
+ - Build the directory structure and files for the Node.js application and the frontend application.
+ - Construct models for users, videos, categories, quizzes, assignments, and scores.
+ - Develop routes and controllers for interacting with the models.
+ - Create views using Bootstrap, including the screens described above.
+ - Establish user authentication and authorization.
+
