@@ -104,13 +104,13 @@ class QuizService {
         const transporter = nodemailer.createTransport({
           service: "gmail",
           auth: {
-            user: "kimochi2033@gmail.com",
-            pass: "fmthngflsjewmpyl",
+            user: "247learn.vn@gmail.com",
+            pass: "glpiggogzyxtfhod",
           },
         });
 
         const mailOptions = {
-          from: "kimochi2033@gmail.com",
+          from: "247learn.vn@gmail.com",
           to: student.email,
           subject: "Bài tập mới",
           text: `Một bài tập ${name} đã được giao cho bạn. hãy hoàn thành trước ${submissionTime}`,

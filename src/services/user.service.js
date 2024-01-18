@@ -31,13 +31,13 @@ const sendEmail = async ({ to, subject, text }) => {
   let transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "kimochi2033@gmail.com",
-      pass: "fmthngflsjewmpyl",
+      user: "247learn.vn@gmail.com",
+      pass: "glpiggogzyxtfhod",
     },
   });
 
   let mailOptions = {
-    from: "kimochi2033@gmail.com",
+    from: "247learn.vn@gmail.com",
     to,
     subject,
     text,

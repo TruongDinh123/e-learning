@@ -153,9 +153,18 @@ class CourseService {
 
       if (!course) throw new BadRequestError("Course not found");
 
-      const findCategory = await categoryModel.findById(categoryId);
+      // Loại bỏ khóa học khỏi danh mục cũ nếu có
+      if (course.category && course.category.toString() !== categoryId) {
+        const oldCategory = await categoryModel.findById(course.category);
+        if (oldCategory) {
+          oldCategory.courses.pull(id); // Sử dụng pull để loại bỏ id khỏi mảng
+          await oldCategory.save();
+        }
+      }
 
-      if (findCategory) {
+      // Thêm khóa học vào danh mục mới nếu chưa tồn tại
+      const findCategory = await categoryModel.findById(categoryId);
+      if (findCategory && !findCategory.courses.includes(id)) {
         findCategory.courses.push(id);
         await findCategory.save();
       }
@@ -243,13 +252,13 @@ class CourseService {
         const transporter = nodemailer.createTransport({
           service: "gmail",
           auth: {
-            user: "kimochi2033@gmail.com",
-            pass: "fmthngflsjewmpyl",
+            user: "247learn.vn@gmail.com",
+            pass: "glpiggogzyxtfhod",
           },
         });
 
         const mailOptions = {
-          from: "kimochi2033@gmail.com",
+          from: "247learn.vn@gmail.com",
           to: email,
           subject: `Chào mừng bạn đến khóa học ${course.name}`,
           html: `
@@ -301,13 +310,13 @@ class CourseService {
         const transporter = nodemailer.createTransport({
           service: "gmail",
           auth: {
-            user: "kimochi2033@gmail.com",
-            pass: "fmthngflsjewmpyl",
+            user: "247learn.vn@gmail.com",
+            pass: "glpiggogzyxtfhod",
           },
         });
 
         const mailOptions = {
-          from: "kimochi2033@gmail.com",
+          from: "247learn.vn@gmail.com",
           to: email,
           subject: `Chào mừng bạn đến khóa học ${course.name}`,
           html: `
@@ -404,13 +413,13 @@ class CourseService {
         const transporter = nodemailer.createTransport({
           service: "gmail",
           auth: {
-            user: "kimochi2033@gmail.com",
-            pass: "fmthngflsjewmpyl",
+            user: "247learn.vn@gmail.com",
+            pass: "glpiggogzyxtfhod",
           },
         });
 
         const mailOptions = {
-          from: "kimochi2033@gmail.com",
+          from: "247learn.vn@gmail.com",
           to: email,
           subject: `Chào mừng bạn đến khóa học ${course.name}`,
           html: `
@@ -462,13 +471,13 @@ class CourseService {
         const transporter = nodemailer.createTransport({
           service: "gmail",
           auth: {
-            user: "kimochi2033@gmail.com",
-            pass: "fmthngflsjewmpyl",
+            user: "247learn.vn@gmail.com",
+            pass: "glpiggogzyxtfhod",
           },
         });
 
         const mailOptions = {
-          from: "kimochi2033@gmail.com",
+          from: "247learn.vn@gmail.com",
           to: email,
           subject: `Chào mừng bạn đến khóa học ${course.name}`,
           html: `
@@ -568,13 +577,13 @@ class CourseService {
         const transporter = nodemailer.createTransport({
           service: "gmail",
           auth: {
-            user: "kimochi2033@gmail.com",
-            pass: "fmthngflsjewmpyl",
+            user: "247learn.vn@gmail.com",
+            pass: "glpiggogzyxtfhod",
           },
         });
 
         const mailOptions = {
-          from: "kimochi2033@gmail.com",
+          from: "247learn.vn@gmail.com",
           to: email,
           subject: `Chào mừng bạn đến khóa học ${course.name}`,
           text: `Chào mừng bạn đến khóa học. Tài khoản của bạn là: ${email}, mật khẩu của bạn là: ${password}`,
@@ -684,13 +693,13 @@ class CourseService {
       const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
-          user: "kimochi2033@gmail.com",
-          pass: "fmthngflsjewmpyl",
+          user: "247learn.vn@gmail.com",
+          pass: "glpiggogzyxtfhod",
         },
       });
 
       const mailOptions = {
-        from: "kimochi2033@gmail.com",
+        from: "247learn.vn@gmail.com",
         to: studentEmails,
         subject: `Có thông báo mới từ giáo viên`,
         text: message,
