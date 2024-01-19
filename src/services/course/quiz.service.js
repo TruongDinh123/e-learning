@@ -358,6 +358,8 @@ class QuizService {
       //   quizzes: null,
       // });
 
+      await Score.deleteMany({ quiz: quizId });
+
       await courseModel.updateMany(
         { quizzes: quizId },
         { $pull: { quizzes: quizId } }
