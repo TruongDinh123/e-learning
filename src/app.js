@@ -14,7 +14,7 @@ app.use(
   cors({
     // origin: [process.env.CLIENT_URL],
     // origin: "https://e-learning-fe.onrender.com",
-    origin: "http://116.118.51.237:3000",
+    origin: "https://116.118.51.237:3000",
     credentials: true,
     methods: "GET,POST,PUT,DELETE",
   })
