@@ -15,6 +15,7 @@ const { findByEmail } = require("./user.service");
 const Role = require("../models/role.model");
 const validateMongoDbId = require("../config/validateMongoDbId");
 const { v2: cloudinary } = require("cloudinary");
+const nodemailer = require("nodemailer");
 
 cloudinary.config({
   cloud_name: "dvsvd87sm",
@@ -147,6 +148,77 @@ class AccessService {
         message: error.message,
         status: "error",
       };
+    }
+  };
+
+  static forgotPasword = async ({ email }) => {
+    const foundEmail = findByEmail({ email });
+    if (!foundEmail) {
+      throw new NotFoundError("Email không đúng hoặc không tồn tại");
+    } else {
+      const newPassword = crypto.randomBytes(4).toString("hex");
+      const passwordHash = await bcrypt.hash(newPassword, 10);
+      const user = await User.findOneAndUpdate(
+        { email },
+        { password: passwordHash }
+      );
+      if (!user) {
+        throw new NotFoundError("Email không đúng hoặc không tồn tại");
+      } else {
+        const transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: "247learn.vn@gmail.com",
+            pass: "glpiggogzyxtfhod",
+          },
+        });
+
+        const mailOptions = {
+          from: "247learn.vn@gmail.com",
+          to: email,
+          subject: `Chào mừng bạn đến với 247learn.vn`,
+          html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Đổi mật khẩu</title>
+                <style>
+                    body { font-family: Arial, sans-serif; }
+                    .container { width: 600px; margin: auto; }
+                    .header { background-color: #002C6A; color: white; padding: 10px; text-align: center; }
+                    .content { padding: 20px; }
+                    .footer { background-color: #f2f2f2; padding: 10px; text-align: center; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>Chào mừng đến với 247learn.vn</h1>
+                    </div>
+                    <div class="content">
+                        <p>Xin chào,</p>
+                        <p>Mật khẩu mới của bạn là: <strong>${newPassword}</strong></p>
+                        <p>Vui lòng không chia sẻ thông tin tài khoản của bạn với người khác. Bạn có thể đổi mật khẩu sau khi đăng nhập.</p>
+                        <p>Trân trọng,</p>
+                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">247learn.vn@gmail.com</a>.</p>
+                    </div>
+                    <div class="footer">
+                        <p>&copy; 2024 247learn.vn. All rights reserved.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+          `,
+        };
+
+        transporter.sendMail(mailOptions, function (error, info) {
+          if (error) {
+            throw new BadRequestError("Failed to send email", error);
+          } else {
+            console.log("Email sent: " + info.response);
+          }
+        });
+      }
     }
   };
 

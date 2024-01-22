@@ -34,6 +34,14 @@ class AccessController {
     }).send(res);
   };
 
+  forgotPassword = async (req, res, next) => {
+    const { email } = req.body;
+    new SuccessReponse({
+      message: "Forgot password success",
+      metadata: await AccessService.forgotPasword({ email }),
+    }).send(res);
+  };
+
   updateUserRoles = async (req, res, next) => {
     try {
       const { userId, roleId } = req.body;
@@ -79,14 +87,7 @@ class AccessController {
 
   updateUser = async (req, res, next) => {
     const { id } = req.params;
-    const {
-      lastName,
-      email,
-      firstName,
-      dob,
-      phoneNumber,
-      gender,
-    } = req.body;
+    const { lastName, email, firstName, dob, phoneNumber, gender } = req.body;
 
     new SuccessReponse({
       message: "Update user success",
@@ -97,7 +98,7 @@ class AccessController {
         firstName,
         dob,
         phoneNumber,
-        gender
+        gender,
       }),
     }).send(res);
   };

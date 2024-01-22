@@ -40,6 +40,11 @@ router.use(apiKey);
 
 router.post("/e-learning/login", asyncHandler(accessController.login));
 
+router.post(
+  "/e-learning/forgot-password",
+  asyncHandler(accessController.forgotPassword)
+);
+
 //authentication//
 router.use(authentication);
 
