@@ -33,6 +33,159 @@ class CategoryService {
     await category.save();
   };
 
+  static addStudentToCours = async ({ courseId, email, userId }) => {
+    try {
+      let user = await User.findOne({ email });
+
+      const course = await courseModel.findById(courseId);
+      if (!course) throw new NotFoundError("Khóa học không tồn tại");
+
+      const loggedInUser = await User.findById(userId);
+
+      const teacherName = loggedInUser.firstName;
+
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: "247learn.vn@gmail.com",
+          pass: "glpiggogzyxtfhod",
+        },
+      });
+
+      const mailOptions = {
+        from: "247learn.vn@gmail.com",
+        to: email,
+        subject: `Chào mừng bạn đến khóa học ${course.name}`,
+        html: "",
+      };
+
+      if (
+        !loggedInUser?.roles?.includes("Admin") &&
+        loggedInUser._id.toString() !== course.teacher.toString()
+      ) {
+        throw new BadRequestError(
+          "Chỉ giáo viên của khóa học hoặc Admin mới có thể thêm người dùng vào khóa học"
+        );
+      }
+
+      let shouldSendEmail = false;
+      if (!user || user.status === "inactive") {
+        const password = Math.random().toString(36).slice(-8);
+        const passwordHash = await bcrypt.hash(password, 10);
+
+        if (!user) {
+          user = await User.create({
+            email,
+            firstName: "User" + Math.floor(Math.random() * 10000),
+            password: passwordHash,
+            roles: ["Trainee"],
+          });
+        } else {
+          user.password = passwordHash;
+          user.status = "active";
+          await user.save();
+        }
+
+        mailOptions.html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Chào mừng đến với 247learn.vn</title>
+          <style>
+            body { font-family: Arial, sans-serif; }
+            .container { width: 600px; margin: auto; }
+            .header { background-color: #002C6A; color: white; padding: 10px; text-align: center; }
+            .content { padding: 20px; }
+            .footer { background-color: #f2f2f2; padding: 10px; text-align: center; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Chào mừng đến với 247learn.vn</h1>
+            </div>
+            <div class="content">
+              <p>Xin chào,</p>
+              <p>Chúng tôi rất vui mừng thông báo rằng bạn đã được đăng ký thành công vào khoá học <strong>${course.name}</strong> do giáo viên <strong>${teacherName}</strong> hướng dẫn.</p>
+              <p>Dưới đây là thông tin tài khoản của bạn để truy cập vào hệ thống:</p>
+              <ul>
+                <li>Tài khoản: <strong>${email}</strong></li>
+                <li>Mật khẩu: <strong>${password}</strong></li>
+              </ul>
+              <p>Vui lòng không chia sẻ thông tin tài khoản của bạn với người khác. Bạn có thể đổi mật khẩu sau khi đăng nhập lần đầu.</p>
+              <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">support@247learn.vn</a>.</p>
+            </div>
+            <div class="footer">
+              <p>&copy; 2024 247learn.vn. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+        shouldSendEmail = true;
+      } else {
+        // Cấu hình nội dung HTML của mailOptions cho người dùng hiện tại
+        mailOptions.html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Chào mừng đến với 247learn.vn</title>
+      <style>
+        body { font-family: Arial, sans-serif; }
+        .container { width: 600px; margin: auto; }
+        .header { background-color: #002C6A; color: white; padding: 10px; text-align: center; }
+        .content { padding: 20px; }
+        .footer { background-color: #f2f2f2; padding: 10px; text-align: center; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Chào mừng đến với 247learn.vn</h1>
+        </div>
+        <div class="content">
+          <p>Xin chào,</p>
+          <p>Chúng tôi rất vui mừng thông báo rằng bạn đã được thêm vào khoá học <strong>${course.name}</strong> do giáo viên <strong>${teacherName}</strong> hướng dẫn.</p>
+          <p>Bạn có thể tiếp tục sử dụng tài khoản hiện tại của mình để truy cập vào khóa học.</p>
+          <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">support@247learn.vn</a>.</p>
+        </div>
+        <div class="footer">
+          <p>&copy; 2024 247learn.vn. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+        // Đánh dấu cần gửi email
+        shouldSendEmail = true;
+      }
+
+      // Gửi email nếu cần
+      if (shouldSendEmail) {
+        transporter.sendMail(mailOptions, function (error, info) {
+          if (error) {
+            console.error("Failed to send email", error);
+          } else {
+            console.log("Email sent: " + info.response);
+          }
+        });
+      }
+
+      if (!user.courses.includes(courseId)) {
+        user.courses.push(courseId);
+        await user.save();
+      }
+
+      if (!course.students.includes(user._id)) {
+        course.students.push(user._id);
+        await course.save();
+      }
+
+      return user;
+    } catch (error) {
+      throw new BadRequestError("Lỗi server");
+    }
+  };
   static getAllCategoriesById = async (categoryId) => {
     if (categoryId) {
       return await categoryModel

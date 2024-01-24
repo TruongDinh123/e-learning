@@ -27,7 +27,6 @@ const apiKey = async (req, res, next) => {
     req.objKey = objKey;
     return next();
   } catch (error) {
-    
     return res.status(500).json({
       message: "Internal Server Error",
     });
@@ -39,15 +38,18 @@ const permission = (roles) => {
     try {
       const userId = req.headers[HEADER.CLIENT_ID];
       if (!userId) throw new AuthFailureError(`Invalid client id`);
-      
+
       const user = await findUserById(userId);
-      const userRoles = user.roles;
+      console.log("🚀 ~ user:", user);
 
-      const hasRoleMatchingPermission = userRoles.some((role) =>
-        roles.includes(role)
+      const userRoles = user.roles.map(role => role.name);
+      console.log("🚀 ~ userRoles:", userRoles);
+
+      const hasRoleMatchingPermission = userRoles.some((roleName) =>
+        roles.includes(roleName)
       );
+      console.log("🚀 ~ hasRoleMatchingPermission:", hasRoleMatchingPermission);
 
-      
       if (!hasRoleMatchingPermission) {
         return res.status(403).json({
           message: "Permission denied",
@@ -56,7 +58,6 @@ const permission = (roles) => {
 
       return next();
     } catch (error) {
-      
       return res.status(500).json({
         message: "Internal Server Error",
       });

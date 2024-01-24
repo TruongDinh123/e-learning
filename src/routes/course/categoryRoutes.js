@@ -10,37 +10,37 @@ router.use(authentication);
 
 router.get(
   "/e-learning/get-all-categories/:categoryId",
-  permission(["Mentor", "Admin", "Trainee"]),
+  permission(["Super-Admin", "Mentor", "Admin", "Trainee"]),
   asyncHandler(categoryController.getAllCategoryAndSubCoursesById)
 );
 
 router.post(
   "/e-learning/create-category",
-  permission(["Mentor", "Admin"]),
+  permission(["Super-Admin", "Mentor", "Admin"]),
   asyncHandler(categoryController.createCategoryAndSubCourse)
 );
 
 router.delete(
   "/e-learning/delete-category/:categoryId",
-  permission(["Mentor", "Admin"]),
+  permission(["Super-Admin", "Mentor", "Admin"]),
   asyncHandler(categoryController.deleteCategory)
 );
 
 router.put(
   "/e-learning/update-category/:categoryId",
-  permission(["Mentor", "Admin"]),
+  permission(["Super-Admin", "Mentor", "Admin"]),
   asyncHandler(categoryController.updateCategory)
 );
 
 router.get(
   "/e-learning/get-all-subcourses/:subCourseId",
-  permission(["Mentor", "Admin", "Trainee"]),
+  permission(["Super-Admin", "Mentor", "Admin", "Trainee"]),
   asyncHandler(categoryController.getAllSubCoursesById)
 );
 
 router.get(
   "/e-learning/get-all-subcourses",
-  permission(["Mentor", "Admin", "Trainee"]),
+  permission(["Super-Admin", "Mentor", "Admin", "Trainee"]),
   asyncHandler(categoryController.getAllSubCourses)
 );
 

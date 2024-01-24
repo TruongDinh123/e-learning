@@ -8,19 +8,19 @@ const router = express.Router();
 
 router.post(
   "/e-learning/package",
-  permission(["Admin", "Mentor"]),
+  permission(["Super-Admin", "Admin", "Mentor"]),
   asyncHandler(PackageController.createPackage)
 );
 
 router.post(
   "/e-learning/centers/purchase",
-  permission(["Admin", "Mentor", "Trainee"]),
+  permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
   asyncHandler(centerController.purchasePackage)
 );
 
 router.post(
   "/e-learning/create-teacher/center",
-  permission(["Admin", "Center"]),
+  permission(["Super-Admin", "Admin", "Center"]),
   asyncHandler(centerController.createTeacherCenter)
 );
 

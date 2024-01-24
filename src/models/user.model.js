@@ -59,18 +59,19 @@ const userSchema = new mongoose.Schema(
       },
     ],
 
-    roles: {
-      type: [String],
-      required: true,
-    },
-    // profession: {
-    //   type: String,
-    //   required: true,
-    // },
+    roles: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Role",
+        required: true,
+      },
+    ],
+
     isBlock: {
       type: Boolean,
       default: false,
     },
+    
     status: {
       type: String,
       enum: ["active", "inactive"],

@@ -55,14 +55,10 @@ class CourseController {
   getACourse = async (req, res, next) => {
     const { id } = req.params;
 
-    try {
-      new SuccessReponse({
-        message: "Get a course successfully!",
-        metadata: await CourseService.getACourse({ id }),
-      }).send(res);
-    } catch (error) {
-      throw new BadRequestError(error);
-    }
+    new SuccessReponse({
+      message: "Get a course successfully!",
+      metadata: await CourseService.getACourse({ id }),
+    }).send(res);
   };
 
   deleteCourse = async (req, res, next) => {

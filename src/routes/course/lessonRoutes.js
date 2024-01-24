@@ -14,25 +14,25 @@ router.use(authentication);
 //lesson
 router.post(
   "/e-learning/lesson/:courseId",
-  permission(["Mentor", "Admin"]),
+  permission(["Super-Admin", "Mentor", "Admin"]),
   asyncHandler(lessonController.createLesson)
 );
 
 router.get(
   "/e-learning/lessons/:courseId",
-  permission(["Mentor", "Admin", "Trainee"]),
+  permission(["Super-Admin", "Mentor", "Admin", "Trainee"]),
   asyncHandler(lessonController.getAllCourseLeesons)
 );
 
 router.delete(
   "/e-learning/lesson/:courseId/:lessonId",
-  permission(["Mentor", "Admin"]),
+  permission(["Super-Admin", "Mentor", "Admin"]),
   asyncHandler(lessonController.deleteALesson)
 );
 
 router.put(
   "/e-learning/lesson/:lessonId",
-  permission(["Mentor", "Admin"]),
+  permission(["Super-Admin", "Mentor", "Admin"]),
   asyncHandler(lessonController.updateLesson)
 );
 

@@ -43,26 +43,25 @@ class AccessController {
   };
 
   updateUserRoles = async (req, res, next) => {
-    try {
-      const { userId, roleId } = req.body;
-      const currentUserId = req.user.userId;
+    const { userId, roleId } = req.body;
+    const currentUserId = req.user.userId;
 
-      const updatedUser = await AccessService.updateUserRoles({
+    new SuccessReponse({
+      message: "Get all user success",
+      metadata: await AccessService.updateUserRoles({
         roleId,
         userId,
         currentUserId,
-      });
-      return res.status(200).json(updatedUser);
-    } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+      }),
+    }).send(res);
   };
 
   getAllUser = async (req, res, next) => {
+    const { page, limit } = req.query;
     try {
       new SuccessReponse({
         message: "Get all user success",
-        metadata: await AccessService.getAllUser(),
+        metadata: await AccessService.getAllUser(page, limit),
       }).send(res);
     } catch (error) {
       return res.status(500).json({ message: "Internal server error" });

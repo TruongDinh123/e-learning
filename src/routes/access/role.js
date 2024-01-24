@@ -11,25 +11,25 @@ router.use(authentication);
 
 router.post(
   "/e-learning/role",
-  permission(["Admin", "Mentor"]),
+  permission(["Super-Admin", "Admin"]),
   asyncHandler(roleController.CreateRole)
 );
 
 router.put(
   "/e-learning/role/:id",
-  permission(["Admin", "Mentor"]),
+  permission(["Super-Admin", "Admin"]),
   asyncHandler(roleController.updateRole)
 );
 
 router.delete(
   "/e-learning/role/:id/",
-  permission(["Admin", "Mentor"]),
+  permission(["Super-Admin", "Admin"]),
   asyncHandler(roleController.deleteRole)
 );
 
 router.get(
   "/e-learning/role",
-  permission(["Admin", "Mentor"]),
+  permission(["Super-Admin", "Admin"]),
   asyncHandler(roleController.getRoles)
 );
 

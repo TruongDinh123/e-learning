@@ -50,44 +50,44 @@ router.use(authentication);
 
 router.put(
   "/e-learning/user/update-user-role",
-  permission(["Admin", "Mentor"]),
+  permission(["Super-Admin", "Admin", "Mentor"]),
   asyncHandler(accessController.updateUserRoles)
 );
 
 router.post(
   "/e-learning/user/:userId/upload-image",
-  permission(["Mentor", "Admin", "Trainee"]),
+  permission(["Super-Admin", "Mentor", "Admin", "Trainee"]),
   uploadMiddleware.single("filename"),
   asyncHandler(accessController.uploadImageUser)
 );
 
 router.post(
   "/e-learning/change-password",
-  permission(["Admin", "Mentor", "Trainee"]),
+  permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
   asyncHandler(accessController.changePassword)
 );
 
 router.get(
   "/e-learning/users",
-  permission(["Admin", "Mentor"]),
+  permission(["Super-Admin", "Admin", "Mentor"]),
   asyncHandler(accessController.getAllUser)
 );
 
 router.get(
   "/e-learning/user/:id",
-  permission(["Admin", "Mentor", "Trainee"]),
+  permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
   asyncHandler(accessController.getAUser)
 );
 
 router.delete(
   "/e-learning/user/:id",
-  permission(["Admin", "Mentor"]),
+  permission(["Super-Admin", "Admin", "Mentor"]),
   asyncHandler(accessController.deleteUser)
 );
 
 router.put(
   "/e-learning/update-user/:id",
-  permission(["Admin", "Mentor", "Trainee"]),
+  permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
   asyncHandler(accessController.updateUser)
 );
 

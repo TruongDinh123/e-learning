@@ -371,13 +371,10 @@ class CourseService {
     try {
       let user = await User.findOne({ email });
 
-      if (user && user.status === "inactive") {
-        user.status = "active";
-        await user.save();
-      }
-
       if (user?.roles?.includes("Trainee")) {
-        throw new BadRequestError("Không thể thêm người dùng này vào khóa học");
+        throw new BadRequestError(
+          "Người dùng hiện tại là học viên, bạn hãy chuyển thành giáo viên trước khi thêm vào khóa học"
+        );
       }
       const course = await courseModel.findById(courseId);
       if (!course) throw new NotFoundError("Course not found");
@@ -386,31 +383,41 @@ class CourseService {
         throw new BadRequestError("Không thể thêm người dùng này vào khóa học");
       }
 
-      if (!user) {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: "247learn.vn@gmail.com",
+          pass: "glpiggogzyxtfhod",
+        },
+      });
+
+      const mailOptions = {
+        from: "247learn.vn@gmail.com",
+        to: email,
+        subject: `Chào mừng bạn đến khóa học ${course.name}`,
+        html: "",
+      };
+
+      let shouldSendEmail = false;
+
+      if (!user || user.status === "inactive") {
         const password = Math.random().toString(36).slice(-8);
         const passwordHash = await bcrypt.hash(password, 10);
 
-        user = await User.create({
-          email,
-          firstName: "User" + Math.floor(Math.random() * 10000),
-          password: passwordHash,
-          roles: ["Mentor"],
-          courses: [courseId],
-        });
+        if (!user) {
+          user = await User.create({
+            email,
+            firstName: "User" + Math.floor(Math.random() * 10000),
+            password: passwordHash,
+            roles: ["Trainee"],
+          });
+        } else {
+          user.password = passwordHash;
+          user.status = "active";
+          await user.save();
+        }
 
-        const transporter = nodemailer.createTransport({
-          service: "gmail",
-          auth: {
-            user: "247learn.vn@gmail.com",
-            pass: "glpiggogzyxtfhod",
-          },
-        });
-
-        const mailOptions = {
-          from: "247learn.vn@gmail.com",
-          to: email,
-          subject: `Chào mừng bạn đến khóa học ${course.name}`,
-          html: `
+        mailOptions.html = `
             <!DOCTYPE html>
             <html>
             <head>
@@ -445,30 +452,10 @@ class CourseService {
                 </div>
             </body>
             </html>
-          `,
-        };
-
-        transporter.sendMail(mailOptions, function (error, info) {
-          if (error) {
-            throw new BadRequestError("Failed to send email", error);
-          } else {
-            console.log("Email sent: " + info.response);
-          }
-        });
+          `;
+        shouldSendEmail = true;
       } else {
-        const transporter = nodemailer.createTransport({
-          service: "gmail",
-          auth: {
-            user: "247learn.vn@gmail.com",
-            pass: "glpiggogzyxtfhod",
-          },
-        });
-
-        const mailOptions = {
-          from: "247learn.vn@gmail.com",
-          to: email,
-          subject: `Chào mừng bạn đến khóa học ${course.name}`,
-          html: `
+        mailOptions.html = `
             <!DOCTYPE html>
             <html>
             <head>
@@ -499,12 +486,16 @@ class CourseService {
                 </div>
             </body>
             </html>
-          `,
-        };
+          `;
+        // Đánh dấu cần gửi email
+        shouldSendEmail = true;
+      }
 
+      // Gửi email nếu cần
+      if (shouldSendEmail) {
         transporter.sendMail(mailOptions, function (error, info) {
           if (error) {
-            throw new BadRequestError("Failed to send email", error);
+            console.error("Failed to send email", error);
           } else {
             console.log("Email sent: " + info.response);
           }
@@ -522,7 +513,10 @@ class CourseService {
 
       return user;
     } catch (error) {
-      throw new BadRequestError("Không thể thêm người dùng này vào khóa học");
+      console.log("🚀 ~ error:", error);
+      throw new BadRequestError(
+        "Người dùng hiện tại là học viên, bạn hãy chuyển thành giáo viên trước khi thêm vào khóa học"
+      );
     }
   };
 

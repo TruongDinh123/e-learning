@@ -14,12 +14,15 @@ const findByEmail = async ({
     status: 1,
   },
 }) => {
-  return await User.findOne({ email }).select(select).lean();
+  return await User.findOne({ email })
+    .select(select)
+    .populate("roles", "_id name")
+    .lean();
 };
 
 const findUserById = async (userId) => {
   try {
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).populate("roles").lean();
     return user;
   } catch (error) {
     console.error("Error fetching user by ID:", error);

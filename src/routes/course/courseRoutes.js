@@ -13,26 +13,26 @@ router.use(authentication);
 //courses
 router.post(
   "/e-learning/course",
-  permission(["Admin"]),
+  permission(["Super-Admin", "Admin"]),
   asyncHandler(courseController.createCourse)
 );
 
 router.post(
   "/e-learning/course/:courseId/upload-image",
-  permission(["Mentor", "Admin"]),
+  permission(["Super-Admin", "Mentor", "Admin"]),
   uploadMiddleware.single("filename"),
   asyncHandler(courseController.uploadImageCourse)
 );
 
 router.get(
   "/e-learning/get-courses",
-  permission(["Mentor", "Admin", "Trainee"]),
+  permission(["Super-Admin", "Mentor", "Admin", "Trainee"]),
   asyncHandler(courseController.getCourses)
 );
 
 router.get(
   "/e-learning/course/:id",
-  permission(["Mentor", "Admin", "Trainee"]),
+  permission(["Super-Admin", "Mentor", "Admin", "Trainee"]),
   asyncHandler(courseController.getACourse)
 );
 

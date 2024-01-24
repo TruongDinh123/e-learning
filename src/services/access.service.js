@@ -242,28 +242,42 @@ class AccessService {
         throw new NotFoundError("User not found");
       }
 
-      if (user.roles) {
-        throw new BadRequestError("User already has a role");
+      // Check if the role is already assigned to the user
+      if (user.roles.includes(role._id)) {
+        throw new BadRequestError("User already has this role");
       }
 
-      user.roles = role.name;
+      user.roles = [role._id];
       await user.save();
 
       return user;
     } catch (error) {
-      throw error;
+      throw new BadRequestError("Failed to update user role");
     }
   };
 
-  static getAllUser = async () => {
+  static getAllUser = async (page = 1, limit = 5) => {
     try {
-      const users = await User.find({ status: "active" }).lean();
+      const users = await User.find({ status: "active" })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .populate("roles", "_id name")
+        .lean();
+
+      const total = await User.countDocuments({ status: "active" });
+      const pages = Math.ceil(total / limit);
 
       if (!users) {
         throw new NotFoundError("Users not found");
       }
 
-      return users;
+      return {
+        users,
+        total,
+        pages,
+        currentPage: page,
+        pageSize: users.length,
+      };
     } catch (error) {
       throw new BadRequestError("Failed to get a User", error);
     }
@@ -272,7 +286,9 @@ class AccessService {
   static getAUser = async (id) => {
     validateMongoDbId(id);
     try {
-      const user = await User.findOne({ status: "active", _id: id }).lean();
+      const user = await User.findOne({ status: "active", _id: id })
+        .populate("roles", "_id name")
+        .lean();
 
       return user;
     } catch (error) {

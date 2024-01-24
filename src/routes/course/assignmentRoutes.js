@@ -7,41 +7,41 @@ const router = express.Router();
 
 router.post(
   "/e-learning/assignment",
-  permission(["Admin", "Mentor"]),
+  permission(["Super-Admin", "Admin", "Mentor"]),
   asyncHandler(assignmentController.createAssignment)
 );
 router.get(
   "/e-learning/course/:courseId/assignment",
-  permission(["Admin", "Mentor", "Trainee"]),
+  permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
   asyncHandler(assignmentController.getAssignmentByCourseId)
 );
 router.get(
   "/e-learning/assignment/:id",
-  permission(["Admin", "Mentor"]),
+  permission(["Super-Admin", "Admin", "Mentor"]),
   asyncHandler(assignmentController.getAAssignment)
 );
 
 router.post(
   "/e-learning/assignment/:assignmentId/submit",
-  permission(["Admin", "Mentor", "Trainee"]),
+  permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
   asyncHandler(assignmentController.submitAssignment)
 );
 
 router.put(
   "/e-learning/assignment/:assignmentId",
-  permission(["Admin", "Mentor"]),
+  permission(["Super-Admin", "Admin", "Mentor"]),
   asyncHandler(assignmentController.updateAssignment)
 );
 
 router.delete(
   "/e-learning/assignment/:assignmentId",
-  permission(["Admin", "Mentor"]),
+  permission(["Super-Admin", "Admin", "Mentor"]),
   asyncHandler(assignmentController.deleteAssignment)
 );
 
 router.delete(
   "/e-learning/assignment/:assignmentId/question/:questionId",
-  permission(["Admin", "Mentor"]),
+  permission(["Super-Admin", "Admin", "Mentor"]),
   asyncHandler(assignmentController.deleteQuestionAssignment)
 );
 
