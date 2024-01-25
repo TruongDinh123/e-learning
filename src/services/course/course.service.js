@@ -240,13 +240,17 @@ class CourseService {
         html: "",
       };
 
-      const adminRole = await Role.findOne({ name: 'Admin' });
+      const adminRole = await Role.find({
+        $or: [{ name: "Admin" }, { name: "Super-Admin" }],
+      }).lean();
       if (!adminRole) {
         throw new NotFoundError("Role 'Admin' not found");
       }
 
+      const adminRoleIds = adminRole.map(role => role._id.toString());
+
       if (
-        !loggedInUser.roles.includes(adminRole._id) &&
+        !loggedInUser.roles.some(role => adminRoleIds.includes(role.toString())) &&
         loggedInUser._id.toString() !== course.teacher.toString()
       ) {
         throw new BadRequestError(
@@ -384,9 +388,9 @@ class CourseService {
       let user = await User.findOne({ email });
 
       const traineeRole = await Role.findOne({ name: "Trainee" });
-        if (!traineeRole) {
-          throw new NotFoundError("Role 'Trainee' not found");
-        }
+      if (!traineeRole) {
+        throw new NotFoundError("Role 'Trainee' not found");
+      }
 
       if (user?.roles?.includes(traineeRole.id)) {
         throw new BadRequestError(
@@ -421,8 +425,8 @@ class CourseService {
         const password = Math.random().toString(36).slice(-8);
         const passwordHash = await bcrypt.hash(password, 10);
 
-        const traineeRole = await Role.findOne({ name: "Mentor" });
-        if (!traineeRole) {
+        const mentorRole = await Role.findOne({ name: "Mentor" });
+        if (!mentorRole) {
           throw new NotFoundError("Role 'Mentor' not found");
         }
 
@@ -431,7 +435,7 @@ class CourseService {
             email,
             firstName: "User" + Math.floor(Math.random() * 10000),
             password: passwordHash,
-            roles: [traineeRole._id],
+            roles: [mentorRole._id],
           });
         } else {
           user.password = passwordHash;

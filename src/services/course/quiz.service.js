@@ -101,6 +101,15 @@ class QuizService {
         const student = await userModel.findById(studentId);
         if (!student) throw new NotFoundError("student not found");
 
+        const course = await courseModel.findOne({ _id: { $in: courseIds } }).populate('teacher');
+        if (!course) throw new NotFoundError("course not found");
+        const teacherName = course.teacher ? `${course?.teacher?.firstName} ${course?.teacher?.lastName}` : "N/A";
+
+        const formattedSubmissionTime = new Date(submissionTime).toLocaleString('vi-VN', {
+          hour12: false,
+          timeZone: 'Asia/Ho_Chi_Minh'
+        });
+
         const transporter = nodemailer.createTransport({
           service: "gmail",
           auth: {
@@ -112,8 +121,41 @@ class QuizService {
         const mailOptions = {
           from: "247learn.vn@gmail.com",
           to: student.email,
-          subject: "Bài tập mới",
-          text: `Một bài tập ${name} đã được giao cho bạn. hãy hoàn thành trước ${submissionTime}`,
+          subject: "Bạn có một bài tập mới",
+          html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>Chào mừng đến với 247learn.vn</title>
+              <style>
+                  body { font-family: Arial, sans-serif; }
+                  .container { width: 600px; margin: auto; }
+                  .header { background-color: #002C6A; color: white; padding: 10px; text-align: center; }
+                  .content { padding: 20px; }
+                  .footer { background-color: #f2f2f2; padding: 10px; text-align: center; }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <div class="header">
+                      <h1>Chào mừng đến với 247learn.vn</h1>
+                  </div>
+                  <div class="content">
+                      <p>Xin chào,</p>
+                      <p>Giáo viên <strong>${teacherName}</strong> đã giao cho bạn một bài học trong <strong>${course.name}</strong></p>
+                      <ul>
+                          <li>Thời hạn nộp bài: <strong>${formattedSubmissionTime}</strong></li>
+                      </ul>
+                      <p>Vui lòng nộp bài đúng hạn.</p>
+                      <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">247learn.vn@gmail.com</a>.</p>
+                  </div>
+                  <div class="footer">
+                      <p>&copy; 2024 247learn.vn. All rights reserved.</p>
+                  </div>
+              </div>
+          </body>
+          </html>
+        `,
         };
 
         return transporter.sendMail(mailOptions);
