@@ -9,6 +9,7 @@ const validateMongoDbId = require("../../config/validateMongoDbId");
 const { v2: cloudinary } = require("cloudinary");
 const categoryModel = require("../../models/category.model");
 const { convertToObjectIdMongodb } = require("../../utils");
+const Role = require("../../models/role.model");
 
 cloudinary.config({
   cloud_name: "dvsvd87sm",
@@ -239,8 +240,13 @@ class CourseService {
         html: "",
       };
 
+      const adminRole = await Role.findOne({ name: 'Admin' });
+      if (!adminRole) {
+        throw new NotFoundError("Role 'Admin' not found");
+      }
+
       if (
-        !loggedInUser?.roles?.includes("Admin") &&
+        !loggedInUser.roles.includes(adminRole._id) &&
         loggedInUser._id.toString() !== course.teacher.toString()
       ) {
         throw new BadRequestError(
@@ -253,12 +259,17 @@ class CourseService {
         const password = Math.random().toString(36).slice(-8);
         const passwordHash = await bcrypt.hash(password, 10);
 
+        const traineeRole = await Role.findOne({ name: "Trainee" });
+        if (!traineeRole) {
+          throw new NotFoundError("Role 'Trainee' not found");
+        }
+
         if (!user) {
           user = await User.create({
             email,
             firstName: "User" + Math.floor(Math.random() * 10000),
             password: passwordHash,
-            roles: ["Trainee"],
+            roles: [traineeRole._id],
           });
         } else {
           user.password = passwordHash;
@@ -363,6 +374,7 @@ class CourseService {
 
       return user;
     } catch (error) {
+      console.log("🚀 ~ error:", error);
       throw new BadRequestError("Lỗi server");
     }
   };
@@ -371,7 +383,12 @@ class CourseService {
     try {
       let user = await User.findOne({ email });
 
-      if (user?.roles?.includes("Trainee")) {
+      const traineeRole = await Role.findOne({ name: "Trainee" });
+        if (!traineeRole) {
+          throw new NotFoundError("Role 'Trainee' not found");
+        }
+
+      if (user?.roles?.includes(traineeRole.id)) {
         throw new BadRequestError(
           "Người dùng hiện tại là học viên, bạn hãy chuyển thành giáo viên trước khi thêm vào khóa học"
         );
@@ -404,12 +421,17 @@ class CourseService {
         const password = Math.random().toString(36).slice(-8);
         const passwordHash = await bcrypt.hash(password, 10);
 
+        const traineeRole = await Role.findOne({ name: "Mentor" });
+        if (!traineeRole) {
+          throw new NotFoundError("Role 'Mentor' not found");
+        }
+
         if (!user) {
           user = await User.create({
             email,
             firstName: "User" + Math.floor(Math.random() * 10000),
             password: passwordHash,
-            roles: ["Trainee"],
+            roles: [traineeRole._id],
           });
         } else {
           user.password = passwordHash;

@@ -256,15 +256,29 @@ class AccessService {
     }
   };
 
-  static getAllUser = async (page = 1, limit = 5) => {
+  static getAllUser = async (page = 1, limit = 5, search = '', role = '') => {
     try {
-      const users = await User.find({ status: "active" })
+
+    // Tạo điều kiện tìm kiếm dựa trên tên và vai trò
+      let query = { status: "active" };
+      if (search) {
+        query.$or = [
+          { firstName: { $regex: search, $options: 'i' } },
+          { lastName: { $regex: search, $options: 'i' } }
+        ];
+      }
+      if (role) {
+        query.roles = role;
+      }
+
+
+      const users = await User.find(query)
         .skip((page - 1) * limit)
         .limit(limit)
         .populate("roles", "_id name")
         .lean();
 
-      const total = await User.countDocuments({ status: "active" });
+      const total = await User.countDocuments(query);
       const pages = Math.ceil(total / limit);
 
       if (!users) {

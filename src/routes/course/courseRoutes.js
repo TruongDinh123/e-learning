@@ -38,55 +38,55 @@ router.get(
 
 router.put(
   "/e-learning/update-course/:id",
-  permission(["Mentor", "Admin"]),
+  permission(["Mentor", "Admin", "Super-Admin"]),
   asyncHandler(courseController.updateCourse)
 );
 
 router.delete(
   "/e-learning/course/:id",
-  permission(["Mentor", "Admin"]),
+  permission(["Mentor", "Admin", "Super-Admin"]),
   asyncHandler(courseController.deleteCourse)
 );
 
 router.post(
   "/e-learning/invite-user-course/:courseId",
-  permission(["Mentor", "Admin"]),
+  permission(["Mentor", "Admin", "Super-Admin"]),
   asyncHandler(courseController.addStudentToCourse)
 );
 
 router.post(
   "/e-learning/invite-teacher-course/:courseId",
-  permission(["Admin"]),
+  permission(["Admin", "Super-Admin"]),
   asyncHandler(courseController.addTeacherToCourse)
 );
 
 router.put(
   "/e-learning/update-teacher-course/:courseId",
-  permission(["Admin"]),
+  permission(["Admin", "Super-Admin"]),
   asyncHandler(courseController.updateCourseTeacher)
 );
 
 router.delete(
   "/e-learning/delete-user-course/user/:userId/course/:courseId",
-  permission(["Mentor", "Admin"]),
+  permission(["Mentor", "Admin", "Super-Admin"]),
   asyncHandler(courseController.removeStudentFromCourse)
 );
 
 router.get(
   "/e-learning/get-student-course",
-  permission(["Trainee", "Mentor", "Admin"]),
+  permission(["Trainee", "Mentor", "Admin", "Super-Admin"]),
   asyncHandler(courseController.getstudentCourses)
 );
 
 router.get(
   "/e-learning/get-complete-course/:courseId",
-  permission(["Mentor", "Admin", "Trainee"]),
+  permission(["Mentor", "Admin", "Super-Admin", , "Trainee"]),
   asyncHandler(courseController.getCourseCompletion)
 );
 
 router.post(
   "/e-learning/public-course/:courseId",
-  permission(["Mentor", "Admin"]),
+  permission(["Mentor", "Admin", "Super-Admin"]),
   asyncHandler(courseController.buttonShowCourse)
 );
 
