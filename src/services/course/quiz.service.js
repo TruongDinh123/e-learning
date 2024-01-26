@@ -101,14 +101,21 @@ class QuizService {
         const student = await userModel.findById(studentId);
         if (!student) throw new NotFoundError("student not found");
 
-        const course = await courseModel.findOne({ _id: { $in: courseIds } }).populate('teacher');
+        const course = await courseModel
+          .findOne({ _id: { $in: courseIds } })
+          .populate("teacher");
         if (!course) throw new NotFoundError("course not found");
-        const teacherName = course.teacher ? `${course?.teacher?.firstName} ${course?.teacher?.lastName}` : "N/A";
+        const teacherName = course.teacher
+          ? ` ${course?.teacher?.lastName} ${course?.teacher?.firstName}`
+          : "N/A";
 
-        const formattedSubmissionTime = new Date(submissionTime).toLocaleString('vi-VN', {
-          hour12: false,
-          timeZone: 'Asia/Ho_Chi_Minh'
-        });
+        const formattedSubmissionTime = new Date(submissionTime).toLocaleString(
+          "vi-VN",
+          {
+            hour12: false,
+            timeZone: "Asia/Ho_Chi_Minh",
+          }
+        );
 
         const transporter = nodemailer.createTransport({
           service: "gmail",
@@ -138,7 +145,7 @@ class QuizService {
           <body>
               <div class="container">
                   <div class="header">
-                      <h1>Chào mừng đến với 247learn.vn</h1>
+                      <h1>Chào mừng đến với <a href="https://www.247learn.vn" style="color: white; text-decoration: none;">247learn.vn</a></h1>
                   </div>
                   <div class="content">
                       <p>Xin chào,</p>
@@ -150,7 +157,7 @@ class QuizService {
                       <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">247learn.vn@gmail.com</a>.</p>
                   </div>
                   <div class="footer">
-                      <p>&copy; 2024 247learn.vn. All rights reserved.</p>
+                      <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
                   </div>
               </div>
           </body>
@@ -392,7 +399,7 @@ class QuizService {
   static deleteQuiz = async ({ quizId }) => {
     try {
       validateMongoDbId(quizId);
-      
+
       const quiz = await Quiz.findById(quizId);
       if (!quiz) throw new NotFoundError("Quiz not found");
 
@@ -621,7 +628,6 @@ class QuizService {
     })
       .populate("questions")
       .lean();
-
 
     return quizzes.length ? quizzes : [];
   };

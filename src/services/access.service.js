@@ -193,7 +193,7 @@ class AccessService {
             <body>
                 <div class="container">
                     <div class="header">
-                        <h1>Chào mừng đến với 247learn.vn</h1>
+                        <h1>Chào mừng đến với <a href="https://www.247learn.vn" style="color: white; text-decoration: none;">247learn.vn</a></h1>
                     </div>
                     <div class="content">
                         <p>Xin chào,</p>
@@ -203,7 +203,7 @@ class AccessService {
                         <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">247learn.vn@gmail.com</a>.</p>
                     </div>
                     <div class="footer">
-                        <p>&copy; 2024 247learn.vn. All rights reserved.</p>
+                        <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
                     </div>
                 </div>
             </body>
@@ -243,7 +243,8 @@ class AccessService {
       }
 
       // Check if the role is already assigned to the user
-      if (user.roles.includes(role._id)) {
+      // Check if the role is already assigned to the user
+      if (user.roles.map(role => role.toString()).includes(role._id.toString())) {
         throw new BadRequestError("User already has this role");
       }
 
@@ -252,25 +253,24 @@ class AccessService {
 
       return user;
     } catch (error) {
+      console.log("🚀 ~ error:", error);
       throw new BadRequestError("Failed to update user role");
     }
   };
 
-  static getAllUser = async (page = 1, limit = 5, search = '', role = '') => {
+  static getAllUser = async (page = 1, limit = 5, search = "", role = "") => {
     try {
-
-    // Tạo điều kiện tìm kiếm dựa trên tên và vai trò
+      // Tạo điều kiện tìm kiếm dựa trên tên và vai trò
       let query = { status: "active" };
       if (search) {
         query.$or = [
-          { firstName: { $regex: search, $options: 'i' } },
-          { lastName: { $regex: search, $options: 'i' } }
+          { firstName: { $regex: search, $options: "i" } },
+          { lastName: { $regex: search, $options: "i" } },
         ];
       }
       if (role) {
         query.roles = role;
       }
-
 
       const users = await User.find(query)
         .skip((page - 1) * limit)
