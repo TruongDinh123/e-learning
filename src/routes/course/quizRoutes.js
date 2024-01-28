@@ -17,6 +17,12 @@ router.post(
 );
 
 router.get(
+  "/e-learning/quizs",
+  permission(["Super-Admin", "Admin", "Mentor"]),
+  asyncHandler(quizController.getQuizs)
+);
+
+router.get(
   "/e-learning/quiz/templates",
   permission(["Super-Admin", "Admin", "Mentor"]),
   asyncHandler(quizController.getAllQuizTemplates)

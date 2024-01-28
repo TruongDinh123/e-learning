@@ -102,7 +102,12 @@ class LessonService {
         .find()
         .where({ _id: findCourse })
         .select(select)
-        .populate("lessons")
+        .populate({
+          path: 'lessons',
+          populate: {
+            path: 'quizzes'
+          }
+        })
         .lean();
 
       return lessons;

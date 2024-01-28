@@ -22,6 +22,12 @@ const quizSchema = new mongoose.Schema(
       },
     ],
 
+    lessonId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Lesson",
+      required: false,
+    },
+
     studentIds: [
       {
         type: mongoose.Schema.Types.ObjectId,

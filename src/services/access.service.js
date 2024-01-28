@@ -244,7 +244,9 @@ class AccessService {
 
       // Check if the role is already assigned to the user
       // Check if the role is already assigned to the user
-      if (user.roles.map(role => role.toString()).includes(role._id.toString())) {
+      if (
+        user.roles.map((role) => role.toString()).includes(role._id.toString())
+      ) {
         throw new BadRequestError("User already has this role");
       }
 
@@ -302,6 +304,7 @@ class AccessService {
     try {
       const user = await User.findOne({ status: "active", _id: id })
         .populate("roles", "_id name")
+        .populate("quizzes")
         .lean();
 
       return user;

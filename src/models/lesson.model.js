@@ -21,11 +21,12 @@ const lessonSchema = new mongoose.Schema({
       ref: "VideoLesson",
     },
   ],
-  quiz: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Quiz",
-    required: false,
-  },
+  quizzes: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Quiz",
+    },
+  ],
 });
 
 module.exports = mongoose.model("Lesson", lessonSchema);

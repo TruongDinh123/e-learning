@@ -14,6 +14,7 @@ class QuizController {
       name,
       submissionTime,
       quizTemplateId,
+      lessonId,
     } = req.body;
 
     new SuccessReponse({
@@ -27,7 +28,15 @@ class QuizController {
         name,
         submissionTime,
         quizTemplateId,
+        lessonId,
       }),
+    }).send(res);
+  };
+
+  getQuizs = async (req, res, next) => {
+    new SuccessReponse({
+      message: "Get all quiz successfully",
+      metadata: await QuizService.getQuizs(),
     }).send(res);
   };
 
@@ -177,9 +186,7 @@ class QuizController {
         message: "Submit quiz successfully",
         metadata: await QuizService.submitQuiz(quizId, userId, answer),
       }).send(res);
-    } catch (error) {
-      
-    }
+    } catch (error) {}
   };
 
   submitQuizEssay = async (req, res, next) => {
@@ -196,9 +203,7 @@ class QuizController {
           essayAnswer,
         }),
       }).send(res);
-    } catch (error) {
-      
-    }
+    } catch (error) {}
   };
 
   getScoreByUser = async (req, res, next) => {
@@ -209,9 +214,7 @@ class QuizController {
         message: "Get score successfully",
         metadata: await QuizService.getScoreByUser(userId),
       }).send(res);
-    } catch (error) {
-      
-    }
+    } catch (error) {}
   };
 
   getScoreByUserId = async (req, res, next) => {
@@ -222,9 +225,7 @@ class QuizController {
         message: "Get score successfully",
         metadata: await QuizService.getScoreByUserId(userId, quizId),
       }).send(res);
-    } catch (error) {
-      
-    }
+    } catch (error) {}
   };
 
   getScoreByQuizId = async (req, res, next) => {
@@ -235,9 +236,7 @@ class QuizController {
         message: "Get score successfully",
         metadata: await QuizService.getScoreByQuizId(quizId),
       }).send(res);
-    } catch (error) {
-      
-    }
+    } catch (error) {}
   };
 
   updateScore = async (req, res, next) => {
@@ -248,9 +247,7 @@ class QuizController {
         message: "Update score successfully",
         metadata: await QuizService.updateScore(scoresToUpdate),
       }).send(res);
-    } catch (error) {
-      
-    }
+    } catch (error) {}
   };
 }
 

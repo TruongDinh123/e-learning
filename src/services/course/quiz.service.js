@@ -8,6 +8,7 @@ const userModel = require("../../models/user.model");
 const nodemailer = require("nodemailer");
 const { v2: cloudinary } = require("cloudinary");
 const QuizTemplate = require("../../models/quizTemplate.model");
+const lessonModel = require("../../models/lesson.model");
 
 cloudinary.config({
   cloud_name: "dvsvd87sm",
@@ -25,6 +26,7 @@ class QuizService {
     questions,
     submissionTime,
     quizTemplateId,
+    lessonId,
   }) => {
     try {
       let quiz;
@@ -39,6 +41,7 @@ class QuizService {
           name: quizTemplate.name,
           courseIds,
           studentIds,
+          lessonId,
           questions: combinedQuestions,
           essay: quizTemplate.essay,
           submissionTime,
@@ -73,6 +76,7 @@ class QuizService {
               name,
               courseIds,
               studentIds,
+              lessonId,
               questions: formattedQuestions,
               submissionTime,
             });
@@ -89,6 +93,7 @@ class QuizService {
             name,
             courseIds,
             studentIds,
+            lessonId,
             essay: formattedEssay,
             submissionTime,
           });
@@ -101,13 +106,32 @@ class QuizService {
         const student = await userModel.findById(studentId);
         if (!student) throw new NotFoundError("student not found");
 
-        const course = await courseModel
-          .findOne({ _id: { $in: courseIds } })
-          .populate("teacher");
+        let course,
+          lessonName,
+          teacherName = "N/A"; // Initialize teacherName here
+        if (lessonId) {
+          const lesson = await lessonModel.findById(lessonId).populate({
+            path: "courseId",
+            populate: {
+              path: "teacher",
+              model: "User", // Replace 'User' with the actual model name for the teacher
+            },
+          });
+          course = lesson.courseId;
+          lessonName = lesson.name;
+          if (course && course.teacher) {
+            teacherName = `${course.teacher.lastName} ${course.teacher.firstName}`;
+          }
+        } else {
+          course = await courseModel
+            .findOne({ _id: { $in: courseIds } })
+            .populate("teacher");
+
+          if (course && course.teacher) {
+            teacherName = `${course.teacher.lastName} ${course.teacher.firstName}`;
+          }
+        }
         if (!course) throw new NotFoundError("course not found");
-        const teacherName = course.teacher
-          ? ` ${course?.teacher?.lastName} ${course?.teacher?.firstName}`
-          : "N/A";
 
         const formattedSubmissionTime = new Date(submissionTime).toLocaleString(
           "vi-VN",
@@ -149,7 +173,14 @@ class QuizService {
                   </div>
                   <div class="content">
                       <p>Xin chào,</p>
-                      <p>Giáo viên <strong>${teacherName}</strong> đã giao cho bạn một bài học trong <strong>${course.name}</strong></p>
+                      <p>Giáo viên <strong>${teacherName}</strong> đã giao cho bạn một bài tập mới trong <strong>${
+            course.name
+          }</strong></p>
+                      ${
+                        lessonName
+                          ? `<p>Thuộc bài học: <strong>${lessonName}</strong></p>`
+                          : ""
+                      }
                       <ul>
                           <li>Thời hạn nộp bài: <strong>${formattedSubmissionTime}</strong></li>
                       </ul>
@@ -171,6 +202,20 @@ class QuizService {
       await Promise.all(emailPromises);
 
       const savedQuiz = await quiz.save();
+
+      if (lessonId) {
+        const lesson = await lessonModel.findById(lessonId);
+        if (!lesson) throw new NotFoundError("Lesson not found");
+
+        // Check if the lesson already has a quiz
+        if (lesson.quizzes && lesson.quizzes.length > 0) {
+          throw new BadRequestError("A quiz for this lesson already exists");
+        }
+
+        // Update the lesson with the new quiz
+        lesson.quizzes = [savedQuiz._id];
+        await lesson.save();
+      }
 
       for (const studentId of studentIds) {
         const student = await userModel.findById(studentId);
@@ -197,6 +242,11 @@ class QuizService {
     } catch (error) {
       throw new BadRequestError("Failed to create quiz", error);
     }
+  };
+
+  static getQuizs = async () => {
+    const findQuizs = await Quiz.find().lean();
+    return findQuizs;
   };
 
   static getAllQuizTemplates = async () => {
@@ -280,13 +330,32 @@ class QuizService {
 
   static getQuizsByCourse = async (courseIds) => {
     try {
-      const quizs = await Quiz.find({ courseIds: courseIds })
+      // Find the course
+      const course = await courseModel.findById(courseIds);
+      if (!course) throw new NotFoundError("Course not found");
+
+      // Find lessons that belong to the course
+      const lessons = await lessonModel.find({ courseId: courseIds });
+
+      // Extract all quiz IDs from the lessons
+      const lessonQuizIds = lessons.flatMap((lesson) => lesson.quizzes);
+
+      // Find quizzes that belong to the course
+      const courseQuizzes = await Quiz.find({ courseIds: courseIds })
         .populate("questions")
         .lean();
 
-      if (!quizs) throw new NotFoundError("quizs not found");
+      // Find quizzes that belong to the lessons
+      const lessonQuizzes = await Quiz.find({ _id: { $in: lessonQuizIds } })
+        .populate("questions")
+        .lean();
 
-      return quizs;
+      // Combine courseQuizzes and lessonQuizzes
+      const quizzes = [...courseQuizzes, ...lessonQuizzes];
+
+      if (!quizzes) throw new NotFoundError("Quizzes not found");
+
+      return quizzes;
     } catch (error) {
       throw new BadRequestError("Failed to get quizs", error);
     }
@@ -296,6 +365,16 @@ class QuizService {
     const quizs = await Quiz.find()
       .where({ _id: quizId })
       .populate("questions")
+      .populate("courseIds", "name")
+      .populate( 
+      {
+        path: "lessonId",
+        populate: {
+          path: "courseId",
+          model: "Course",
+        },
+      })
+      
       .lean();
 
     if (!quizs) throw new NotFoundError("quizs not found");
@@ -414,7 +493,15 @@ class QuizService {
         { $pull: { quizzes: quizId } }
       );
 
+      if (quiz.lessonId) {
+        await lessonModel.updateOne(
+          { _id: quiz.lessonId },
+          { $pull: { quizzes: quizId } }
+        );
+      }
+
       const deletedQuiz = await Quiz.findByIdAndDelete(quizId);
+
       return deletedQuiz;
     } catch (error) {
       throw new BadRequestError("Failed to delete quiz", error);
@@ -621,15 +708,33 @@ class QuizService {
     const course = await courseModel.findById(courseId);
     if (!course) throw new NotFoundError("Course not found");
 
+    // Find lessons that belong to the course
+    const lessons = await lessonModel.find({ courseId: courseId });
+
+    // Extract all quiz IDs from the lessons
+    const lessonQuizIds = lessons.flatMap((lesson) => lesson.quizzes);
+
     // Find quizzes that belong to the course and assigned to the student
-    const quizzes = await Quiz.find({
+    const courseQuizzes = await Quiz.find({
       _id: { $in: student.quizzes },
       courseIds: courseId,
     })
       .populate("questions")
       .lean();
 
-    return quizzes.length ? quizzes : [];
+    const lessonQuizzes = await Quiz.find({
+      _id: { $in: [...student.quizzes, ...lessonQuizIds] },
+    })
+      .populate("questions")
+      .lean();
+
+    // Combine courseQuizzes and lessonQuizzes and remove duplicates
+    const combinedQuizzes = [...courseQuizzes, ...lessonQuizzes];
+    const uniqueQuizzes = Array.from(
+      new Set(combinedQuizzes.map((a) => a._id.toString()))
+    ).map((_id) => combinedQuizzes.find((a) => a._id.toString() === _id));
+
+    return uniqueQuizzes;
   };
 
   static updateScore = async (scoresToUpdate) => {
