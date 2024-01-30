@@ -366,15 +366,19 @@ class QuizService {
       .where({ _id: quizId })
       .populate("questions")
       .populate("courseIds", "name")
-      .populate( 
-      {
+      .populate({
         path: "lessonId",
         populate: {
           path: "courseId",
           model: "Course",
+          populate: {
+            path: "teacher",
+            model: "User",
+            select: "name email lastName firstName",
+          },
         },
       })
-      
+
       .lean();
 
     if (!quizs) throw new NotFoundError("quizs not found");

@@ -31,6 +31,11 @@ router.get(
 );
 
 router.get(
+  "/e-learning/course/:id",
+  asyncHandler(courseController.getACourse)
+);
+
+router.get(
   "/e-learning/public-course",
   asyncHandler(courseController.getCoursePublic)
 );

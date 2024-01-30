@@ -30,12 +30,6 @@ router.get(
   asyncHandler(courseController.getCourses)
 );
 
-router.get(
-  "/e-learning/course/:id",
-  permission(["Super-Admin", "Mentor", "Admin", "Trainee"]),
-  asyncHandler(courseController.getACourse)
-);
-
 router.put(
   "/e-learning/update-course/:id",
   permission(["Mentor", "Admin", "Super-Admin"]),
