@@ -12,10 +12,10 @@ dotenv.config();
 
 app.use(
   cors({
-    // origin: [process.env.CLIENT_URL],
-    origin: "https://e-learning-fe.onrender.com",
+    origin: [process.env.CLIENT_URL],
+    // origin: "https://e-learning-fe.onrender.com",
     // origin: "https://116.118.51.237:3000",
-    // origin: "https://www.247learn.vn",
+    origin: "https://www.247learn.vn",
     credentials: true,
     methods: "GET,POST,PUT,DELETE",
   })
