@@ -16,6 +16,12 @@ router.post(
   asyncHandler(quizController.createQuiz)
 );
 
+router.post(
+  "/e-learning/quiz/:quizId/start",
+  permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
+  asyncHandler(quizController.startQuiz)
+);
+
 router.get(
   "/e-learning/quizs",
   permission(["Super-Admin", "Admin", "Mentor"]),
@@ -118,6 +124,13 @@ router.post(
   permission(["Super-Admin", "Trainee"]),
   uploadMiddleware.single("filename"),
   asyncHandler(quizController.uploadFileUserSubmit)
+);
+
+router.post(
+  "/e-learning/quiz/upload-image-question",
+  permission(["Super-Admin", "Admin", "Mentor"]),
+  uploadMiddleware.single("filename"),
+  asyncHandler(quizController.uploadQuestionImage)
 );
 
 //quiz templates

@@ -15,6 +15,7 @@ class QuizController {
       submissionTime,
       quizTemplateId,
       lessonId,
+      timeLimit,
     } = req.body;
 
     new SuccessReponse({
@@ -29,7 +30,17 @@ class QuizController {
         submissionTime,
         quizTemplateId,
         lessonId,
+        timeLimit,
       }),
+    }).send(res);
+  };
+
+  startQuiz = async (req, res, next) => {
+    const { quizId } = req.params;
+    const userId = req.headers["x-client-id"];
+    new SuccessReponse({
+      message: "Start quiz successfully",
+      metadata: await QuizService.startQuiz(quizId, userId),
     }).send(res);
   };
 
@@ -148,15 +159,19 @@ class QuizController {
     }).send(res);
   };
 
-  // updateQuiz = async (req, res, next) => {
-  //   const { quizId } = req.params;
-  //   const { type, courseIds, studentIds, name, essay, questions, submissionTime } = req.body;
+  uploadQuestionImage = async (req, res, next) => {
+    const { quizId, questionId  } = req.body;
+    const { path: filename } = req.file;
 
-  //   new SuccessReponse({
-  //     message: "Update quiz successfully",
-  //     metadata: await QuizService.updateQuiz(quizId, { type, courseIds, studentIds, name, essay, questions, submissionTime }),
-  //   }).send(res);
-  // };
+    new SuccessReponse({
+      message: "Upload image question successfully",
+      metadata: await QuizService.uploadQuestionImage({
+        quizId,
+        filename,
+        questionId,
+      }),
+    }).send(res);
+  };
 
   deleteQuiz = async (req, res, next) => {
     const { quizId } = req.params;

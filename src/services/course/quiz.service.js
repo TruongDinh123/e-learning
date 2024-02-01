@@ -27,6 +27,7 @@ class QuizService {
     submissionTime,
     quizTemplateId,
     lessonId,
+    timeLimit,
   }) => {
     try {
       let quiz;
@@ -79,6 +80,7 @@ class QuizService {
               lessonId,
               questions: formattedQuestions,
               submissionTime,
+              timeLimit,
             });
           }
         } else if (type === "essay") {
@@ -240,7 +242,36 @@ class QuizService {
 
       return savedQuiz;
     } catch (error) {
+      console.log("🚀 ~ error:", error);
       throw new BadRequestError("Failed to create quiz", error);
+    }
+  };
+
+  static uploadQuestionImage = async ({ quizId, questionId, filename }) => {
+    validateMongoDbId(quizId);
+    validateMongoDbId(questionId);
+    try {
+      const quiz = await Quiz.findById(quizId);
+      if (!quiz) throw new NotFoundError("Quiz not found");
+
+      const result = await cloudinary.uploader.upload(filename, {
+        folder: "quiz_questions", // Tùy chỉnh thư mục lưu trữ trên Cloudinary
+        resource_type: "image", // Đảm bảo rằng tệp được xử lý là hình ảnh
+      });
+
+      // Tìm câu hỏi bằng ID và cập nhật URL hình ảnh
+      const questionIndex = quiz.questions.findIndex(
+        (question) => question._id.toString() === questionId
+      );
+      if (questionIndex === -1) throw new NotFoundError("Question not found");
+
+      quiz.questions[questionIndex].image_url = result.secure_url;
+      await quiz.save();
+
+      return { message: "Image uploaded successfully", quiz };
+    } catch (error) {
+      console.log("🚀 ~ error:", error);
+      throw new BadRequestError("Failed to upload question image", error);
     }
   };
 
@@ -397,35 +428,6 @@ class QuizService {
     return quizs;
   };
 
-  // static updateQuiz = async (quizId, updatedQuizData) => {
-  //   const { name, questions } = updatedQuizData;
-  //   const quiz = await Quiz.findById(quizId);
-
-  //   if (!quiz) {
-  //     throw new NotFoundError("quiz not found");
-  //   }
-
-  //   const score = await Score.findOne({ quiz: quizId, isComplete: true });
-  //   if (score) {
-  //     throw new BadRequestError("Cannot update quiz as it has already been completed by a student");
-  //   }
-
-  //   quiz.name = name;
-  //   for (const updateQuestion of questions) {
-  //     const questionIndex = quiz.questions.findIndex(
-  //       (question) => question._id.toString() === updateQuestion._id
-  //     );
-  //     if (questionIndex !== -1) {
-  //       quiz.questions[questionIndex] = updateQuestion;
-  //     } else {
-  //       quiz.questions.push(updateQuestion);
-  //     }
-  //   }
-  //   const updatedQuiz = await quiz.save();
-
-  //   return updatedQuiz;
-  // };
-
   static updateQuiz = async (quizId, updatedQuizData) => {
     const { name, questions, submissionTime, essay } = updatedQuizData;
     const quiz = await Quiz.findById(quizId);
@@ -539,13 +541,50 @@ class QuizService {
     }
   };
 
+  static async startQuiz(quizId, userId) {
+    const quiz = await Quiz.findById(quizId);
+    if (!quiz) {
+      throw new Error("Quiz not found");
+    }
+
+    let scoreRecord = await Score.findOne({ quiz: quizId, user: userId });
+    if (!scoreRecord) {
+      // Nếu chưa có bản ghi điểm, tạo mới với startTime là thời điểm hiện tại
+      scoreRecord = new Score({
+        quiz: quizId,
+        user: userId,
+        startTime: new Date(), // Thiết lập thời gian bắt đầu làm bài
+        isComplete: false,
+      });
+    } else {
+      // Nếu đã có bản ghi, chỉ cập nhật startTime
+      scoreRecord.startTime = new Date();
+    }
+
+    await scoreRecord.save();
+    return scoreRecord;
+  }
+
   static submitQuiz = async (quizId, userId, answer) => {
     try {
       let score = 0;
       const maxScore = 10; // Điểm số tối đa
 
+      const scoreRecord = await Score.findOne({ quiz: quizId, user: userId });
+      if (!scoreRecord) throw new NotFoundError("Score record not found");
+
       const quiz = await Quiz.findById(quizId);
       if (!quiz) throw new NotFoundError("no quiz found");
+
+      // Kiểm tra thời gian nộp bài
+      const currentTime = new Date();
+      const startTime = scoreRecord.startTime;
+      const timeLimitInMilliseconds = quiz.timeLimit * 60000;
+      const endTime = new Date(startTime.getTime() + timeLimitInMilliseconds);
+
+      if (currentTime > endTime) {
+        throw new BadRequestError("Hết hạn làm bài");
+      }
 
       const existingScore = await Score.findOne({ user: userId, quiz: quizId });
 
@@ -558,39 +597,52 @@ class QuizService {
         }
       }
 
-      if (existingScore) {
-        existingScore.score = (
-          (score / quiz.questions.length) *
-          maxScore
-        ).toFixed(2);
-        existingScore.answers = answer;
-        existingScore.isComplete = true;
-        await existingScore.save();
+      // if (existingScore) {
+      //   existingScore.score = (
+      //     (score / quiz.questions.length) *
+      //     maxScore
+      //   ).toFixed(2);
+      //   existingScore.answers = answer;
+      //   existingScore.isComplete = true;
+      //   await existingScore.save();
 
-        if (existingScore.createdAt > quiz.submissionTime) {
-          existingScore.isComplete = false;
-          throw new BadRequestError("Submission time has passed");
-        }
+      //   if (existingScore.createdAt > quiz.submissionTime) {
+      //     existingScore.isComplete = false;
+      //     throw new BadRequestError("Submission time has passed");
+      //   }
 
-        return existingScore;
-      } else {
-        const userScore = new Score({
-          user: userId,
-          quiz: quizId,
-          score: ((score / quiz.questions.length) * maxScore).toFixed(2),
-          answers: answer,
-          isComplete: true,
-        });
-        await userScore.save();
+      //   return existingScore;
+      // } else {
+      //   const userScore = new Score({
+      //     user: userId,
+      //     quiz: quizId,
+      //     score: ((score / quiz.questions.length) * maxScore).toFixed(2),
+      //     answers: answer,
+      //     isComplete: true,
+      //   });
+      //   await userScore.save();
 
-        if (userScore.createdAt > quiz.submissionTime) {
-          userScore.isComplete = false;
-          throw new BadRequestError("Submission time has passed");
-        }
+      //   if (userScore.createdAt > quiz.submissionTime) {
+      //     userScore.isComplete = false;
+      //     throw new BadRequestError("Submission time has passed");
+      //   }
 
-        return userScore;
-      }
-    } catch (error) {}
+      //   return userScore;
+      // }
+
+      // Cập nhật điểm số và trạng thái hoàn thành cho bản ghi điểm
+      scoreRecord.score = ((score / quiz.questions.length) * maxScore).toFixed(
+        2
+      );
+      scoreRecord.answers = answer;
+      scoreRecord.isComplete = true;
+      scoreRecord.submitTime = currentTime;
+      await scoreRecord.save();
+      return scoreRecord;
+    } catch (error) {
+      console.log("🚀 ~ error:", error);
+      throw new BadRequestError("Failed to submit quiz", error);
+    }
   };
 
   static uploadFileUserSubmit = async ({ filename, quizId, userId }) => {

@@ -47,12 +47,28 @@ const quizSchema = new mongoose.Schema(
       required: false,
     },
 
+    timeLimit: {
+      type: Number,
+      required: false,
+    },
+
     questions: [
       {
         question: {
           type: String,
           required: false,
         },
+
+        filename: {
+          type: String,
+          required: false,
+        },
+    
+        image_url: {
+          type: String,
+          required: false,
+        },
+
         options: [
           {
             type: String,

@@ -28,9 +28,11 @@ const userSchema = new mongoose.Schema(
     filename: {
       type: String,
     },
+
     image_url: {
       type: String,
     },
+    
     email: {
       type: String,
       required: true,
