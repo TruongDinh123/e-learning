@@ -10,6 +10,7 @@ const { v2: cloudinary } = require("cloudinary");
 const categoryModel = require("../../models/category.model");
 const { convertToObjectIdMongodb } = require("../../utils");
 const Role = require("../../models/role.model");
+const Quiz = require("../../models/quiz.model");
 
 cloudinary.config({
   cloud_name: "dvsvd87sm",
@@ -95,7 +96,13 @@ class CourseService {
         })
         .populate("students", "lastName email roles notifications")
         .populate("teacher")
-        .populate("lessons")
+        .populate({
+          path: "lessons",
+          populate: [
+            { path: "videos", model: "VideoLesson" },
+            { path: "quizzes", model: "Quiz" }
+          ]
+        })
         .populate("quizzes");
 
       return aCourse;
@@ -185,7 +192,21 @@ class CourseService {
 
   static deleteCourse = async (id) => {
     try {
-      await lessonModel.deleteMany({ courseId: id });
+    // Xóa tất cả các bài học thuộc về khóa học
+    const lessons = await lessonModel.find({ courseId: id });
+    const lessonIds = lessons.map(lesson => lesson._id);
+
+    // Xóa tất cả các quiz liên quan đến các bài học của khóa học
+    await quizModel.deleteMany({ lessonId: { $in: lessonIds } });
+
+    // Xóa tất cả các quiz liên quan trực tiếp đến khóa học thông qua trường courseIds
+    await quizModel.updateMany(
+      { courseIds: id },
+      { $pull: { courseIds: id } }
+    );
+
+    // Tiếp tục với việc xóa khóa học như bình thường
+    await lessonModel.deleteMany({ courseId: id });
 
       const course = await courseModel.findById(id);
       if (!course) throw new NotFoundError("Course not found");
@@ -211,6 +232,7 @@ class CourseService {
 
       await courseModel.findByIdAndDelete(id);
     } catch (error) {
+      console.log(error);
       throw new BadRequestError(error);
     }
   };

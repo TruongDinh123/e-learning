@@ -40,15 +40,12 @@ const permission = (roles) => {
       if (!userId) throw new AuthFailureError(`Invalid client id`);
 
       const user = await findUserById(userId);
-      console.log("🚀 ~ user:", user);
 
       const userRoles = user.roles.map(role => role.name);
-      console.log("🚀 ~ userRoles:", userRoles);
 
       const hasRoleMatchingPermission = userRoles.some((roleName) =>
         roles.includes(roleName)
       );
-      console.log("🚀 ~ hasRoleMatchingPermission:", hasRoleMatchingPermission);
 
       if (!hasRoleMatchingPermission) {
         return res.status(403).json({
