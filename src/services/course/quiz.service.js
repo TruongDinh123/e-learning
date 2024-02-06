@@ -135,13 +135,13 @@ class QuizService {
         }
         if (!course) throw new NotFoundError("course not found");
 
-        const formattedSubmissionTime = new Date(submissionTime).toLocaleString(
+        const formattedSubmissionTime = submissionTime ? new Date(submissionTime).toLocaleString(
           "vi-VN",
           {
             hour12: false,
             timeZone: "Asia/Ho_Chi_Minh",
           }
-        );
+        ) : "Không có thời hạn";
 
         const transporter = nodemailer.createTransport({
           service: "gmail",

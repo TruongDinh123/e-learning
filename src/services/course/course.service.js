@@ -79,7 +79,14 @@ class CourseService {
       const courses = await courseModel
         .find()
         .populate("students", "firstName lastName")
-        .populate("lessons");
+        .populate({
+          path: "lessons",
+          populate: [
+            { path: "videos", model: "VideoLesson" },
+            { path: "quizzes", model: "Quiz" }
+          ]
+        })
+        .populate("quizzes");
 
       if (!courses) throw new NotFoundError("Courses not found");
       return courses;
