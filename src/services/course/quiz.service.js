@@ -582,17 +582,19 @@ class QuizService {
       const timeLimitInMilliseconds = quiz.timeLimit * 60000;
       const endTime = new Date(startTime.getTime() + timeLimitInMilliseconds);
 
-      if (currentTime > endTime) {
-        throw new BadRequestError("Hết hạn làm bài");
-      }
+      // if (currentTime > endTime) {
+      //   throw new BadRequestError("Hết hạn làm bài");
+      // }
 
       const existingScore = await Score.findOne({ user: userId, quiz: quizId });
 
       for (let i = 0; i < quiz.questions.length; i++) {
         const question = quiz.questions[i];
-        const userAnswer = answer[i][Object.keys(answer[i])[0]];
+        const userAnswer = answer[i] ? answer[i][Object.keys(answer[i])[0]] : null;
 
-        if (question.answer === userAnswer) {
+        if (userAnswer === undefined || userAnswer === null || question.answer !== userAnswer) {
+          continue;
+        } else {
           score++;
         }
       }
