@@ -41,7 +41,7 @@ const permission = (roles) => {
 
       const user = await findUserById(userId);
 
-      const userRoles = user.roles.map(role => role.name);
+      const userRoles = user.roles.map((role) => role.name);
 
       const hasRoleMatchingPermission = userRoles.some((roleName) =>
         roles.includes(roleName)

@@ -8,7 +8,7 @@ dotenv.config();
 const config = require("../config/config.mongdb");
 const { countConnect } = require("../helpers/check.connect");
 
-const connectString = process.env.PRODUCTION_DB_URL;
+const connectString =  config.db.url;
 
 class Database {
   constructor() {

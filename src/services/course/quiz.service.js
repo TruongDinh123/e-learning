@@ -135,13 +135,12 @@ class QuizService {
         }
         if (!course) throw new NotFoundError("course not found");
 
-        const formattedSubmissionTime = submissionTime ? new Date(submissionTime).toLocaleString(
-          "vi-VN",
-          {
-            hour12: false,
-            timeZone: "Asia/Ho_Chi_Minh",
-          }
-        ) : "Không có thời hạn";
+        const formattedSubmissionTime = submissionTime
+          ? new Date(submissionTime).toLocaleString("vi-VN", {
+              hour12: false,
+              timeZone: "Asia/Ho_Chi_Minh",
+            })
+          : "Không có thời hạn";
 
         const transporter = nodemailer.createTransport({
           service: "gmail",
@@ -254,23 +253,35 @@ class QuizService {
       const quiz = await Quiz.findById(quizId);
       if (!quiz) throw new NotFoundError("Quiz not found");
 
-      const result = await cloudinary.uploader.upload(filename, {
-        folder: "quiz_questions", // Tùy chỉnh thư mục lưu trữ trên Cloudinary
-        resource_type: "image", // Đảm bảo rằng tệp được xử lý là hình ảnh
-      });
-
-      // Tìm câu hỏi bằng ID và cập nhật URL hình ảnh
+      // Tìm câu hỏi bằng ID
       const questionIndex = quiz.questions.findIndex(
         (question) => question._id.toString() === questionId
       );
       if (questionIndex === -1) throw new NotFoundError("Question not found");
+
+      // Nếu câu hỏi đã có hình ảnh, xóa hình ảnh cũ trên Cloudinary
+      if (quiz.questions[questionIndex].image_url) {
+        const publicId = quiz.questions[questionIndex].image_url
+          .split("/")
+          .pop()
+          .split(".")[0];
+        await cloudinary.uploader.destroy(publicId, {
+          folder: "quiz_questions",
+          resource_type: "image",
+        });
+      }
+
+      // Tải lên hình ảnh mới và cập nhật URL
+      const result = await cloudinary.uploader.upload(filename, {
+        folder: "quiz_questions",
+        resource_type: "image",
+      });
 
       quiz.questions[questionIndex].image_url = result.secure_url;
       await quiz.save();
 
       return { message: "Image uploaded successfully", quiz };
     } catch (error) {
-      console.log("🚀 ~ error:", error);
       throw new BadRequestError("Failed to upload question image", error);
     }
   };
@@ -429,7 +440,8 @@ class QuizService {
   };
 
   static updateQuiz = async (quizId, updatedQuizData) => {
-    const { name, questions, submissionTime, essay } = updatedQuizData;
+    const { name, questions, timeLimit, submissionTime, essay } =
+      updatedQuizData;
     const quiz = await Quiz.findById(quizId);
 
     if (!quiz) {
@@ -445,16 +457,7 @@ class QuizService {
 
     quiz.name = name;
     quiz.submissionTime = submissionTime;
-    // for (const updateQuestion of questions) {
-    //   const questionIndex = quiz.questions.findIndex(
-    //     (question) => question._id.toString() === updateQuestion._id
-    //   );
-    //   if (questionIndex !== -1) {
-    //     quiz.questions[questionIndex] = updateQuestion;
-    //   } else {
-    //     quiz.questions.push(updateQuestion);
-    //   }
-    // }
+    quiz.timeLimit = timeLimit;
 
     if (quiz.type === "multiple_choice") {
       for (const updateQuestion of questions) {
@@ -488,9 +491,13 @@ class QuizService {
       const quiz = await Quiz.findById(quizId);
       if (!quiz) throw new NotFoundError("Quiz not found");
 
-      // const findCourse = await courseModel.findByIdAndUpdate(quiz.quizId, {
-      //   quizzes: null,
-      // });
+      // Xóa các hình ảnh của câu hỏi trên Cloudinary
+      for (const question of quiz.questions) {
+        if (question.image_url) {
+          const publicId = question.image_url.split("/").pop().split(".")[0];
+          await cloudinary.uploader.destroy(publicId);
+        }
+      }
 
       await Score.deleteMany({ quiz: quizId });
 
@@ -590,48 +597,20 @@ class QuizService {
 
       for (let i = 0; i < quiz.questions.length; i++) {
         const question = quiz.questions[i];
-        const userAnswer = answer[i] ? answer[i][Object.keys(answer[i])[0]] : null;
+        const userAnswer = answer[i]
+          ? answer[i][Object.keys(answer[i])[0]]
+          : null;
 
-        if (userAnswer === undefined || userAnswer === null || question.answer !== userAnswer) {
+        if (
+          userAnswer === undefined ||
+          userAnswer === null ||
+          question.answer !== userAnswer
+        ) {
           continue;
         } else {
           score++;
         }
       }
-
-      // if (existingScore) {
-      //   existingScore.score = (
-      //     (score / quiz.questions.length) *
-      //     maxScore
-      //   ).toFixed(2);
-      //   existingScore.answers = answer;
-      //   existingScore.isComplete = true;
-      //   await existingScore.save();
-
-      //   if (existingScore.createdAt > quiz.submissionTime) {
-      //     existingScore.isComplete = false;
-      //     throw new BadRequestError("Submission time has passed");
-      //   }
-
-      //   return existingScore;
-      // } else {
-      //   const userScore = new Score({
-      //     user: userId,
-      //     quiz: quizId,
-      //     score: ((score / quiz.questions.length) * maxScore).toFixed(2),
-      //     answers: answer,
-      //     isComplete: true,
-      //   });
-      //   await userScore.save();
-
-      //   if (userScore.createdAt > quiz.submissionTime) {
-      //     userScore.isComplete = false;
-      //     throw new BadRequestError("Submission time has passed");
-      //   }
-
-      //   return userScore;
-      // }
-
       // Cập nhật điểm số và trạng thái hoàn thành cho bản ghi điểm
       scoreRecord.score = ((score / quiz.questions.length) * maxScore).toFixed(
         2
@@ -688,6 +667,7 @@ class QuizService {
 
       if (existingScore) {
         existingScore.essayAnswer = essayAnswer;
+        scoreRecord.isComplete = true;
         await existingScore.save();
         return existingScore;
       } else {
@@ -778,12 +758,36 @@ class QuizService {
       courseIds: courseId,
     })
       .populate("questions")
+      .populate({
+        path: "lessonId",
+        populate: {
+          path: "courseId",
+          model: "Course",
+          populate: {
+            path: "teacher",
+            model: "User",
+            select: "name email lastName firstName",
+          },
+        },
+      })
       .lean();
 
     const lessonQuizzes = await Quiz.find({
       _id: { $in: [...student.quizzes, ...lessonQuizIds] },
     })
       .populate("questions")
+      .populate({
+        path: "lessonId",
+        populate: {
+          path: "courseId",
+          model: "Course",
+          populate: {
+            path: "teacher",
+            model: "User",
+            select: "name email lastName firstName",
+          },
+        },
+      })
       .lean();
 
     // Combine courseQuizzes and lessonQuizzes and remove duplicates

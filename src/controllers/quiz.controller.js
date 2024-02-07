@@ -133,15 +133,16 @@ class QuizController {
 
   updateQuiz = async (req, res, next) => {
     const { quizId } = req.params;
-    const { questions, name, submissionTime, essay } = req.body;
+    const { questions, name, submissionTime, essay, timeLimit } = req.body;
 
     new SuccessReponse({
-      message: "Update quiz successfully",
+      message: "Cập nhật bài tập thành công",
       metadata: await QuizService.updateQuiz(quizId, {
         questions,
         name,
         submissionTime,
         essay,
+        timeLimit,
       }),
     }).send(res);
   };
