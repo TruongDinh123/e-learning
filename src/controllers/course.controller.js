@@ -32,14 +32,19 @@ class CourseController {
   };
 
   getCourses = async (req, res, next) => {
-    // const teacherId = req.headers["x-client-id"];
-
     new Created({
       message: "Success!",
       metadata: await CourseService.getCourse(),
       options: {
         limit: 10,
       },
+    }).send(res);
+  };
+
+  selectCourse = async (req, res, next) => {
+    new Created({
+      message: "Success!",
+      metadata: await CourseService.selectCourse(),
     }).send(res);
   };
 
@@ -58,6 +63,15 @@ class CourseController {
     new SuccessReponse({
       message: "Get a course successfully!",
       metadata: await CourseService.getACourse({ id }),
+    }).send(res);
+  };
+
+  getACourseByInfo = async (req, res, next) => {
+    const { id } = req.params;
+
+    new SuccessReponse({
+      message: "Get a course successfully!",
+      metadata: await CourseService.getACourseByInfo({ id }),
     }).send(res);
   };
 

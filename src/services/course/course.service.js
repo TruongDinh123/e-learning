@@ -78,15 +78,36 @@ class CourseService {
     try {
       const courses = await courseModel
         .find()
+        .select("_id name title image_url category teacher")
         .populate("students", "firstName lastName")
         .populate({
           path: "lessons",
           populate: [
-            { path: "videos", model: "VideoLesson" },
-            { path: "quizzes", model: "Quiz" }
-          ]
+            { path: "videos", model: "VideoLesson", select: "_id url" },
+            { path: "quizzes", model: "Quiz" },
+          ],
         })
-        .populate("quizzes");
+        .populate("quizzes")
+        .lean();
+
+      if (!courses) throw new NotFoundError("Courses not found");
+      return courses;
+    } catch (error) {
+      throw new BadRequestError("Failed to get a Course", error);
+    }
+  };
+
+  static selectCourse = async () => {
+    try {
+      const courses = await courseModel
+        .find()
+        .select("_id name teacher")
+        .populate("students", "firstName lastName")
+        .populate({
+          path: "lessons",
+          select: "_id name",
+        })
+        .lean();
 
       if (!courses) throw new NotFoundError("Courses not found");
       return courses;
@@ -107,10 +128,26 @@ class CourseService {
           path: "lessons",
           populate: [
             { path: "videos", model: "VideoLesson" },
-            { path: "quizzes", model: "Quiz" }
-          ]
+            { path: "quizzes", model: "Quiz" },
+          ],
         })
         .populate("quizzes");
+
+      return aCourse;
+    } catch (error) {
+      throw new BadRequestError("Failed to get a Course", error);
+    }
+  };
+
+  static getACourseByInfo = async ({ id }) => {
+    try {
+      const aCourse = await courseModel
+        .findById({
+          _id: id,
+        })
+        .select("_id name title notifications")
+        .populate("students", "lastName email roles notifications")
+        .populate("teacher", "_id lastName firstName email")
 
       return aCourse;
     } catch (error) {
@@ -199,21 +236,21 @@ class CourseService {
 
   static deleteCourse = async (id) => {
     try {
-    // Xóa tất cả các bài học thuộc về khóa học
-    const lessons = await lessonModel.find({ courseId: id });
-    const lessonIds = lessons.map(lesson => lesson._id);
+      // Xóa tất cả các bài học thuộc về khóa học
+      const lessons = await lessonModel.find({ courseId: id });
+      const lessonIds = lessons.map((lesson) => lesson._id);
 
-    // Xóa tất cả các quiz liên quan đến các bài học của khóa học
-    await quizModel.deleteMany({ lessonId: { $in: lessonIds } });
+      // Xóa tất cả các quiz liên quan đến các bài học của khóa học
+      await quizModel.deleteMany({ lessonId: { $in: lessonIds } });
 
-    // Xóa tất cả các quiz liên quan trực tiếp đến khóa học thông qua trường courseIds
-    await quizModel.updateMany(
-      { courseIds: id },
-      { $pull: { courseIds: id } }
-    );
+      // Xóa tất cả các quiz liên quan trực tiếp đến khóa học thông qua trường courseIds
+      await quizModel.updateMany(
+        { courseIds: id },
+        { $pull: { courseIds: id } }
+      );
 
-    // Tiếp tục với việc xóa khóa học như bình thường
-    await lessonModel.deleteMany({ courseId: id });
+      // Tiếp tục với việc xóa khóa học như bình thường
+      await lessonModel.deleteMany({ courseId: id });
 
       const course = await courseModel.findById(id);
       if (!course) throw new NotFoundError("Course not found");

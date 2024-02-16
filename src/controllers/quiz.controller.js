@@ -101,6 +101,15 @@ class QuizController {
     }).send(res);
   };
 
+  getQuizsInfoByCourse = async (req, res, next) => {
+    const { courseIds } = req.params;
+
+    new SuccessReponse({
+      message: "Get quiz info successfully",
+      metadata: await QuizService.getQuizsInfoByCourse(courseIds),
+    }).send(res);
+  };
+
   getQuizzesByStudentAndCourse = async (req, res, next) => {
     const { courseId } = req.params;
     const studentId = req.headers["x-client-id"];
@@ -229,6 +238,17 @@ class QuizController {
       new SuccessReponse({
         message: "Get score successfully",
         metadata: await QuizService.getScoreByUser(userId),
+      }).send(res);
+    } catch (error) {}
+  };
+
+  getScoreByInfo = async (req, res, next) => {
+    try {
+      const userId = req.headers["x-client-id"];
+
+      new SuccessReponse({
+        message: "Get score info successfully",
+        metadata: await QuizService.getScoreByInfo(userId),
       }).send(res);
     } catch (error) {}
   };

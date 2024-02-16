@@ -48,6 +48,12 @@ router.get(
 );
 
 router.get(
+  "/e-learning/course/:courseIds/info-quizz",
+  permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
+  asyncHandler(quizController.getQuizsInfoByCourse)
+);
+
+router.get(
   "/e-learning/course/:courseId/list-quizzes",
   permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
   asyncHandler(quizController.getQuizzesByStudentAndCourse)
@@ -100,6 +106,13 @@ router.get(
   permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
   asyncHandler(quizController.getScoreByUser)
 );
+
+router.get(
+  "/e-learning/info-score",
+  permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
+  asyncHandler(quizController.getScoreByInfo)
+);
+
 
 router.get(
   "/e-learning/:quizId/:userId/score",

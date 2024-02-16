@@ -403,6 +403,43 @@ class QuizService {
     }
   };
 
+  static getQuizsInfoByCourse = async (courseIds) => {
+    try {
+      // Find the course
+      const course = await courseModel.findById(courseIds);
+      if (!course) throw new NotFoundError("Course not found");
+
+      // Find lessons that belong to the course
+      const lessons = await lessonModel.find({ courseId: courseIds });
+
+      // Extract all quiz IDs from the lessons
+      const lessonQuizIds = lessons.flatMap((lesson) => lesson.quizzes);
+
+      // Find quizzes that belong to the course
+      const courseQuizzes = await Quiz.find({ courseIds: courseIds })
+        .select(
+          "-questions -updatedAt -createdAt -studentIds -submissionTime -__v"
+        )
+        .lean();
+
+      // Find quizzes that belong to the lessons
+      const lessonQuizzes = await Quiz.find({ _id: { $in: lessonQuizIds } })
+        .select(
+          "-questions -updatedAt -createdAt -studentIds -submissionTime -__v"
+        )
+        .lean();
+
+      // Combine courseQuizzes and lessonQuizzes
+      const quizzes = [...courseQuizzes, ...lessonQuizzes];
+
+      if (!quizzes) throw new NotFoundError("Quizzes not found");
+
+      return quizzes;
+    } catch (error) {
+      throw new BadRequestError("Failed to get quizs", error);
+    }
+  };
+
   static getAQuizByCourse = async (quizId) => {
     const quizs = await Quiz.find()
       .where({ _id: quizId })
@@ -685,10 +722,7 @@ class QuizService {
 
   static getScoreByUser = async (userId) => {
     try {
-      const scores = await Score.find({ user: userId })
-        .populate("quiz")
-        .populate("assignment")
-        .lean();
+      const scores = await Score.find({ user: userId }).populate("quiz").lean();
 
       if (!scores) throw new NotFoundError("scores not found");
 
@@ -701,7 +735,7 @@ class QuizService {
   static getScoreByUserId = async (userId, quizId) => {
     try {
       const scores = await Score.find({ user: userId, quiz: quizId })
-        .populate("quiz")
+        .populate("quiz", "_id name")
         .lean();
 
       if (!scores) throw new NotFoundError("scores not found");
@@ -713,6 +747,21 @@ class QuizService {
       }));
 
       return scoreAndAnswers;
+    } catch (error) {
+      throw new BadRequestError("Failed to get scores and answers", error);
+    }
+  };
+
+  static getScoreByInfo = async (userId) => {
+    try {
+      const scores = await Score.find({ user: userId })
+        .select("_id score isComplete user")
+        .populate("quiz", "_id name")
+        .lean();
+
+      if (!scores) throw new NotFoundError("scores not found");
+
+      return scores;
     } catch (error) {
       throw new BadRequestError("Failed to get scores and answers", error);
     }
@@ -738,12 +787,13 @@ class QuizService {
     validateMongoDbId(studentId);
     validateMongoDbId(courseId);
 
-    // Find the student
-    const student = await userModel.findById(studentId);
-    if (!student) throw new NotFoundError("Student not found");
+    // Find the student and course in parallel
+    const [student, course] = await Promise.all([
+      userModel.findById(studentId),
+      courseModel.findById(courseId),
+    ]);
 
-    // Find the course
-    const course = await courseModel.findById(courseId);
+    if (!student) throw new NotFoundError("Student not found");
     if (!course) throw new NotFoundError("Course not found");
 
     // Find lessons that belong to the course
@@ -753,42 +803,45 @@ class QuizService {
     const lessonQuizIds = lessons.flatMap((lesson) => lesson.quizzes);
 
     // Find quizzes that belong to the course and assigned to the student
-    const courseQuizzes = await Quiz.find({
-      _id: { $in: student.quizzes },
-      courseIds: courseId,
-    })
-      .populate("questions")
-      .populate({
-        path: "lessonId",
-        populate: {
-          path: "courseId",
-          model: "Course",
-          populate: {
-            path: "teacher",
-            model: "User",
-            select: "name email lastName firstName",
-          },
-        },
+    const [courseQuizzes, lessonQuizzes] = await Promise.all([
+      Quiz.find({
+        _id: { $in: student.quizzes },
+        courseIds: courseId,
       })
-      .lean();
-
-    const lessonQuizzes = await Quiz.find({
-      _id: { $in: [...student.quizzes, ...lessonQuizIds] },
-    })
-      .populate("questions")
-      .populate({
-        path: "lessonId",
-        populate: {
-          path: "courseId",
-          model: "Course",
+        .select("-questions -updatedAt -createdAt -__v")
+        .populate("courseIds", "_id name")
+        .populate({
+          path: "lessonId",
           populate: {
-            path: "teacher",
-            model: "User",
-            select: "name email lastName firstName",
+            path: "courseId",
+            model: "Course",
+            populate: {
+              path: "teacher",
+              model: "User",
+              select: "name email lastName firstName",
+            },
           },
-        },
+        })
+        .lean(),
+      Quiz.find({
+        _id: { $in: [...student.quizzes, ...lessonQuizIds] },
       })
-      .lean();
+        .populate("courseIds", "_id name")
+        .select("-questions -updatedAt -createdAt -__v")
+        .populate({
+          path: "lessonId",
+          populate: {
+            path: "courseId",
+            model: "Course",
+            populate: {
+              path: "teacher",
+              model: "User",
+              select: "name email lastName firstName",
+            },
+          },
+        })
+        .lean(),
+    ]);
 
     // Combine courseQuizzes and lessonQuizzes and remove duplicates
     const combinedQuizzes = [...courseQuizzes, ...lessonQuizzes];
