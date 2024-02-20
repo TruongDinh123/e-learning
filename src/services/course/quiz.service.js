@@ -29,7 +29,6 @@ class QuizService {
     lessonId,
     timeLimit,
   }) => {
-    try {
       let quiz;
       if (quizTemplateId) {
         const quizTemplate = await QuizTemplate.findById(quizTemplateId);
@@ -186,7 +185,7 @@ class QuizService {
                           <li>Thời hạn nộp bài: <strong>${formattedSubmissionTime}</strong></li>
                       </ul>
                       <p>Vui lòng nộp bài đúng hạn.</p>
-                      <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">247learn.vn@gmail.com</a>.</p>
+                      <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
                   </div>
                   <div class="footer">
                       <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
@@ -210,7 +209,7 @@ class QuizService {
 
         // Check if the lesson already has a quiz
         if (lesson.quizzes && lesson.quizzes.length > 0) {
-          throw new BadRequestError("A quiz for this lesson already exists");
+          throw new BadRequestError("Bài tập đã tồn tại trong bài học này");
         }
 
         // Update the lesson with the new quiz
@@ -240,10 +239,7 @@ class QuizService {
       }
 
       return savedQuiz;
-    } catch (error) {
-      console.log("🚀 ~ error:", error);
-      throw new BadRequestError("Failed to create quiz", error);
-    }
+
   };
 
   static uploadQuestionImage = async ({ quizId, questionId, filename }) => {

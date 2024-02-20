@@ -377,7 +377,7 @@ class CourseService {
                 <li>Mật khẩu: <strong>${password}</strong></li>
               </ul>
               <p>Vui lòng không chia sẻ thông tin tài khoản của bạn với người khác. Bạn có thể đổi mật khẩu sau khi đăng nhập lần đầu.</p>
-              <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">support@247learn.vn</a>.</p>
+              <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com"> 247learn.vn@gmail.com</a>.</p>
             </div>
             <div class="footer">
               <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
@@ -411,7 +411,7 @@ class CourseService {
           <p>Xin chào,</p>
           <p>Chúng tôi rất vui mừng thông báo rằng bạn đã được thêm vào khoá học <strong>${course.name}</strong> do giáo viên <strong>${teacherName}</strong> hướng dẫn.</p>
           <p>Bạn có thể tiếp tục sử dụng tài khoản hiện tại của mình để truy cập vào khóa học.</p>
-          <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">support@247learn.vn</a>.</p>
+          <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com"> 247learn.vn@gmail.com</a>.</p>
         </div>
         <div class="footer">
           <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
@@ -445,9 +445,41 @@ class CourseService {
         await course.save();
       }
 
+      const quizzes = await Quiz.find({ courseIds: courseId });
+      for (const quiz of quizzes) {
+        if (!quiz.studentIds.includes(user._id)) {
+          quiz.studentIds.push(user._id);
+          await quiz.save();
+        }
+        // Kiểm tra và thêm quiz vào mảng quizzes của User nếu chưa có
+        if (!user.quizzes.includes(quiz._id)) {
+          user.quizzes.push(quiz._id);
+        }
+      }
+  
+      // Tìm tất cả các bài học thuộc về khóa học này và cập nhật mảng quizzes của User
+      const lessons = await lessonModel.find({ courseId: courseId });
+      for (const lesson of lessons) {
+        // Thêm học viên vào tất cả các bài tập trong mỗi bài học
+        for (const quizId of lesson.quizzes) {
+          const quiz = await Quiz.findById(quizId);
+          if (quiz && !quiz.studentIds.includes(user._id)) {
+            quiz.studentIds.push(user._id);
+            await quiz.save();
+          }
+          // Kiểm tra và thêm quiz vào mảng quizzes của User nếu chưa có
+          if (!user.quizzes.includes(quiz._id)) {
+            user.quizzes.push(quiz._id);
+          }
+        }
+      }
+  
+      // Lưu thay đổi vào User
+      await user.save();
+
       return user;
     } catch (error) {
-      console.log("🚀 ~ error:", error);
+      console.log(error)
       throw new BadRequestError("Lỗi server");
     }
   };
@@ -539,7 +571,7 @@ class CourseService {
                             <li>Mật khẩu: <strong>${password}</strong></li>
                         </ul>
                         <p>Vui lòng không chia sẻ thông tin tài khoản của bạn với người khác. Bạn có thể đổi mật khẩu sau khi đăng nhập lần đầu.</p>
-                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">247learn.vn@gmail.com</a>.</p>
+                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
                     </div>
                     <div class="footer">
                         <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
@@ -572,7 +604,7 @@ class CourseService {
                         <p>Xin chào,</p>
                         <p>Chúng tôi rất vui mừng thông báo rằng bạn đã được đăng ký thành công trở thành giáo viên của khoá học <strong>${course.name}</strong></p>
                         <p>Bạn hãy đăng nhập vào tài khoản hiện tại của bạn để truy cập vào hệ thống:</p>
-                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">247learn.vn@gmail.com</a>.</p>
+                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
                     </div>
                     <div class="footer">
                         <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
@@ -667,7 +699,7 @@ class CourseService {
                       <p>Chúng tôi rất vui mừng thông báo rằng bạn đã được đăng ký thành công trở thành giáo viên của khoá học <strong>${course.name}</strong></p>
                       <p>Bạn hãy đăng nhập vào tài khoản hiện tại của bạn để truy cập vào hệ thống:</p>
                       <p>Vui lòng không chia sẻ thông tin tài khoản của bạn với người khác. Bạn có thể đổi mật khẩu sau khi đăng nhập lần đầu.</p>
-                      <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">247learn.vn@gmail.com</a>.</p>
+                      <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
                   </div>
                   <div class="footer">
                   <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
@@ -736,7 +768,7 @@ class CourseService {
                             <li>Mật khẩu: <strong>${password}</strong></li>
                         </ul>
                         <p>Vui lòng không chia sẻ thông tin tài khoản của bạn với người khác. Bạn có thể đổi mật khẩu sau khi đăng nhập lần đầu.</p>
-                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">247learn.vn@gmail.com</a>.</p>
+                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
                     </div>
                     <div class="footer">
                         <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
@@ -769,7 +801,7 @@ class CourseService {
                         <p>Xin chào,</p>
                         <p>Chúng tôi rất vui mừng thông báo rằng bạn đã được đăng ký thành công trở thành giáo viên của khoá học <strong>${course.name}</strong></p>
                         <p>Bạn hãy đăng nhập vào tài khoản hiện tại của bạn để truy cập vào hệ thống:</p>
-                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">247learn.vn@gmail.com</a>.</p>
+                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
                     </div>
                     <div class="footer">
                         <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
@@ -829,7 +861,7 @@ class CourseService {
                                       <li>Mật khẩu: <strong>${password}</strong></li>
                                   </ul>
                                   <p>Vui lòng không chia sẻ thông tin tài khoản của bạn với người khác. Bạn có thể đổi mật khẩu sau khi đăng nhập lần đầu.</p>
-                                  <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">247learn.vn@gmail.com</a>.</p>
+                                  <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
                               </div>
                               <div class="footer">
                                   <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
