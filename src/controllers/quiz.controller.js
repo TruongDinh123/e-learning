@@ -170,7 +170,7 @@ class QuizController {
   };
 
   uploadQuestionImage = async (req, res, next) => {
-    const { quizId, questionId  } = req.body;
+    const { quizId, questionId } = req.body;
     const { path: filename } = req.file;
 
     new SuccessReponse({
@@ -189,6 +189,14 @@ class QuizController {
     new SuccessReponse({
       message: "Delete quiz successfully",
       metadata: await QuizService.deleteQuiz({ quizId }),
+    }).send(res);
+  };
+
+  deleteScorebyQuiz = async (req, res, next) => {
+    const { scoreId } = req.params;
+    new SuccessReponse({
+      message: "Delete table score successfully",
+      metadata: await QuizService.deleteScorebyQuiz({ scoreId }),
     }).send(res);
   };
 

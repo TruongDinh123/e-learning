@@ -29,131 +29,139 @@ class QuizService {
     lessonId,
     timeLimit,
   }) => {
-      let quiz;
-      if (quizTemplateId) {
-        const quizTemplate = await QuizTemplate.findById(quizTemplateId);
-        if (!quizTemplate) throw new NotFoundError("Quiz tempalte not found");
+    let quiz;
+    if (quizTemplateId) {
+      const quizTemplate = await QuizTemplate.findById(quizTemplateId);
+      if (!quizTemplate) throw new NotFoundError("Quiz tempalte not found");
 
-        const combinedQuestions = [...quizTemplate.questions, ...questions];
+      const combinedQuestions = [...quizTemplate.questions, ...questions];
 
-        quiz = new Quiz({
-          type: quizTemplate.type,
-          name: quizTemplate.name,
-          courseIds,
-          studentIds,
-          lessonId,
-          questions: combinedQuestions,
-          essay: quizTemplate.essay,
-          submissionTime,
-          quizTemplate: quizTemplateId,
-        });
-      } else {
-        if (type === "multiple_choice") {
-          const formattedQuestions = [];
+      quiz = new Quiz({
+        type: quizTemplate.type,
+        name: quizTemplate.name,
+        courseIds,
+        studentIds,
+        lessonId,
+        questions: combinedQuestions,
+        essay: quizTemplate.essay,
+        submissionTime,
+        quizTemplate: quizTemplateId,
+      });
+    } else {
+      if (type === "multiple_choice") {
+        const formattedQuestions = [];
 
-          for (const question of questions) {
-            const formattedQuestion = {
-              question: question.question,
-              options: question.options,
-              answer: question.answer,
-            };
-            formattedQuestions.push(formattedQuestion);
-          }
-
-          if (
-            (!studentIds || !studentIds.length) &&
-            (!courseIds || !courseIds.length) &&
-            !submissionTime
-          ) {
-            quiz = new QuizTemplate({
-              type,
-              name,
-              questions: formattedQuestions,
-            });
-          } else {
-            quiz = new Quiz({
-              type,
-              name,
-              courseIds,
-              studentIds,
-              lessonId,
-              questions: formattedQuestions,
-              submissionTime,
-              timeLimit,
-            });
-          }
-        } else if (type === "essay") {
-          const formattedEssay = {
-            title: essay.title,
-            content: essay.content,
-            attachment: essay.attachment,
+        for (const question of questions) {
+          const formattedQuestion = {
+            question: question.question,
+            options: question.options,
+            answer: question.answer,
           };
+          formattedQuestions.push(formattedQuestion);
+        }
 
+        if (
+          (!studentIds || !studentIds.length) &&
+          (!courseIds || !courseIds.length) &&
+          !submissionTime
+        ) {
+          quiz = new QuizTemplate({
+            type,
+            name,
+            questions: formattedQuestions,
+          });
+        } else {
           quiz = new Quiz({
             type,
             name,
             courseIds,
             studentIds,
             lessonId,
-            essay: formattedEssay,
+            questions: formattedQuestions,
             submissionTime,
+            timeLimit,
           });
-        } else {
-          throw new BadRequestError("Invalid quiz type");
         }
+      } else if (type === "essay") {
+        const formattedEssay = {
+          title: essay.title,
+          content: essay.content,
+          attachment: essay.attachment,
+        };
+
+        quiz = new Quiz({
+          type,
+          name,
+          courseIds,
+          studentIds,
+          lessonId,
+          essay: formattedEssay,
+          submissionTime,
+        });
+      } else {
+        throw new BadRequestError("Invalid quiz type");
       }
+    }
 
-      const emailPromises = studentIds.map(async (studentId) => {
-        const student = await userModel.findById(studentId);
-        if (!student) throw new NotFoundError("student not found");
+    const emailPromises = studentIds.map(async (studentId) => {
+      const student = await userModel.findById(studentId);
+      if (!student) throw new NotFoundError("student not found");
 
-        let course,
-          lessonName,
-          teacherName = "N/A"; // Initialize teacherName here
-        if (lessonId) {
-          const lesson = await lessonModel.findById(lessonId).populate({
-            path: "courseId",
-            populate: {
-              path: "teacher",
-              model: "User", // Replace 'User' with the actual model name for the teacher
-            },
-          });
-          course = lesson.courseId;
-          lessonName = lesson.name;
-          if (course && course.teacher) {
-            teacherName = `${course.teacher.lastName} ${course.teacher.firstName}`;
-          }
-        } else {
-          course = await courseModel
-            .findOne({ _id: { $in: courseIds } })
-            .populate("teacher");
-
-          if (course && course.teacher) {
-            teacherName = `${course.teacher.lastName} ${course.teacher.firstName}`;
-          }
-        }
-        if (!course) throw new NotFoundError("course not found");
-
-        const formattedSubmissionTime = submissionTime
-          ? new Date(submissionTime).toLocaleString("vi-VN", {
-              hour12: false,
-              timeZone: "Asia/Ho_Chi_Minh",
-            })
-          : "Không có thời hạn";
-
-        const transporter = nodemailer.createTransport({
-          service: "gmail",
-          auth: {
-            user: "247learn.vn@gmail.com",
-            pass: "glpiggogzyxtfhod",
+      let course,
+        lessonName,
+        teacherName = "N/A"; // Initialize teacherName here
+      if (lessonId) {
+        const lesson = await lessonModel.findById(lessonId).populate({
+          path: "courseId",
+          populate: {
+            path: "teacher",
+            model: "User", // Replace 'User' with the actual model name for the teachers
           },
         });
+        course = lesson.courseId;
+        lessonName = lesson.name;
+        if (course && course.teacher) {
+          teacherName = course.teacher
+            ? [course.teacher.lastName, course.teacher.firstName]
+                .filter(Boolean)
+                .join(" ") || "Giáo viên"
+            : "Giáo viên";
+        }
+      } else {
+        course = await courseModel
+          .findOne({ _id: { $in: courseIds } })
+          .populate("teacher");
 
-        const mailOptions = {
-          from: "247learn.vn@gmail.com",
-          to: student.email,
-          subject: "Bạn có một bài tập mới",
-          html: `
+        if (course && course.teacher) {
+          teacherName = course.teacher
+            ? [course.teacher.lastName, course.teacher.firstName]
+                .filter(Boolean)
+                .join(" ") || "Giáo viên"
+            : "Giáo viên";
+        }
+      }
+      if (!course) throw new NotFoundError("course not found");
+
+      const formattedSubmissionTime = submissionTime
+        ? new Date(submissionTime).toLocaleString("vi-VN", {
+            hour12: false,
+            timeZone: "Asia/Ho_Chi_Minh",
+          })
+        : "Không có thời hạn";
+
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: "247learn.vn@gmail.com",
+          pass: "glpiggogzyxtfhod",
+        },
+      });
+
+      const mailOptions = {
+        from: "247learn.vn@gmail.com",
+        to: student.email,
+        subject: "Bạn có một bài tập mới",
+        html: `
           <!DOCTYPE html>
           <html>
           <head>
@@ -174,8 +182,8 @@ class QuizService {
                   <div class="content">
                       <p>Xin chào,</p>
                       <p>Giáo viên <strong>${teacherName}</strong> đã giao cho bạn một bài tập mới trong <strong>${
-            course.name
-          }</strong></p>
+          course.name
+        }</strong></p>
                       ${
                         lessonName
                           ? `<p>Thuộc bài học: <strong>${lessonName}</strong></p>`
@@ -194,52 +202,51 @@ class QuizService {
           </body>
           </html>
         `,
-        };
+      };
 
-        return transporter.sendMail(mailOptions);
-      });
+      return transporter.sendMail(mailOptions);
+    });
 
-      await Promise.all(emailPromises);
+    await Promise.all(emailPromises);
 
-      const savedQuiz = await quiz.save();
+    const savedQuiz = await quiz.save();
 
-      if (lessonId) {
-        const lesson = await lessonModel.findById(lessonId);
-        if (!lesson) throw new NotFoundError("Lesson not found");
+    if (lessonId) {
+      const lesson = await lessonModel.findById(lessonId);
+      if (!lesson) throw new NotFoundError("Lesson not found");
 
-        // Check if the lesson already has a quiz
-        if (lesson.quizzes && lesson.quizzes.length > 0) {
-          throw new BadRequestError("Bài tập đã tồn tại trong bài học này");
-        }
-
-        // Update the lesson with the new quiz
-        lesson.quizzes = [savedQuiz._id];
-        await lesson.save();
+      // Check if the lesson already has a quiz
+      if (lesson.quizzes && lesson.quizzes.length > 0) {
+        throw new BadRequestError("Bài tập đã tồn tại trong bài học này");
       }
 
-      for (const studentId of studentIds) {
-        const student = await userModel.findById(studentId);
-        student.quizzes.push(savedQuiz._id);
-        await student.save();
-      }
+      // Update the lesson with the new quiz
+      lesson.quizzes = [savedQuiz._id];
+      await lesson.save();
+    }
 
-      for (const courseId of courseIds) {
-        const course = await courseModel
-          .findByIdAndUpdate(
-            courseId,
-            {
-              $push: { quizzes: savedQuiz._id },
-            },
-            { new: true }
-          )
-          .populate("quizzes")
-          .populate("students");
+    for (const studentId of studentIds) {
+      const student = await userModel.findById(studentId);
+      student.quizzes.push(savedQuiz._id);
+      await student.save();
+    }
 
-        if (!course) throw new NotFoundError("course not found");
-      }
+    for (const courseId of courseIds) {
+      const course = await courseModel
+        .findByIdAndUpdate(
+          courseId,
+          {
+            $push: { quizzes: savedQuiz._id },
+          },
+          { new: true }
+        )
+        .populate("quizzes")
+        .populate("students");
 
-      return savedQuiz;
+      if (!course) throw new NotFoundError("course not found");
+    }
 
+    return savedQuiz;
   };
 
   static uploadQuestionImage = async ({ quizId, questionId, filename }) => {
@@ -546,6 +553,11 @@ class QuizService {
         );
       }
 
+      await userModel.updateMany(
+        { quizzes: quizId },
+        { $pull: { quizzes: quizId } }
+      );
+
       const deletedQuiz = await Quiz.findByIdAndDelete(quizId);
 
       return deletedQuiz;
@@ -778,6 +790,15 @@ class QuizService {
     }
   };
 
+  static deleteScorebyQuiz = async (scoreId) => {
+    try {
+      const deletedScore = await Score.deleteOne({ _id: scoreId });
+      if (!deletedScore) throw new NotFoundError("No score found");
+    } catch (error) {
+      throw new BadRequestError("Failed to delete score", error);
+    }
+  };
+
   static getQuizzesByStudentAndCourse = async (studentId, courseId) => {
     // Validate studentId and courseId
     validateMongoDbId(studentId);
@@ -804,7 +825,7 @@ class QuizService {
         _id: { $in: student.quizzes },
         courseIds: courseId,
       })
-        .select("-questions -updatedAt -createdAt -__v")
+        .select("-updatedAt -createdAt -__v")
         .populate("courseIds", "_id name")
         .populate({
           path: "lessonId",
@@ -823,7 +844,7 @@ class QuizService {
         _id: { $in: [...student.quizzes, ...lessonQuizIds] },
       })
         .populate("courseIds", "_id name")
-        .select("-questions -updatedAt -createdAt -__v")
+        .select("-updatedAt -createdAt -__v")
         .populate({
           path: "lessonId",
           populate: {

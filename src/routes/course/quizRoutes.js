@@ -89,6 +89,12 @@ router.delete(
   asyncHandler(quizController.deleteQuiz)
 );
 
+router.delete(
+  "/e-learning/score/:scoreId/delete-score",
+  permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
+  asyncHandler(quizController.deleteScorebyQuiz)
+);
+
 router.post(
   "/e-learning/quiz/:quizId/submit",
   permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),

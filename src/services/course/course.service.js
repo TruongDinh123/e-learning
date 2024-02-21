@@ -78,7 +78,7 @@ class CourseService {
     try {
       const courses = await courseModel
         .find()
-        .select("_id name title image_url category teacher")
+        .select("_id name title showCourse image_url category teacher")
         .populate("students", "firstName lastName")
         .populate({
           path: "lessons",
@@ -241,10 +241,10 @@ class CourseService {
       const lessonIds = lessons.map((lesson) => lesson._id);
 
       // Xóa tất cả các quiz liên quan đến các bài học của khóa học
-      await quizModel.deleteMany({ lessonId: { $in: lessonIds } });
+      await Quiz.deleteMany({ lessonId: { $in: lessonIds } });
 
       // Xóa tất cả các quiz liên quan trực tiếp đến khóa học thông qua trường courseIds
-      await quizModel.updateMany(
+      await Quiz.updateMany(
         { courseIds: id },
         { $pull: { courseIds: id } }
       );
@@ -285,12 +285,14 @@ class CourseService {
     try {
       let user = await User.findOne({ email });
 
-      const course = await courseModel.findById(courseId);
+      const course = await courseModel.findById(courseId).populate('teacher', 'firstName lastName');
       if (!course) throw new NotFoundError("Khóa học không tồn tại");
 
       const loggedInUser = await User.findById(userId);
 
-      const teacherName = loggedInUser.firstName;
+      const teacherName = course.teacher ? 
+        [course.teacher.lastName, course.teacher.firstName].filter(Boolean).join(" ") || "Giáo viên" : 
+        "Giáo viên";
 
       const transporter = nodemailer.createTransport({
         service: "gmail",
@@ -923,16 +925,20 @@ class CourseService {
 
   static getStudentCourses = async (userId) => {
     try {
-      const user = await User.findById(userId).populate({
+      const user = await User.findById(userId)
+      .select("_id firstName lastName quizzes")
+      .populate({
         path: "courses",
+        select: "_id image_url name title lessons",
         populate: {
           path: "teacher",
           model: "User",
+          select: "firstName lastName email"
         },
-      });
+      })
       if (!user) throw new NotFoundError("User not found");
 
-      return user.courses;
+      return user;
     } catch (error) {
       throw new BadRequestError("Failed to get student courses");
     }
