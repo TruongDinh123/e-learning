@@ -908,7 +908,6 @@ class CourseService {
     try {
       const user = await User.findById(userId);
       const course = await courseModel.findById(courseId);
-
       if (!user) throw new NotFoundError("User not found");
       if (!course) throw new NotFoundError("Course not found");
 
@@ -929,12 +928,29 @@ class CourseService {
       .select("_id firstName lastName quizzes")
       .populate({
         path: "courses",
-        select: "_id image_url name title lessons",
-        populate: {
-          path: "teacher",
-          model: "User",
-          select: "firstName lastName email"
-        },
+        select: "_id image_url name title lessons quizzes",
+        populate: [
+          {
+            path: "teacher",
+            model: "User",
+            select: "firstName lastName email"
+          },
+          {
+            path: "lessons",
+            model: "Lesson",
+            select: "quizzes",
+            populate: {
+              path: "quizzes",
+              model: "Quiz",
+              select: "_id"
+            }
+          },
+          {
+            path: "quizzes",
+            model: "Quiz",
+            select: "_id"
+          }
+        ],
       })
       if (!user) throw new NotFoundError("User not found");
 
