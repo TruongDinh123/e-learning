@@ -132,6 +132,13 @@ router.get(
   asyncHandler(quizController.getScoreByQuizId)
 );
 
+router.get(
+  "/e-learning/get-all-score/:courseId",
+  permission(["Super-Admin", "Admin", "Mentor"]),
+  asyncHandler(quizController.getAllScoresByCourseId)
+);
+
+
 router.put(
   "/e-learning/score/update",
   permission(["Super-Admin", "Admin", "Mentor"]),

@@ -10,13 +10,16 @@ const findByEmail = async ({
     password: 1,
     lastName: 1,
     firstName: 1,
+    image_url: 1,
     roles: 1,
     status: 1,
+    courses: 1,
   },
 }) => {
   return await User.findOne({ email })
     .select(select)
     .populate("roles", "_id name")
+    .populate("courses", "_id name")
     .lean();
 };
 
@@ -54,8 +57,24 @@ const sendEmail = async ({ to, subject, text }) => {
   });
 };
 
+const createResponseObject = async (user) =>  {
+  return {
+    message: "Student added to course successfully!",
+    status: 200,
+    metadata: {
+      firstName: user.firstName,
+      email: user.email,
+      courses: user.courses.map(course => course.toString()), // Chỉ trả về ID của khóa học
+      quizzes: user.quizzes.map(quiz => quiz.toString()), // Chỉ trả về ID của quiz
+      roles: user.roles.map(role => role.toString()), // Chỉ trả về ID của vai trò
+      status: user.status
+    }
+  };
+}
+
 module.exports = {
   findByEmail,
   sendEmail,
   findUserById,
+  createResponseObject
 };

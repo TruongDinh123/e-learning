@@ -205,6 +205,7 @@ class CategoryService {
   static getAllCategories = async () => {
     const categories = await categoryModel
       .find()
+      .select('_id name')
       .populate({
         path: "courses",
         select: "name title image_url teacher lessons showCourse _id",

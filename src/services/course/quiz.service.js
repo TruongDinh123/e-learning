@@ -891,6 +891,49 @@ class QuizService {
       throw new BadRequestError("Failed to update score", error);
     }
   };
+
+  static getAllScoresByCourseId = async (courseId) => {
+    try {
+      // Validate the courseId
+      validateMongoDbId(courseId);
+
+      // Find the course to ensure it exists
+      const course = await courseModel.findById(courseId);
+      if (!course) throw new NotFoundError("Course not found");
+
+      // Get all quizzes associated with the course
+      const quizzes = await Quiz.find({ courseIds: courseId });
+
+      // Map through quizzes and get scores for each quiz
+      const scoresPromises = quizzes.map(async (quiz) => {
+        const scores = await Score.find({ quiz: quiz._id }).populate('user', 'email').lean();
+        return {
+          quizId: quiz._id,
+          quizName: quiz.name,
+          scores: scores.map(score => {
+            // Kiểm tra xem user có tồn tại không trước khi truy cập các thuộc tính
+            const user = score.user;
+            return {
+              userId: user ? user._id : null,
+              userEmail: user ? user.email : 'No Email',
+              score: score.score,
+              submitTime: score.submitTime,
+              isComplete: score.isComplete,
+            };
+          }),
+        };
+      });
+
+      // Resolve all promises to get the scores
+      const allScores = await Promise.all(scoresPromises);
+
+      return allScores;
+    } catch (error) {
+      console.error("Error in getAllScoresByCourseId:", error);
+      throw new BadRequestError("Failed to get scores by course ID", error);
+    }
+  };
+
 }
 
 exports.QuizService = QuizService;

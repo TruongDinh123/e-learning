@@ -283,12 +283,15 @@ class CourseService {
 
   static addStudentToCours = async ({ courseId, email, userId }) => {
     try {
-      let user = await User.findOne({ email });
-
-      const course = await courseModel.findById(courseId).populate('teacher', 'firstName lastName');
+      let [user, course, loggedInUser, adminRole] = await Promise.all([
+        User.findOne({ email }),
+        courseModel.findById(courseId).populate('teacher', 'firstName lastName'),
+        User.findById(userId),
+        Role.find({ $or: [{ name: "Admin" }, { name: "Super-Admin" }] }).lean()
+      ]);
+  
       if (!course) throw new NotFoundError("Khóa học không tồn tại");
-
-      const loggedInUser = await User.findById(userId);
+      if (!adminRole) throw new NotFoundError("Role 'Admin' not found");
 
       const teacherName = course.teacher ? 
         [course.teacher.lastName, course.teacher.firstName].filter(Boolean).join(" ") || "Giáo viên" : 
@@ -308,13 +311,6 @@ class CourseService {
         subject: `Chào mừng bạn đến khóa học ${course.name}`,
         html: "",
       };
-
-      const adminRole = await Role.find({
-        $or: [{ name: "Admin" }, { name: "Super-Admin" }],
-      }).lean();
-      if (!adminRole) {
-        throw new NotFoundError("Role 'Admin' not found");
-      }
 
       const adminRoleIds = adminRole.map((role) => role._id.toString());
 
@@ -428,63 +424,74 @@ class CourseService {
 
       // Gửi email nếu cần
       if (shouldSendEmail) {
-        transporter.sendMail(mailOptions, function (error, info) {
-          if (error) {
-            console.error("Failed to send email", error);
-          } else {
-            console.log("Email sent: " + info.response);
-          }
+        transporter.sendMail(mailOptions).catch(error => {
+          console.error("Failed to send email", error);
         });
       }
 
-      if (!user.courses.includes(courseId)) {
-        user.courses.push(courseId);
-        await user.save();
-      }
+      // Sử dụng $addToSet để thêm mà không cần kiểm tra trùng lặp
+      const userUpdate = User.findByIdAndUpdate(user._id, {
+        $addToSet: { courses: courseId }
+      }, { new: true });
 
-      if (!course.students.includes(user._id)) {
-        course.students.push(user._id);
-        await course.save();
-      }
+      const courseUpdate = courseModel.findByIdAndUpdate(course._id, {
+        $addToSet: { students: user._id }
+      }, { new: true });
 
+      // Cập nhật quizzes và lessons bằng cách sử dụng $addToSet trong một vòng lặp
       const quizzes = await Quiz.find({ courseIds: courseId });
-      for (const quiz of quizzes) {
-        if (!quiz.studentIds.includes(user._id)) {
-          quiz.studentIds.push(user._id);
-          await quiz.save();
-        }
-        // Kiểm tra và thêm quiz vào mảng quizzes của User nếu chưa có
-        if (!user.quizzes.includes(quiz._id)) {
-          user.quizzes.push(quiz._id);
-        }
-      }
-  
-      // Tìm tất cả các bài học thuộc về khóa học này và cập nhật mảng quizzes của User
-      const lessons = await lessonModel.find({ courseId: courseId });
-      for (const lesson of lessons) {
-        // Thêm học viên vào tất cả các bài tập trong mỗi bài học
-        for (const quizId of lesson.quizzes) {
-          const quiz = await Quiz.findById(quizId);
-          if (quiz && !quiz.studentIds.includes(user._id)) {
-            quiz.studentIds.push(user._id);
-            await quiz.save();
-          }
-          // Kiểm tra và thêm quiz vào mảng quizzes của User nếu chưa có
-          if (!user.quizzes.includes(quiz._id)) {
-            user.quizzes.push(quiz._id);
-          }
-        }
-      }
-  
+      const quizUpdates = quizzes.map(quiz => 
+        Quiz.findByIdAndUpdate(quiz._id, {
+          $addToSet: { studentIds: user._id }
+        }, { new: true })
+      );
+
+      // Cập nhật các bài học và quiz liên quan đến khóa học
+      const lessons = await lessonModel.find({ courseId: courseId }).lean();
+      const lessonUpdates = lessons.map(lesson => {
+        const quizUpdatesForLesson = lesson.quizzes.map(quizId => 
+          Quiz.findByIdAndUpdate(quizId, {
+            $addToSet: { studentIds: user._id }
+          }, { new: true })
+        );
+        return Promise.all(quizUpdatesForLesson);
+      });
+
+      await Promise.all([userUpdate, courseUpdate, ...quizUpdates, ...lessonUpdates.flat()]);
+
+      const quizIdsFromLessons = lessons.flatMap(lesson => lesson.quizzes);
+      const allQuizIds = [...quizzes.map(quiz => quiz._id), ...quizIdsFromLessons];
+
+      // Cập nhật mảng quizzes của User, sử dụng $addToSet để tránh trùng lặp
+      await User.findByIdAndUpdate(user._id, {
+        $addToSet: { quizzes: { $each: allQuizIds } }
+      }, { new: true });
+
       // Lưu thay đổi vào User
       await user.save();
 
-      return user;
+      return this.createResponseObject(user);
     } catch (error) {
       console.log(error)
       throw new BadRequestError("Lỗi server");
     }
   };
+
+  // Hàm trợ giúp để tạo đối tượng phản hồi
+  static createResponseObject(user) {
+    return {
+      message: "Student added to course successfully!",
+      status: 200,
+      metadata: {
+        firstName: user.firstName,
+        email: user.email,
+        // courses: user.courses.map(course => course.toString()),
+        // quizzes: user.quizzes.map(quiz => quiz.toString()),
+        // roles: user.roles.map(role => role.toString()),
+        // status: user.status
+      }
+    };
+  }
 
   static addTeacherToCours = async ({ courseId, email }) => {
     try {

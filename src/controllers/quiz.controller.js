@@ -283,6 +283,15 @@ class QuizController {
     } catch (error) {}
   };
 
+  getAllScoresByCourseId = async (req, res, next) => {
+      const { courseId } = req.params;
+
+      new SuccessReponse({
+        message: "get all scores by course successfully",
+        metadata: await QuizService.getAllScoresByCourseId(courseId),
+      }).send(res);
+  };
+
   updateScore = async (req, res, next) => {
     try {
       const scoresToUpdate = req.body;
