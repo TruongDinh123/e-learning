@@ -18,6 +18,8 @@ class QuizController {
       timeLimit,
     } = req.body;
 
+    const userId = req.headers["x-client-id"];
+
     new SuccessReponse({
       message: "Create quiz successfully",
       metadata: await QuizService.createQuiz({
@@ -31,6 +33,7 @@ class QuizController {
         quizTemplateId,
         lessonId,
         timeLimit,
+        userId,
       }),
     }).send(res);
   };

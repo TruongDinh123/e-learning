@@ -14,6 +14,8 @@ const findByEmail = async ({
     roles: 1,
     status: 1,
     courses: 1,
+    quizCount: 1,
+    quizLimit: 1,
   },
 }) => {
   return await User.findOne({ email })
@@ -57,24 +59,24 @@ const sendEmail = async ({ to, subject, text }) => {
   });
 };
 
-const createResponseObject = async (user) =>  {
+const createResponseObject = async (user) => {
   return {
     message: "Student added to course successfully!",
     status: 200,
     metadata: {
       firstName: user.firstName,
       email: user.email,
-      courses: user.courses.map(course => course.toString()), // Chỉ trả về ID của khóa học
-      quizzes: user.quizzes.map(quiz => quiz.toString()), // Chỉ trả về ID của quiz
-      roles: user.roles.map(role => role.toString()), // Chỉ trả về ID của vai trò
-      status: user.status
-    }
+      courses: user.courses.map((course) => course.toString()), // Chỉ trả về ID của khóa học
+      quizzes: user.quizzes.map((quiz) => quiz.toString()), // Chỉ trả về ID của quiz
+      roles: user.roles.map((role) => role.toString()), // Chỉ trả về ID của vai trò
+      status: user.status,
+    },
   };
-}
+};
 
 module.exports = {
   findByEmail,
   sendEmail,
   findUserById,
-  createResponseObject
+  createResponseObject,
 };

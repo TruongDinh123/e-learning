@@ -59,7 +59,7 @@ class AccessService {
 
     return {
       account: getInfoData({
-        fileds: ["_id", "firstName", "email", "lastName", "roles", "image_url", 'courses'],
+        fileds: ["_id", "firstName", "email", "lastName", "roles", "image_url", 'quizCount', 'quizLimit', 'courses'],
         object: foundAccount,
       }),
       tokens,
@@ -303,6 +303,7 @@ class AccessService {
     validateMongoDbId(id);
     try {
       const user = await User.findOne({ status: "active", _id: id })
+        .select("-createdAt -updatedAt -__v -password -courses")
         .populate("roles", "_id name")
         .populate("quizzes")
         .lean();

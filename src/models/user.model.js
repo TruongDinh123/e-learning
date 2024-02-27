@@ -19,6 +19,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    quizCount: {
+      type: Number,
+      default: 0,
+    },
+    quizLimit: {
+      type: Number,
+      default: 3,
+    },
     gender: {
       type: String,
       enum: ["Nam", "Nữ", "Khác"],

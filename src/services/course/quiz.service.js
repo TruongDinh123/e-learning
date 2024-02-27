@@ -28,8 +28,16 @@ class QuizService {
     quizTemplateId,
     lessonId,
     timeLimit,
+    userId,
   }) => {
     let quiz;
+
+    const user = await userModel.findById(userId).populate("roles");
+    const isAdmin = user.roles.some(
+      (role) => role.name === "Admin" || role.name === "Admin-Super"
+    );
+    const isMentor = user.roles.some((role) => role.name === "Mentor");
+
     if (quizTemplateId) {
       const quizTemplate = await QuizTemplate.findById(quizTemplateId);
       if (!quizTemplate) throw new NotFoundError("Quiz tempalte not found");
@@ -71,6 +79,9 @@ class QuizService {
             questions: formattedQuestions,
           });
         } else {
+          if (!isAdmin && isMentor && user.quizCount >= user.quizLimit) {
+            throw new Error("Bạn đã đạt giới hạn tạo bài tập cho giáo viên");
+          }
           quiz = new Quiz({
             type,
             name,
@@ -81,8 +92,15 @@ class QuizService {
             submissionTime,
             timeLimit,
           });
+          if (isMentor) {
+            user.quizCount += 1;
+            await user.save();
+          }
         }
       } else if (type === "essay") {
+        if (!isAdmin && isMentor && user.quizCount >= user.quizLimit) {
+          throw new Error("Bạn đã đạt giới hạn tạo bài tập cho giáo viên");
+        }
         const formattedEssay = {
           title: essay.title,
           content: essay.content,
@@ -98,6 +116,10 @@ class QuizService {
           essay: formattedEssay,
           submissionTime,
         });
+        if (isMentor) {
+          user.quizCount += 1;
+          await user.save();
+        }
       } else {
         throw new BadRequestError("Invalid quiz type");
       }
@@ -825,7 +847,7 @@ class QuizService {
         _id: { $in: student.quizzes },
         courseIds: courseId,
       })
-        .select("-updatedAt -createdAt -__v")
+        .select("-updatedAt -createdAt -__v -questions")
         .populate("courseIds", "_id name")
         .populate({
           path: "lessonId",
@@ -843,8 +865,8 @@ class QuizService {
       Quiz.find({
         _id: { $in: [...student.quizzes, ...lessonQuizIds] },
       })
+        .select("-updatedAt -createdAt -__v -questions")
         .populate("courseIds", "_id name")
-        .select("-updatedAt -createdAt -__v")
         .populate({
           path: "lessonId",
           populate: {
@@ -906,16 +928,18 @@ class QuizService {
 
       // Map through quizzes and get scores for each quiz
       const scoresPromises = quizzes.map(async (quiz) => {
-        const scores = await Score.find({ quiz: quiz._id }).populate('user', 'email').lean();
+        const scores = await Score.find({ quiz: quiz._id })
+          .populate("user", "email")
+          .lean();
         return {
           quizId: quiz._id,
           quizName: quiz.name,
-          scores: scores.map(score => {
+          scores: scores.map((score) => {
             // Kiểm tra xem user có tồn tại không trước khi truy cập các thuộc tính
             const user = score.user;
             return {
               userId: user ? user._id : null,
-              userEmail: user ? user.email : 'No Email',
+              userEmail: user ? user.email : "No Email",
               score: score.score,
               submitTime: score.submitTime,
               isComplete: score.isComplete,
@@ -933,7 +957,6 @@ class QuizService {
       throw new BadRequestError("Failed to get scores by course ID", error);
     }
   };
-
 }
 
 exports.QuizService = QuizService;
