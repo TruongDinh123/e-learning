@@ -32,136 +32,135 @@ class QuizService {
   }) => {
     let quiz;
 
-    const user = await userModel.findById(userId).populate("roles");
+    const user = await userModel
+      .findById(userId)
+      .select("roles quizCount quizLimit")
+      .populate("roles", "name")
+      .lean();
     const isAdmin = user.roles.some(
       (role) => role.name === "Admin" || role.name === "Admin-Super"
     );
     const isMentor = user.roles.some((role) => role.name === "Mentor");
 
+    // Kiểm tra điều kiện để tạo QuizTemplate mới
+    const isCreatingQuizTemplate =
+      !studentIds ||
+      (!studentIds.length && !courseIds) ||
+      (!courseIds.length && !submissionTime);
+
+
+    // Kiểm tra giới hạn quiz trước khi tiếp tục
+    if (
+      !isAdmin &&
+      isMentor &&
+      user.quizCount >= user.quizLimit &&
+      !isCreatingQuizTemplate
+    ) {
+      throw new Error("Bạn đã đạt giới hạn tạo bài tập cho giáo viên");
+    }
+
+    let quizTemplate;
     if (quizTemplateId) {
-      const quizTemplate = await QuizTemplate.findById(quizTemplateId);
-      if (!quizTemplate) throw new NotFoundError("Quiz tempalte not found");
+      quizTemplate = await QuizTemplate.findById(quizTemplateId).lean();
+      if (!quizTemplate) throw new NotFoundError("Quiz template not found");
+    }
 
-      const combinedQuestions = [...quizTemplate.questions, ...questions];
+    const formattedQuestions =
+      type === "multiple_choice"
+        ? questions.map((question) => ({
+            question: question.question,
+            options: question.options,
+            answer: question.answer,
+          }))
+        : [];
 
+    if (quizTemplateId) {
+      // Tạo Quiz từ QuizTemplate
       quiz = new Quiz({
         type: quizTemplate.type,
         name: quizTemplate.name,
         courseIds,
         studentIds,
         lessonId,
-        questions: combinedQuestions,
+        questions: [...quizTemplate.questions, ...formattedQuestions],
         essay: quizTemplate.essay,
         submissionTime,
         quizTemplate: quizTemplateId,
       });
+    } else if (isCreatingQuizTemplate) {
+      // Tạo QuizTemplate mới
+      quiz = new QuizTemplate({
+        type,
+        name,
+        questions: formattedQuestions,
+      });
     } else {
-      if (type === "multiple_choice") {
-        const formattedQuestions = [];
+      // Tạo Quiz mới
+      quiz = new Quiz({
+        type,
+        name,
+        courseIds,
+        studentIds,
+        lessonId,
+        questions: formattedQuestions,
+        essay:
+          type === "essay"
+            ? {
+                title: essay.title,
+                content: essay.content,
+                attachment: essay.attachment,
+              }
+            : undefined,
+        submissionTime,
+        timeLimit,
+      });
+    }
 
-        for (const question of questions) {
-          const formattedQuestion = {
-            question: question.question,
-            options: question.options,
-            answer: question.answer,
-          };
-          formattedQuestions.push(formattedQuestion);
-        }
+    // Tăng quizCount và lưu nếu là Mentor và không phải tạo QuizTemplate mới
+    if (isMentor && !isCreatingQuizTemplate) {
+      user.quizCount += 1;
+      await userModel.findByIdAndUpdate(userId, { quizCount: user.quizCount });
+    }
 
-        if (
-          (!studentIds || !studentIds.length) &&
-          (!courseIds || !courseIds.length) &&
-          !submissionTime
-        ) {
-          quiz = new QuizTemplate({
-            type,
-            name,
-            questions: formattedQuestions,
-          });
-        } else {
-          if (!isAdmin && isMentor && user.quizCount >= user.quizLimit) {
-            throw new Error("Bạn đã đạt giới hạn tạo bài tập cho giáo viên");
-          }
-          quiz = new Quiz({
-            type,
-            name,
-            courseIds,
-            studentIds,
-            lessonId,
-            questions: formattedQuestions,
-            submissionTime,
-            timeLimit,
-          });
-          if (isMentor) {
-            user.quizCount += 1;
-            await user.save();
-          }
-        }
-      } else if (type === "essay") {
-        if (!isAdmin && isMentor && user.quizCount >= user.quizLimit) {
-          throw new Error("Bạn đã đạt giới hạn tạo bài tập cho giáo viên");
-        }
-        const formattedEssay = {
-          title: essay.title,
-          content: essay.content,
-          attachment: essay.attachment,
-        };
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "247learn.vn@gmail.com",
+        pass: "glpiggogzyxtfhod",
+      },
+    });
 
-        quiz = new Quiz({
-          type,
-          name,
-          courseIds,
-          studentIds,
-          lessonId,
-          essay: formattedEssay,
-          submissionTime,
-        });
-        if (isMentor) {
-          user.quizCount += 1;
-          await user.save();
-        }
-      } else {
-        throw new BadRequestError("Invalid quiz type");
-      }
+    let courses, lessons;
+    if (lessonId) {
+      lessons = await lessonModel
+        .find({ _id: { $in: lessonId } })
+        .populate("courseId")
+        .lean();
+      courses = lessons.map((lesson) => lesson.courseId);
+    } else {
+      courses = await courseModel
+        .find({ _id: { $in: courseIds } })
+        .populate("teacher")
+        .lean();
     }
 
     const emailPromises = studentIds.map(async (studentId) => {
-      const student = await userModel.findById(studentId);
+      const student = await userModel.findById(studentId).lean();
       if (!student) throw new NotFoundError("student not found");
 
-      let course,
-        lessonName,
-        teacherName = "N/A"; // Initialize teacherName here
-      if (lessonId) {
-        const lesson = await lessonModel.findById(lessonId).populate({
-          path: "courseId",
-          populate: {
-            path: "teacher",
-            model: "User", // Replace 'User' with the actual model name for the teachers
-          },
-        });
-        course = lesson.courseId;
-        lessonName = lesson.name;
-        if (course && course.teacher) {
-          teacherName = course.teacher
-            ? [course.teacher.lastName, course.teacher.firstName]
-                .filter(Boolean)
-                .join(" ") || "Giáo viên"
-            : "Giáo viên";
-        }
-      } else {
-        course = await courseModel
-          .findOne({ _id: { $in: courseIds } })
-          .populate("teacher");
+      // Tìm thông tin khóa học và giáo viên từ dữ liệu đã truy vấn trước đó
+      const course = courses.find((c) =>
+        c.students.map((id) => id.toString()).includes(studentId.toString())
+      );
+      const lesson = lessons?.find((l) => l._id.toString() === lessonId);
+      const teacherName =
+        course && course.teacher
+          ? [course.teacher.lastName, course.teacher.firstName]
+              .filter(Boolean)
+              .join(" ") || "Giáo viên"
+          : "Giáo viên";
+      const lessonName = lesson ? lesson.name : undefined;
 
-        if (course && course.teacher) {
-          teacherName = course.teacher
-            ? [course.teacher.lastName, course.teacher.firstName]
-                .filter(Boolean)
-                .join(" ") || "Giáo viên"
-            : "Giáo viên";
-        }
-      }
       if (!course) throw new NotFoundError("course not found");
 
       const formattedSubmissionTime = submissionTime
@@ -170,14 +169,6 @@ class QuizService {
             timeZone: "Asia/Ho_Chi_Minh",
           })
         : "Không có thời hạn";
-
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: "247learn.vn@gmail.com",
-          pass: "glpiggogzyxtfhod",
-        },
-      });
 
       const mailOptions = {
         from: "247learn.vn@gmail.com",
@@ -243,30 +234,30 @@ class QuizService {
       }
 
       // Update the lesson with the new quiz
-      lesson.quizzes = [savedQuiz._id];
-      await lesson.save();
+      await lessonModel.updateOne(
+        { _id: lessonId },
+        { $set: { quizzes: [savedQuiz._id] } }
+      );
     }
 
-    for (const studentId of studentIds) {
-      const student = await userModel.findById(studentId);
-      student.quizzes.push(savedQuiz._id);
-      await student.save();
-    }
+    // Sử dụng bulkWrite để cập nhật nhiều documents một cách hiệu quả
+    const studentUpdates = studentIds.map((studentId) => ({
+      updateOne: {
+        filter: { _id: studentId },
+        update: { $push: { quizzes: savedQuiz._id } },
+      },
+    }));
 
-    for (const courseId of courseIds) {
-      const course = await courseModel
-        .findByIdAndUpdate(
-          courseId,
-          {
-            $push: { quizzes: savedQuiz._id },
-          },
-          { new: true }
-        )
-        .populate("quizzes")
-        .populate("students");
+    await userModel.bulkWrite(studentUpdates);
 
-      if (!course) throw new NotFoundError("course not found");
-    }
+    const courseUpdates = courseIds.map((courseId) => ({
+      updateOne: {
+        filter: { _id: courseId },
+        update: { $push: { quizzes: savedQuiz._id } },
+      },
+    }));
+
+    await courseModel.bulkWrite(courseUpdates);
 
     return savedQuiz;
   };
@@ -616,79 +607,78 @@ class QuizService {
   };
 
   static async startQuiz(quizId, userId) {
-    const quiz = await Quiz.findById(quizId);
+    const quiz = await Quiz.findById(quizId)
+      .select("-createdAt -updatedAt -__v -questions")
+      .lean();
     if (!quiz) {
       throw new Error("Quiz not found");
     }
 
-    let scoreRecord = await Score.findOne({ quiz: quizId, user: userId });
-    if (!scoreRecord) {
-      // Nếu chưa có bản ghi điểm, tạo mới với startTime là thời điểm hiện tại
-      scoreRecord = new Score({
-        quiz: quizId,
-        user: userId,
-        startTime: new Date(), // Thiết lập thời gian bắt đầu làm bài
-        isComplete: false,
-      });
-    } else {
-      // Nếu đã có bản ghi, chỉ cập nhật startTime
-      scoreRecord.startTime = new Date();
+    // Kiểm tra xem thời gian hiện tại đã vượt qua thời gian kết thúc dự kiến của bài quiz chưa
+    const currentTime = new Date();
+    if (quiz.submissionTime && currentTime > new Date(quiz.submissionTime)) {
+      throw new Error("Thời gian làm bài đã hết, không thể bắt đầu làm bài.");
     }
 
-    await scoreRecord.save();
+    // Kiểm tra xem đã có bản ghi điểm cho người dùng và quiz này chưa
+    let scoreRecord = await Score.findOne({
+      quiz: quizId,
+      user: userId,
+    }).lean();
+
+    // Nếu không có bản ghi hoặc bản ghi chưa hoàn thành
+    if (!scoreRecord || (scoreRecord && !scoreRecord.isComplete)) {
+      scoreRecord = await Score.findOneAndUpdate(
+        {
+          quiz: quizId,
+          user: userId,
+        },
+        {
+          $setOnInsert: { startTime: new Date(), isComplete: false },
+        },
+        {
+          new: true,
+          upsert: true, // Tạo một tài liệu mới nếu không tồn tại.
+          setDefaultsOnInsert: true,
+          runValidators: true,
+        }
+      ).lean();
+    }
+
     return scoreRecord;
   }
 
-  static submitQuiz = async (quizId, userId, answer) => {
+  static submitQuiz = async (quizId, userId, answers) => {
     try {
-      let score = 0;
-      const maxScore = 10; // Điểm số tối đa
+      if (!answers || !Array.isArray(answers)) {
+        throw new BadRequestError("Invalid answers format");
+      }
 
       const scoreRecord = await Score.findOne({ quiz: quizId, user: userId });
       if (!scoreRecord) throw new NotFoundError("Score record not found");
 
       const quiz = await Quiz.findById(quizId);
-      if (!quiz) throw new NotFoundError("no quiz found");
+      if (!quiz) throw new NotFoundError("No quiz found");
 
-      // Kiểm tra thời gian nộp bài
-      const currentTime = new Date();
-      const startTime = scoreRecord.startTime;
-      const timeLimitInMilliseconds = quiz.timeLimit * 60000;
-      const endTime = new Date(startTime.getTime() + timeLimitInMilliseconds);
-
-      // if (currentTime > endTime) {
-      //   throw new BadRequestError("Hết hạn làm bài");
-      // }
-
-      const existingScore = await Score.findOne({ user: userId, quiz: quizId });
-
-      for (let i = 0; i < quiz.questions.length; i++) {
-        const question = quiz.questions[i];
-        const userAnswer = answer[i]
-          ? answer[i][Object.keys(answer[i])[0]]
+      const maxScore = 10; // Điểm số tối đa
+      let score = quiz.questions.reduce((acc, question, index) => {
+        const userAnswer = answers[index]
+          ? answers[index][Object.keys(answers[index])[0]]
           : null;
+        return acc + (question.answer === userAnswer ? 1 : 0);
+      }, 0);
 
-        if (
-          userAnswer === undefined ||
-          userAnswer === null ||
-          question.answer !== userAnswer
-        ) {
-          continue;
-        } else {
-          score++;
-        }
-      }
       // Cập nhật điểm số và trạng thái hoàn thành cho bản ghi điểm
       scoreRecord.score = ((score / quiz.questions.length) * maxScore).toFixed(
         2
       );
-      scoreRecord.answers = answer;
+      scoreRecord.answers = answers;
       scoreRecord.isComplete = true;
-      scoreRecord.submitTime = currentTime;
+      scoreRecord.submitTime = Date.now();
       await scoreRecord.save();
+
       return scoreRecord;
     } catch (error) {
-      console.log("🚀 ~ error:", error);
       throw new BadRequestError("Failed to submit quiz", error);
     }
   };
@@ -847,7 +837,7 @@ class QuizService {
         _id: { $in: student.quizzes },
         courseIds: courseId,
       })
-        .select("-updatedAt -createdAt -__v -questions")
+        .select("-updatedAt -createdAt -__v")
         .populate("courseIds", "_id name")
         .populate({
           path: "lessonId",
@@ -865,7 +855,7 @@ class QuizService {
       Quiz.find({
         _id: { $in: [...student.quizzes, ...lessonQuizIds] },
       })
-        .select("-updatedAt -createdAt -__v -questions")
+        .select("-updatedAt -createdAt -__v")
         .populate("courseIds", "_id name")
         .populate({
           path: "lessonId",

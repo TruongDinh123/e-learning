@@ -261,18 +261,21 @@ class CourseService {
           resource_type: "image",
         });
       }
-      // Find the category that contains the course
-      const category = await categoryModel.findOne({
-        courses: convertToObjectIdMongodb(id),
-      });
 
+      // Find the category that contains the course and remove the course from the category's course list
+      const category = await categoryModel.findOne({
+        courses: id,
+      });
       if (category) {
-        // Remove the course from the category's course list
-        category.courses = category.courses.filter((courseId) => {
-          return courseId.toString() !== id.toString();
-        });
+        category.courses.pull(id);
         await category.save();
       }
+
+      // Thêm bước xóa khóa học khỏi danh sách khóa học của người dùng
+      await User.updateMany(
+        { courses: id },
+        { $pull: { courses: id } }
+      );
 
       await courseModel.findByIdAndDelete(id);
     } catch (error) {
