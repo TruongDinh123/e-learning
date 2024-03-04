@@ -48,17 +48,7 @@ class QuizService {
       (!studentIds.length && !courseIds) ||
       (!courseIds.length && !submissionTime);
 
-
-    // Kiểm tra giới hạn quiz trước khi tiếp tục
-    if (
-      !isAdmin &&
-      isMentor &&
-      user.quizCount >= user.quizLimit &&
-      !isCreatingQuizTemplate
-    ) {
-      throw new Error("Bạn đã đạt giới hạn tạo bài tập cho giáo viên");
-    }
-
+      
     let quizTemplate;
     if (quizTemplateId) {
       quizTemplate = await QuizTemplate.findById(quizTemplateId).lean();
@@ -117,9 +107,29 @@ class QuizService {
     }
 
     // Tăng quizCount và lưu nếu là Mentor và không phải tạo QuizTemplate mới
-    if (isMentor && !isCreatingQuizTemplate) {
-      user.quizCount += 1;
-      await userModel.findByIdAndUpdate(userId, { quizCount: user.quizCount });
+    if (isMentor && !isCreatingQuizTemplate && courseIds && courseIds.length > 0) {
+      const courses = await courseModel.find({ _id: { $in: courseIds } }).lean();
+    
+      const updatePromises = courses.map(async (course) => {
+        const teacherQuizInfoIndex = course.teacherQuizzes.findIndex(
+          (tq) => tq.teacherId.toString() === userId.toString()
+        );
+        if (teacherQuizInfoIndex !== -1 && course.teacherQuizzes[teacherQuizInfoIndex].quizCount >= 3) {
+          throw new Error(`Bạn đã đạt giới hạn tạo bài tập cho khóa học: ${course.name}`);
+        }
+        if (teacherQuizInfoIndex === -1) {
+          course.teacherQuizzes.push({ teacherId: userId, quizCount: 1 });
+        } else {
+          course.teacherQuizzes[teacherQuizInfoIndex].quizCount += 1;
+        }
+        return courseModel.findByIdAndUpdate(course._id, { teacherQuizzes: course.teacherQuizzes })
+      });
+    
+      const results = await Promise.allSettled(updatePromises);
+      const rejected = results.find(result => result.status === 'rejected');
+      if (rejected) {
+        throw new Error(rejected.reason);
+      }
     }
 
     const transporter = nodemailer.createTransport({
@@ -238,6 +248,25 @@ class QuizService {
         { _id: lessonId },
         { $set: { quizzes: [savedQuiz._id] } }
       );
+
+        // Thêm logic để cập nhật quizCount cho giáo viên của khóa học mà bài học này thuộc về
+      if (isMentor) {
+        const course = await courseModel.findById(lesson.courseId).lean();
+        if (!course) throw new NotFoundError("Course not found");
+
+        const teacherQuizInfoIndex = course.teacherQuizzes.findIndex(
+          (tq) => tq.teacherId.toString() === userId.toString()
+        );
+        if (teacherQuizInfoIndex !== -1 && course.teacherQuizzes[teacherQuizInfoIndex].quizCount >= 3) {
+          throw new Error(`Bạn đã đạt giới hạn tạo bài tập cho khóa học: ${course.name}`);
+        }
+        if (teacherQuizInfoIndex === -1) {
+          course.teacherQuizzes.push({ teacherId: userId, quizCount: 1 });
+        } else {
+          course.teacherQuizzes[teacherQuizInfoIndex].quizCount += 1;
+        }
+        await courseModel.findByIdAndUpdate(course._id, { teacherQuizzes: course.teacherQuizzes });
+      }
     }
 
     // Sử dụng bulkWrite để cập nhật nhiều documents một cách hiệu quả

@@ -133,6 +133,7 @@ class CourseService {
         })
         .populate("quizzes");
 
+
       return aCourse;
     } catch (error) {
       throw new BadRequestError("Failed to get a Course", error);
@@ -316,12 +317,14 @@ class CourseService {
       };
 
       const adminRoleIds = adminRole.map((role) => role._id.toString());
+      console.log("🚀 ~ loggedInUser:", loggedInUser._id.toString())
+      console.log("🚀 ~ course.teacher", course.teacher.toString())
 
       if (
         !loggedInUser.roles.some((role) =>
           adminRoleIds.includes(role.toString())
         ) &&
-        loggedInUser._id.toString() !== course.teacher.toString()
+        loggedInUser._id.toString() !== course.teacher._id.toString()
       ) {
         throw new BadRequestError(
           "Chỉ giáo viên của khóa học hoặc Admin mới có thể thêm người dùng vào khóa học"
@@ -935,15 +938,15 @@ class CourseService {
   static getStudentCourses = async (userId) => {
     try {
       const user = await User.findById(userId)
-      .select("_id firstName lastName quizzes")
+      .select("_id")
       .populate({
         path: "courses",
-        select: "_id image_url name title lessons quizzes",
+        select: "_id image_url name title",
         populate: [
           {
             path: "teacher",
             model: "User",
-            select: "firstName lastName email"
+            select: "firstName"
           },
           {
             path: "lessons",

@@ -36,7 +36,7 @@ class AccessService {
 
     const match = await bcrypt.compare(password, foundAccount.password);
     if (!match) {
-      throw new AuthFailureError("Email or Password is not correct");
+      throw new BadRequestError("Email or Password is not correct");
     }
 
     const privateKey = crypto.randomBytes(64).toString("hex");
@@ -59,7 +59,17 @@ class AccessService {
 
     return {
       account: getInfoData({
-        fileds: ["_id", "firstName", "email", "lastName", "roles", "image_url", 'quizCount', 'quizLimit', 'courses'],
+        fileds: [
+          "_id",
+          "firstName",
+          "email",
+          "lastName",
+          "roles",
+          "image_url",
+          "quizCount",
+          "quizLimit",
+          "courses",
+        ],
         object: foundAccount,
       }),
       tokens,
@@ -78,7 +88,7 @@ class AccessService {
 
     const match = await bcrypt.compare(oldPassword, user.password);
     if (!match) {
-      throw new AuthFailureError("Mật khẩu không đúng");
+      throw new BadRequestError("Mật khẩu không đúng");
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
@@ -306,6 +316,7 @@ class AccessService {
         .select("-createdAt -updatedAt -__v -password -courses")
         .populate("roles", "_id name")
         .populate("quizzes")
+        .populate("courses", "_id name teacherQuizzes")
         .lean();
 
       return user;
