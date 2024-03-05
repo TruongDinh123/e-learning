@@ -569,7 +569,7 @@ class QuizService {
     return updatedQuiz;
   };
 
-  static deleteQuiz = async ({ quizId }) => {
+  static deleteQuiz = async ({ quizId, userId }) => {
     try {
       validateMongoDbId(quizId);
 
@@ -585,6 +585,20 @@ class QuizService {
       }
 
       await Score.deleteMany({ quiz: quizId });
+
+    const coursesToUpdate = await courseModel.find({ quizzes: quizId }).lean();
+
+    for (const course of coursesToUpdate) {
+      const updatedTeacherQuizzes = course.teacherQuizzes.map(teacherQuiz => {
+        if (userId.toString() === teacherQuiz.teacherId.toString()) {
+          const newQuizCount = Math.max(0, teacherQuiz.quizCount - 1);
+          return { ...teacherQuiz, quizCount: newQuizCount };
+        }
+        return teacherQuiz;
+      });
+
+      await courseModel.findByIdAndUpdate(course._id, { teacherQuizzes: updatedTeacherQuizzes });
+    }
 
       await courseModel.updateMany(
         { quizzes: quizId },
@@ -607,6 +621,7 @@ class QuizService {
 
       return deletedQuiz;
     } catch (error) {
+      console.error(error);
       throw new BadRequestError("Failed to delete quiz", error);
     }
   };

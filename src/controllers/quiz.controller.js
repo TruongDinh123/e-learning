@@ -188,10 +188,11 @@ class QuizController {
 
   deleteQuiz = async (req, res, next) => {
     const { quizId } = req.params;
+    const userId = req.headers["x-client-id"];
 
     new SuccessReponse({
       message: "Delete quiz successfully",
-      metadata: await QuizService.deleteQuiz({ quizId }),
+      metadata: await QuizService.deleteQuiz({ quizId, userId }),
     }).send(res);
   };
 
