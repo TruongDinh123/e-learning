@@ -111,6 +111,9 @@ class QuizService {
       const courses = await courseModel.find({ _id: { $in: courseIds } }).lean();
     
       const updatePromises = courses.map(async (course) => {
+        if (!course.teacherQuizzes) {
+          course.teacherQuizzes = [];
+        }
         const teacherQuizInfoIndex = course.teacherQuizzes.findIndex(
           (tq) => tq.teacherId.toString() === userId.toString()
         );
