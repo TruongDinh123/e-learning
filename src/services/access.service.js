@@ -11,7 +11,7 @@ const {
   AuthFailureError,
   NotFoundError,
 } = require("../core/error.response");
-const { findByEmail } = require("./user.service");
+const { findByEmail, generatePassword } = require("./user.service");
 const Role = require("../models/role.model");
 const validateMongoDbId = require("../config/validateMongoDbId");
 const { v2: cloudinary } = require("cloudinary");
@@ -166,7 +166,7 @@ class AccessService {
     if (!foundEmail) {
       throw new NotFoundError("Email không đúng hoặc không tồn tại");
     } else {
-      const newPassword = crypto.randomBytes(4).toString("hex");
+      const newPassword = generatePassword();
       const passwordHash = await bcrypt.hash(newPassword, 10);
       const user = await User.findOneAndUpdate(
         { email },

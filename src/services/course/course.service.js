@@ -122,7 +122,7 @@ class CourseService {
         .findById({
           _id: id,
         })
-        .populate("students", "lastName email roles notifications")
+        .populate("students", "lastName firstName email roles notifications")
         .populate("teacher")
         .populate({
           path: "lessons",
@@ -132,7 +132,6 @@ class CourseService {
           ],
         })
         .populate("quizzes");
-
 
       return aCourse;
     } catch (error) {
@@ -148,7 +147,7 @@ class CourseService {
         })
         .select("_id name title notifications")
         .populate("students", "lastName email roles notifications")
-        .populate("teacher", "_id lastName firstName email")
+        .populate("teacher", "_id lastName firstName email");
 
       return aCourse;
     } catch (error) {
@@ -245,10 +244,7 @@ class CourseService {
       await Quiz.deleteMany({ lessonId: { $in: lessonIds } });
 
       // Xóa tất cả các quiz liên quan trực tiếp đến khóa học thông qua trường courseIds
-      await Quiz.updateMany(
-        { courseIds: id },
-        { $pull: { courseIds: id } }
-      );
+      await Quiz.updateMany({ courseIds: id }, { $pull: { courseIds: id } });
 
       // Tiếp tục với việc xóa khóa học như bình thường
       await lessonModel.deleteMany({ courseId: id });
@@ -273,10 +269,7 @@ class CourseService {
       }
 
       // Thêm bước xóa khóa học khỏi danh sách khóa học của người dùng
-      await User.updateMany(
-        { courses: id },
-        { $pull: { courses: id } }
-      );
+      await User.updateMany({ courses: id }, { $pull: { courses: id } });
 
       await courseModel.findByIdAndDelete(id);
     } catch (error) {
@@ -289,17 +282,21 @@ class CourseService {
     try {
       let [user, course, loggedInUser, adminRole] = await Promise.all([
         User.findOne({ email }),
-        courseModel.findById(courseId).populate('teacher', 'firstName lastName'),
+        courseModel
+          .findById(courseId)
+          .populate("teacher", "firstName lastName"),
         User.findById(userId),
-        Role.find({ $or: [{ name: "Admin" }, { name: "Super-Admin" }] }).lean()
+        Role.find({ $or: [{ name: "Admin" }, { name: "Super-Admin" }] }).lean(),
       ]);
-  
+
       if (!course) throw new NotFoundError("Khóa học không tồn tại");
       if (!adminRole) throw new NotFoundError("Role 'Admin' not found");
 
-      const teacherName = course.teacher ? 
-        [course.teacher.lastName, course.teacher.firstName].filter(Boolean).join(" ") || "Giáo viên" : 
-        "Giáo viên";
+      const teacherName = course.teacher
+        ? [course.teacher.lastName, course.teacher.firstName]
+            .filter(Boolean)
+            .join(" ") || "Giáo viên"
+        : "Giáo viên";
 
       const transporter = nodemailer.createTransport({
         service: "gmail",
@@ -317,8 +314,8 @@ class CourseService {
       };
 
       const adminRoleIds = adminRole.map((role) => role._id.toString());
-      console.log("🚀 ~ loggedInUser:", loggedInUser._id.toString())
-      console.log("🚀 ~ course.teacher", course.teacher.toString())
+      console.log("🚀 ~ loggedInUser:", loggedInUser._id.toString());
+      console.log("🚀 ~ course.teacher", course.teacher ? course.teacher.toString() : 'undefined');
 
       if (
         !loggedInUser.roles.some((role) =>
@@ -430,55 +427,83 @@ class CourseService {
 
       // Gửi email nếu cần
       if (shouldSendEmail) {
-        transporter.sendMail(mailOptions).catch(error => {
+        transporter.sendMail(mailOptions).catch((error) => {
           console.error("Failed to send email", error);
         });
       }
 
       // Sử dụng $addToSet để thêm mà không cần kiểm tra trùng lặp
-      const userUpdate = User.findByIdAndUpdate(user._id, {
-        $addToSet: { courses: courseId }
-      }, { new: true });
+      const userUpdate = User.findByIdAndUpdate(
+        user._id,
+        {
+          $addToSet: { courses: courseId },
+        },
+        { new: true }
+      );
 
-      const courseUpdate = courseModel.findByIdAndUpdate(course._id, {
-        $addToSet: { students: user._id }
-      }, { new: true });
+      const courseUpdate = courseModel.findByIdAndUpdate(
+        course._id,
+        {
+          $addToSet: { students: user._id },
+        },
+        { new: true }
+      );
 
       // Cập nhật quizzes và lessons bằng cách sử dụng $addToSet trong một vòng lặp
       const quizzes = await Quiz.find({ courseIds: courseId });
-      const quizUpdates = quizzes.map(quiz => 
-        Quiz.findByIdAndUpdate(quiz._id, {
-          $addToSet: { studentIds: user._id }
-        }, { new: true })
+      const quizUpdates = quizzes.map((quiz) =>
+        Quiz.findByIdAndUpdate(
+          quiz._id,
+          {
+            $addToSet: { studentIds: user._id },
+          },
+          { new: true }
+        )
       );
 
       // Cập nhật các bài học và quiz liên quan đến khóa học
       const lessons = await lessonModel.find({ courseId: courseId }).lean();
-      const lessonUpdates = lessons.map(lesson => {
-        const quizUpdatesForLesson = lesson.quizzes.map(quizId => 
-          Quiz.findByIdAndUpdate(quizId, {
-            $addToSet: { studentIds: user._id }
-          }, { new: true })
+      const lessonUpdates = lessons.map((lesson) => {
+        const quizUpdatesForLesson = lesson.quizzes.map((quizId) =>
+          Quiz.findByIdAndUpdate(
+            quizId,
+            {
+              $addToSet: { studentIds: user._id },
+            },
+            { new: true }
+          )
         );
         return Promise.all(quizUpdatesForLesson);
       });
 
-      await Promise.all([userUpdate, courseUpdate, ...quizUpdates, ...lessonUpdates.flat()]);
+      await Promise.all([
+        userUpdate,
+        courseUpdate,
+        ...quizUpdates,
+        ...lessonUpdates.flat(),
+      ]);
 
-      const quizIdsFromLessons = lessons.flatMap(lesson => lesson.quizzes);
-      const allQuizIds = [...quizzes.map(quiz => quiz._id), ...quizIdsFromLessons];
+      const quizIdsFromLessons = lessons.flatMap((lesson) => lesson.quizzes);
+      const allQuizIds = [
+        ...quizzes.map((quiz) => quiz._id),
+        ...quizIdsFromLessons,
+      ];
 
       // Cập nhật mảng quizzes của User, sử dụng $addToSet để tránh trùng lặp
-      await User.findByIdAndUpdate(user._id, {
-        $addToSet: { quizzes: { $each: allQuizIds } }
-      }, { new: true });
+      await User.findByIdAndUpdate(
+        user._id,
+        {
+          $addToSet: { quizzes: { $each: allQuizIds } },
+        },
+        { new: true }
+      );
 
       // Lưu thay đổi vào User
       await user.save();
 
       return this.createResponseObject(user);
     } catch (error) {
-      console.log(error)
+      console.log(error);
       throw new BadRequestError("Lỗi server");
     }
   };
@@ -495,7 +520,7 @@ class CourseService {
         // quizzes: user.quizzes.map(quiz => quiz.toString()),
         // roles: user.roles.map(role => role.toString()),
         // status: user.status
-      }
+      },
     };
   }
 
@@ -924,6 +949,21 @@ class CourseService {
       if (!user) throw new NotFoundError("User not found");
       if (!course) throw new NotFoundError("Course not found");
 
+      // Tìm tất cả quizzes liên quan đến khóa học
+      const courseQuizzes = await Quiz.find({
+        $or: [
+          { courseIds: courseId }, // Quizzes trực tiếp từ khóa học
+          { lessonId: { $in: course.lessons } } // Quizzes từ các bài học thuộc khóa học
+        ]
+      }).select('_id').lean();
+
+      // Lấy ra id của tất cả quizzes liên quan
+      const quizIds = courseQuizzes.map(quiz => quiz._id.toString());
+      console.log(quizIds);
+
+      // Xóa các quizzes tìm được khỏi mảng quizzes của user
+      user.quizzes = user.quizzes.filter(quizId => !quizIds.includes(quizId.toString()));
+
       user.courses.pull(courseId);
       course.students.pull(userId);
 
@@ -938,33 +978,33 @@ class CourseService {
   static getStudentCourses = async (userId) => {
     try {
       const user = await User.findById(userId)
-      .select("_id")
-      .populate({
-        path: "courses",
-        select: "_id image_url name title",
-        populate: [
-          {
-            path: "teacher",
-            model: "User",
-            select: "firstName"
-          },
-          {
-            path: "lessons",
-            model: "Lesson",
-            select: "quizzes",
-            populate: {
+        .select("_id")
+        .populate({
+          path: "courses",
+          select: "_id image_url name title",
+          populate: [
+            {
+              path: "teacher",
+              model: "User",
+              select: "firstName",
+            },
+            {
+              path: "lessons",
+              model: "Lesson",
+              select: "quizzes",
+              populate: {
+                path: "quizzes",
+                model: "Quiz",
+                select: "_id",
+              },
+            },
+            {
               path: "quizzes",
               model: "Quiz",
-              select: "_id"
-            }
-          },
-          {
-            path: "quizzes",
-            model: "Quiz",
-            select: "_id"
-          }
-        ],
-      })
+              select: "_id",
+            },
+          ],
+        });
       if (!user) throw new NotFoundError("User not found");
 
       return user;
