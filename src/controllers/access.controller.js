@@ -57,11 +57,11 @@ class AccessController {
   };
 
   getAllUser = async (req, res, next) => {
-    const { page, limit, search, role } = req.query;
+    // const { page, limit, search, role } = req.query;
     try {
       new SuccessReponse({
         message: "Get all user success",
-        metadata: await AccessService.getAllUser(page, limit, search, role),
+        metadata: await AccessService.getAllUser(),
       }).send(res);
     } catch (error) {
       return res.status(500).json({ message: "Internal server error" });

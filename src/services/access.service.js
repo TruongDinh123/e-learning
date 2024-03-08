@@ -274,24 +274,11 @@ class AccessService {
     try {
       // Tạo điều kiện tìm kiếm dựa trên tên và vai trò
       let query = { status: "active" };
-      if (search) {
-        query.$or = [
-          { firstName: { $regex: search, $options: "i" } },
-          { lastName: { $regex: search, $options: "i" } },
-        ];
-      }
-      if (role) {
-        query.roles = role;
-      }
 
       const users = await User.find(query)
-        .skip((page - 1) * limit)
-        .limit(limit)
+        .select("lastName firstName email status")
         .populate("roles", "_id name")
         .lean();
-
-      const total = await User.countDocuments(query);
-      const pages = Math.ceil(total / limit);
 
       if (!users) {
         throw new NotFoundError("Users not found");
@@ -299,10 +286,6 @@ class AccessService {
 
       return {
         users,
-        total,
-        pages,
-        currentPage: page,
-        pageSize: users.length,
       };
     } catch (error) {
       throw new BadRequestError("Failed to get a User", error);
