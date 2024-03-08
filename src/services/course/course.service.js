@@ -314,9 +314,6 @@ class CourseService {
       };
 
       const adminRoleIds = adminRole.map((role) => role._id.toString());
-      console.log("🚀 ~ loggedInUser:", loggedInUser._id.toString());
-      console.log("🚀 ~ course.teacher", course.teacher ? course.teacher.toString() : 'undefined');
-
       if (
         !loggedInUser.roles.some((role) =>
           adminRoleIds.includes(role.toString())

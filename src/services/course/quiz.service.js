@@ -588,17 +588,41 @@ class QuizService {
 
     const coursesToUpdate = await courseModel.find({ quizzes: quizId }).lean();
 
+    const user = await userModel
+      .findById(userId)
+      .populate("roles", "name")
+      .lean();
+      
+    const isAdmin = user.roles.some(
+      (role) => role.name === "Admin" || role.name === "Admin-Super"
+    );
+    
     for (const course of coursesToUpdate) {
-      const updatedTeacherQuizzes = course.teacherQuizzes.map(teacherQuiz => {
-        if (userId.toString() === teacherQuiz.teacherId.toString()) {
+      // Kiểm tra nếu userId khớp với bất kỳ teacherId nào trong teacherQuizzes
+      const isTeacherInCourse = course.teacherQuizzes.some(teacherQuiz => teacherQuiz.teacherId.toString() === userId.toString());
+
+      if (isTeacherInCourse || isAdmin) {
+        const updatedTeacherQuizzes = course.teacherQuizzes.map(teacherQuiz => {
+          // Giảm quizCount cho tất cả giáo viên trong teacherQuizzes
           const newQuizCount = Math.max(0, teacherQuiz.quizCount - 1);
           return { ...teacherQuiz, quizCount: newQuizCount };
-        }
-        return teacherQuiz;
-      });
+        });
 
-      await courseModel.findByIdAndUpdate(course._id, { teacherQuizzes: updatedTeacherQuizzes });
+        await courseModel.findByIdAndUpdate(course._id, { teacherQuizzes: updatedTeacherQuizzes });
+      }
     }
+
+    // for (const course of coursesToUpdate) {
+    //   const updatedTeacherQuizzes = course.teacherQuizzes.map(teacherQuiz => {
+    //     if (userId.toString() === teacherQuiz.teacherId.toString()) {
+    //       const newQuizCount = Math.max(0, teacherQuiz.quizCount - 1);
+    //       return { ...teacherQuiz, quizCount: newQuizCount };
+    //     }
+    //     return teacherQuiz;
+    //   });
+
+    //   await courseModel.findByIdAndUpdate(course._id, { teacherQuizzes: updatedTeacherQuizzes });
+    // }
 
       await courseModel.updateMany(
         { quizzes: quizId },
