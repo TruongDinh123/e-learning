@@ -11,6 +11,7 @@ const categoryModel = require("../../models/category.model");
 const { convertToObjectIdMongodb } = require("../../utils");
 const Role = require("../../models/role.model");
 const Quiz = require("../../models/quiz.model");
+const Score = require("../../models/score.model");
 
 cloudinary.config({
   cloud_name: "dvsvd87sm",
@@ -116,7 +117,7 @@ class CourseService {
     }
   };
 
-  static getACourse = async ({ id }) => {
+  static getACourse = async ({ id, userId }) => {
     try {
       const aCourse = await courseModel
         .findById({
@@ -131,7 +132,18 @@ class CourseService {
             { path: "quizzes", model: "Quiz" },
           ],
         })
-        .populate("quizzes");
+        .populate("quizzes")
+        .lean();
+
+        // Tìm tất cả điểm số của người dùng cho các bài quiz trong khóa học
+        const scores = await Score.find({ user: userId, quiz: { $in: aCourse.quizzes.map(quiz => quiz._id) } }).lean();
+    
+        // Thêm thông tin hoàn thành cho mỗi bài quiz trong khóa học
+        aCourse.quizzes.forEach(quiz => {
+          const score = scores.find(score => score.quiz.toString() === quiz._id.toString());
+          quiz.isCompleted = !!score; // Đánh dấu là đã hoàn thành nếu tìm thấy điểm số
+          quiz.scoreDetails = score; // Thêm chi tiết điểm số nếu có
+        });
 
       return aCourse;
     } catch (error) {
@@ -147,7 +159,7 @@ class CourseService {
         })
         .select("_id name title notifications")
         .populate("students", "lastName email roles notifications")
-        .populate("teacher", "_id lastName firstName email");
+      .populate("teacher", "_id lastName firstName email image_url");
 
       return aCourse;
     } catch (error) {

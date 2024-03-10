@@ -59,10 +59,11 @@ class CourseController {
 
   getACourse = async (req, res, next) => {
     const { id } = req.params;
+    const userId = req.headers["x-client-id"];
 
     new SuccessReponse({
       message: "Get a course successfully!",
-      metadata: await CourseService.getACourse({ id }),
+      metadata: await CourseService.getACourse({ id, userId }),
     }).send(res);
   };
 
