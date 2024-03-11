@@ -219,6 +219,7 @@ class QuizService {
                           <li>Thời hạn nộp bài: <strong>${formattedSubmissionTime}</strong></li>
                       </ul>
                       <p>Vui lòng nộp bài đúng hạn.</p>
+                      <p>Để xem danh sách bài tập, vui lòng <a href="https://www.247learn.vn/courses/view-details/${course._id}">click vào đây</a>.</p>
                       <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
                   </div>
                   <div class="footer">
