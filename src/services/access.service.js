@@ -10,6 +10,7 @@ const {
   BadRequestError,
   AuthFailureError,
   NotFoundError,
+  ForbiddenError,
 } = require("../core/error.response");
 const { findByEmail, generatePassword } = require("./user.service");
 const Role = require("../models/role.model");
@@ -24,6 +25,43 @@ cloudinary.config({
 });
 
 class AccessService {
+  static handleRefreshToken = async ({ keyAccount, user, refreshToken }) => {
+    const { userId, email } = user;
+
+    if (keyAccount.refreshTokensUsed.includes(refreshToken)) {
+      await KeyTokenService.deleteKeyById(userId);
+      throw new ForbiddenError("Refresh token has been used!! pls relogin");
+    }
+
+    if (keyAccount.refreshToken !== refreshToken) {
+      throw new ForbiddenError("Refresh token has been used!! pls relogin");
+    }
+
+    const foundAccount = await findByEmail({ email });
+    if (!foundAccount) throw new AuthFailureError("Refresh token not found");
+
+    //create 1 cap moi
+    const tokens = await createTokenPair(
+      { userId, email },
+      keyAccount.publicKey,
+      keyAccount.privateKey
+    );
+    //update token
+    await keyAccount.updateOne({
+      $set: {
+        refreshToken: tokens.refreshToken,
+      },
+      $addToSet: {
+        refreshTokensUsed: refreshToken,
+      },
+    });
+
+    return {
+      user,
+      tokens,
+    };
+  };
+
   static login = async ({ email, password, refreshToken = null } = null) => {
     const foundAccount = await findByEmail({ email });
     if (!foundAccount) {

@@ -8,16 +8,17 @@ const HEADER = {
   API_KEY: "x-api-key",
   CLIENT_ID: "x-client-id",
   AUTHORIZATION: "authorization",
+  REFRESHTOKEN: "refresh-token",
 };
 
 // khi login => cos header => BE nhan 3 thang do'
-// tạo 1 page manager roles => 
- // ktra xem có quyền ko => xử lí api
+// tạo 1 page manager roles =>
+// ktra xem có quyền ko => xử lí api
 
 const createTokenPair = async (payload, publicKey, privateKey) => {
   try {
     const accessToken = await JWT.sign(payload, publicKey, {
-      expiresIn: "2 days",
+      expiresIn: "30s",
     });
 
     const refreshToken = await JWT.sign(payload, privateKey, {
@@ -43,8 +44,23 @@ const authentication = asyncHandler(async (req, res, next) => {
   const keyAccount = await findByUserId(userId);
   if (!keyAccount) throw new NotFoundError("Not found key account");
 
+  if (req.headers[HEADER.REFRESHTOKEN]) {
+    try {
+      const refreshToken = req.headers[HEADER.REFRESHTOKEN];
+      const decodeUser = await JWT.verify(refreshToken, keyAccount.privateKey);
+      if (userId !== decodeUser.userId)
+        throw new AuthFailureError("Invalid access token user id");
+      req.keyAccount = keyAccount;
+      req.user = decodeUser;
+      req.refreshToken = refreshToken;
+      return next();
+    } catch (error) {
+      throw error;
+    }
+  }
+
   const accessToken = req.headers[HEADER.AUTHORIZATION];
-  if (!accessToken) throw new AuthFailureError("Invalid access token");
+  if (!accessToken) throw new AuthFailureError("Invalid Request");
 
   try {
     const decodeUser = await JWT.verify(accessToken, keyAccount.publicKey);
@@ -58,7 +74,12 @@ const authentication = asyncHandler(async (req, res, next) => {
   }
 });
 
+const verifyJwt = async (token, keySecret) => {
+  return await JWT.verify(token, keySecret);
+};
+
 module.exports = {
   createTokenPair,
   authentication,
+  verifyJwt,
 };
