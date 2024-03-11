@@ -1022,6 +1022,62 @@ class CourseService {
     }
   };
 
+  static getCourseSummary = async (userId) => {
+    try {
+      const user = await User.findById(userId)
+        .select("_id")
+        .populate({
+          path: "courses",
+          select: "_id image_url name title",
+          populate: [
+            {
+              path: "teacher",
+              model: "User",
+              select: "firstName",
+            },
+            {
+              path: "lessons",
+              model: "Lesson",
+              select: "quizzes",
+              populate: {
+                path: "quizzes",
+                model: "Quiz",
+                select: "_id",
+              },
+            },
+            {
+              path: "quizzes",
+              model: "Quiz",
+              select: "_id",
+            },
+          ],
+        });
+      if (!user) throw new NotFoundError("User not found");
+
+      const coursesWithQuizCount = user.courses.map(course => {
+        const lessonQuizCount = course.lessons.reduce((acc,lesson) => acc + lesson.quizzes.length, 0);
+        const totalLessons = course.lessons.length;
+        const totalQuizCount = course.quizzes.length + lessonQuizCount;
+        return {
+          _id: course._id,
+          image_url: course.image_url,
+          name: course.name,
+          title: course.title,
+          teacher: {
+            firstName: course.teacher.firstName,
+            _id: course.teacher._id
+          },
+          totalLesson: totalLessons,
+          totalQuizCount,
+        }
+      })
+
+      return coursesWithQuizCount;
+    } catch (error) {
+      throw new BadRequestError("Failed to get course summaries");
+    }
+  }
+
   static getCourseCompletion = async ({ courseId, userId }) => {
     validateMongoDbId(courseId);
     validateMongoDbId(userId);

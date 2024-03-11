@@ -85,6 +85,12 @@ router.get(
 );
 
 router.get(
+  "/e-learning/users/courses/summary",
+  permission(["Trainee", "Mentor", "Admin", "Super-Admin"]),
+  asyncHandler(courseController.getCourseSummary)
+);
+
+router.get(
   "/e-learning/get-complete-course/:courseId",
   permission(["Mentor", "Admin", "Super-Admin", , "Trainee"]),
   asyncHandler(courseController.getCourseCompletion)
