@@ -1066,8 +1066,8 @@ class CourseService {
           name: course.name,
           title: course.title,
           teacher: {
-            firstName: course.teacher.firstName,
-            _id: course.teacher._id
+            firstName: course.teacher ? course.teacher.firstName : 'Unknown',
+            _id: course.teacher ? course.teacher._id : 'Unknown'
           },
           totalLesson: totalLessons,
           totalQuizCount,
@@ -1076,6 +1076,7 @@ class CourseService {
 
       return coursesWithQuizCount;
     } catch (error) {
+      console.error(error);
       throw new BadRequestError("Failed to get course summaries");
     }
   }
