@@ -1074,7 +1074,7 @@ class CourseService {
         }
       })
 
-      return coursesWithQuizCount;
+    return coursesWithQuizCount;
     } catch (error) {
       console.error(error);
       throw new BadRequestError("Failed to get course summaries");

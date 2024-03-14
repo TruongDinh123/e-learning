@@ -48,7 +48,6 @@ class QuizService {
       (!studentIds.length && !courseIds) ||
       (!courseIds.length && !submissionTime);
 
-      
     let quizTemplate;
     if (quizTemplateId) {
       quizTemplate = await QuizTemplate.findById(quizTemplateId).lean();
@@ -107,9 +106,16 @@ class QuizService {
     }
 
     // Tăng quizCount và lưu nếu là Mentor và không phải tạo QuizTemplate mới
-    if (isMentor && !isCreatingQuizTemplate && courseIds && courseIds.length > 0) {
-      const courses = await courseModel.find({ _id: { $in: courseIds } }).lean();
-    
+    if (
+      isMentor &&
+      !isCreatingQuizTemplate &&
+      courseIds &&
+      courseIds.length > 0
+    ) {
+      const courses = await courseModel
+        .find({ _id: { $in: courseIds } })
+        .lean();
+
       const updatePromises = courses.map(async (course) => {
         if (!course.teacherQuizzes) {
           course.teacherQuizzes = [];
@@ -117,19 +123,26 @@ class QuizService {
         const teacherQuizInfoIndex = course.teacherQuizzes.findIndex(
           (tq) => tq.teacherId.toString() === userId.toString()
         );
-        if (teacherQuizInfoIndex !== -1 && course.teacherQuizzes[teacherQuizInfoIndex].quizCount >= 3) {
-          throw new Error(`Bạn đã đạt giới hạn tạo bài tập cho khóa học: ${course.name}`);
+        if (
+          teacherQuizInfoIndex !== -1 &&
+          course.teacherQuizzes[teacherQuizInfoIndex].quizCount >= 3
+        ) {
+          throw new Error(
+            `Bạn đã đạt giới hạn tạo bài tập cho khóa học: ${course.name}`
+          );
         }
         if (teacherQuizInfoIndex === -1) {
           course.teacherQuizzes.push({ teacherId: userId, quizCount: 1 });
         } else {
           course.teacherQuizzes[teacherQuizInfoIndex].quizCount += 1;
         }
-        return courseModel.findByIdAndUpdate(course._id, { teacherQuizzes: course.teacherQuizzes })
+        return courseModel.findByIdAndUpdate(course._id, {
+          teacherQuizzes: course.teacherQuizzes,
+        });
       });
-    
+
       const results = await Promise.allSettled(updatePromises);
-      const rejected = results.find(result => result.status === 'rejected');
+      const rejected = results.find((result) => result.status === "rejected");
       if (rejected) {
         throw new Error(rejected.reason);
       }
@@ -219,7 +232,9 @@ class QuizService {
                           <li>Thời hạn nộp bài: <strong>${formattedSubmissionTime}</strong></li>
                       </ul>
                       <p>Vui lòng nộp bài đúng hạn.</p>
-                      <p>Để xem danh sách bài tập, vui lòng <a href="https://www.247learn.vn/courses/view-details/${course._id}">click vào đây</a>.</p>
+                      <p>Để xem danh sách bài tập, vui lòng <a href="https://www.247learn.vn/courses/view-details/${
+                        course._id
+                      }">click vào đây</a>.</p>
                       <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
                   </div>
                   <div class="footer">
@@ -253,7 +268,7 @@ class QuizService {
         { $set: { quizzes: [savedQuiz._id] } }
       );
 
-        // Thêm logic để cập nhật quizCount cho giáo viên của khóa học mà bài học này thuộc về
+      // Thêm logic để cập nhật quizCount cho giáo viên của khóa học mà bài học này thuộc về
       if (isMentor) {
         const course = await courseModel.findById(lesson.courseId).lean();
         if (!course) throw new NotFoundError("Course not found");
@@ -261,15 +276,22 @@ class QuizService {
         const teacherQuizInfoIndex = course.teacherQuizzes.findIndex(
           (tq) => tq.teacherId.toString() === userId.toString()
         );
-        if (teacherQuizInfoIndex !== -1 && course.teacherQuizzes[teacherQuizInfoIndex].quizCount >= 3) {
-          throw new Error(`Bạn đã đạt giới hạn tạo bài tập cho khóa học: ${course.name}`);
+        if (
+          teacherQuizInfoIndex !== -1 &&
+          course.teacherQuizzes[teacherQuizInfoIndex].quizCount >= 3
+        ) {
+          throw new Error(
+            `Bạn đã đạt giới hạn tạo bài tập cho khóa học: ${course.name}`
+          );
         }
         if (teacherQuizInfoIndex === -1) {
           course.teacherQuizzes.push({ teacherId: userId, quizCount: 1 });
         } else {
           course.teacherQuizzes[teacherQuizInfoIndex].quizCount += 1;
         }
-        await courseModel.findByIdAndUpdate(course._id, { teacherQuizzes: course.teacherQuizzes });
+        await courseModel.findByIdAndUpdate(course._id, {
+          teacherQuizzes: course.teacherQuizzes,
+        });
       }
     }
 
@@ -587,43 +609,52 @@ class QuizService {
 
       await Score.deleteMany({ quiz: quizId });
 
-    const coursesToUpdate = await courseModel.find({ quizzes: quizId }).lean();
+      const coursesToUpdate = await courseModel
+        .find({ quizzes: quizId })
+        .lean();
 
-    const user = await userModel
-      .findById(userId)
-      .populate("roles", "name")
-      .lean();
-      
-    const isAdmin = user.roles.some(
-      (role) => role.name === "Admin" || role.name === "Admin-Super"
-    );
-    
-    for (const course of coursesToUpdate) {
-      // Kiểm tra nếu userId khớp với bất kỳ teacherId nào trong teacherQuizzes
-      const isTeacherInCourse = course.teacherQuizzes.some(teacherQuiz => teacherQuiz.teacherId.toString() === userId.toString());
+      const user = await userModel
+        .findById(userId)
+        .populate("roles", "name")
+        .lean();
 
-      if (isTeacherInCourse || isAdmin) {
-        const updatedTeacherQuizzes = course.teacherQuizzes.map(teacherQuiz => {
-          // Giảm quizCount cho tất cả giáo viên trong teacherQuizzes
-          const newQuizCount = Math.max(0, teacherQuiz.quizCount - 1);
-          return { ...teacherQuiz, quizCount: newQuizCount };
-        });
+      const isAdmin = user.roles.some(
+        (role) => role.name === "Admin" || role.name === "Admin-Super"
+      );
 
-        await courseModel.findByIdAndUpdate(course._id, { teacherQuizzes: updatedTeacherQuizzes });
+      for (const course of coursesToUpdate) {
+        // Kiểm tra nếu userId khớp với bất kỳ teacherId nào trong teacherQuizzes
+        const isTeacherInCourse = course.teacherQuizzes.some(
+          (teacherQuiz) =>
+            teacherQuiz.teacherId.toString() === userId.toString()
+        );
+
+        if (isTeacherInCourse || isAdmin) {
+          const updatedTeacherQuizzes = course.teacherQuizzes.map(
+            (teacherQuiz) => {
+              // Giảm quizCount cho tất cả giáo viên trong teacherQuizzes
+              const newQuizCount = Math.max(0, teacherQuiz.quizCount - 1);
+              return { ...teacherQuiz, quizCount: newQuizCount };
+            }
+          );
+
+          await courseModel.findByIdAndUpdate(course._id, {
+            teacherQuizzes: updatedTeacherQuizzes,
+          });
+        }
       }
-    }
 
-    // for (const course of coursesToUpdate) {
-    //   const updatedTeacherQuizzes = course.teacherQuizzes.map(teacherQuiz => {
-    //     if (userId.toString() === teacherQuiz.teacherId.toString()) {
-    //       const newQuizCount = Math.max(0, teacherQuiz.quizCount - 1);
-    //       return { ...teacherQuiz, quizCount: newQuizCount };
-    //     }
-    //     return teacherQuiz;
-    //   });
+      // for (const course of coursesToUpdate) {
+      //   const updatedTeacherQuizzes = course.teacherQuizzes.map(teacherQuiz => {
+      //     if (userId.toString() === teacherQuiz.teacherId.toString()) {
+      //       const newQuizCount = Math.max(0, teacherQuiz.quizCount - 1);
+      //       return { ...teacherQuiz, quizCount: newQuizCount };
+      //     }
+      //     return teacherQuiz;
+      //   });
 
-    //   await courseModel.findByIdAndUpdate(course._id, { teacherQuizzes: updatedTeacherQuizzes });
-    // }
+      //   await courseModel.findByIdAndUpdate(course._id, { teacherQuizzes: updatedTeacherQuizzes });
+      // }
 
       await courseModel.updateMany(
         { quizzes: quizId },
@@ -874,11 +905,12 @@ class QuizService {
     }
   };
 
-  static deleteScorebyQuiz = async (scoreId) => {
+  static deleteScorebyQuiz = async ({ scoreId }) => {
     try {
       const deletedScore = await Score.deleteOne({ _id: scoreId });
       if (!deletedScore) throw new NotFoundError("No score found");
     } catch (error) {
+      console.log("🚀 ~ error:", error);
       throw new BadRequestError("Failed to delete score", error);
     }
   };
