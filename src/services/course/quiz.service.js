@@ -60,6 +60,7 @@ class QuizService {
             question: question.question,
             options: question.options,
             answer: question.answer,
+            image: question.image_url,
           }))
         : [];
 
@@ -317,11 +318,125 @@ class QuizService {
     return savedQuiz;
   };
 
-  static uploadQuestionImage = async ({ quizId, questionId, filename }) => {
+  static saveDraftQuiz = async ({
+    quizIdDraft,
+    type,
+    courseIds,
+    name,
+    essay,
+    questions,
+    submissionTime,
+    quizTemplateId,
+    lessonId,
+    timeLimit,
+    isDraft,
+    creatorId,
+  }) => {
+    let quiz;
+    // Kiểm tra xem có quizId không để quyết định cập nhật hay tạo mới
+    if (quizIdDraft) {
+      // Cập nhật bản nháp hiện có
+      quiz = await Quiz.findById(quizIdDraft);
+      if (!quiz) throw new NotFoundError("Quiz not found");
+
+      // Cập nhật các trường của quiz
+      Object.assign(quiz, {
+        type,
+        name,
+        courseIds,
+        lessonId,
+        questions: questions.map((question) => ({
+          question: question.question,
+          options: question.options,
+          answer: question.answer,
+          image: question.image_url,
+        })),
+        essay,
+        submissionTime,
+        timeLimit,
+        isDraft,
+        creatorId,
+      });
+    } else {
+      let quizTemplate;
+
+      if (quizTemplateId) {
+        quizTemplate = await QuizTemplate.findById(quizTemplateId).lean();
+        if (!quizTemplate) throw new NotFoundError("Quiz template not found");
+      }
+
+      const formattedQuestions =
+        type === "multiple_choice"
+          ? questions.map((question) => ({
+              question: question.question,
+              options: question.options,
+              answer: question.answer,
+              image: question.image_url,
+            }))
+          : [];
+
+      // Tạo bản nháp mới
+      quiz = new Quiz({
+        type: quizTemplate ? quizTemplate.type : type,
+        name: quizTemplate ? quizTemplate.name : name,
+        courseIds,
+        lessonId,
+        questions: quizTemplate
+          ? [...quizTemplate.questions, ...formattedQuestions]
+          : formattedQuestions,
+        essay:
+          type === "essay"
+            ? {
+                title: essay.title,
+                content: essay.content,
+                attachment: essay.attachment,
+              }
+            : undefined,
+        submissionTime,
+        timeLimit,
+        isDraft: true,
+        creatorId,
+      });
+    }
+
+    const savedQuiz = await quiz.save();
+    return savedQuiz;
+  };
+
+  static getDraftQuiz = async ({ teacherId, courseId }) => {
+    return Quiz.find({
+      creatorId: teacherId,
+      courseIds: courseId,
+      isDraft: true,
+    }).lean();
+  };
+
+  static deleteDraftQuiz = async (quizIdDraft) => {
+    try {
+      const DeldraftQuiz = await Quiz.findByIdAndDelete(
+        quizIdDraft
+      );
+      if (!DeldraftQuiz) throw new NotFoundError("No draft quiz template found");
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  static uploadQuestionImage = async ({
+    quizId,
+    isTemplateMode,
+    questionId,
+    filename,
+  }) => {
     validateMongoDbId(quizId);
     validateMongoDbId(questionId);
     try {
-      const quiz = await Quiz.findById(quizId);
+      let quiz;
+      if (isTemplateMode) {
+        quiz = await QuizTemplate.findById(quizId);
+      } else {
+        quiz = await Quiz.findById(quizId);
+      }
       if (!quiz) throw new NotFoundError("Quiz not found");
 
       // Tìm câu hỏi bằng ID
@@ -353,6 +468,7 @@ class QuizService {
 
       return { message: "Image uploaded successfully", quiz };
     } catch (error) {
+      console.log("🚀 ~ error:", error);
       throw new BadRequestError("Failed to upload question image", error);
     }
   };
@@ -764,17 +880,20 @@ class QuizService {
       if (!quiz) throw new NotFoundError("No quiz found");
 
       const maxScore = 10; // Điểm số tối đa
-      let score = quiz.questions.reduce((acc, question, index) => {
+      let correctAnswers = quiz.questions.reduce((acc, question, index) => {
         const userAnswer = answers[index]
           ? answers[index][Object.keys(answers[index])[0]]
           : null;
-        return acc + (question.answer === userAnswer ? 1 : 0);
+        return acc + (question.answer === userAnswer ? 10 : 0);
       }, 0);
 
+      // Tính tổng điểm
+      let totalScore = correctAnswers;
+      // Làm tròn điểm số
+      totalScore = Math.round(totalScore * 100) / 100;
+
       // Cập nhật điểm số và trạng thái hoàn thành cho bản ghi điểm
-      scoreRecord.score = ((score / quiz.questions.length) * maxScore).toFixed(
-        2
-      );
+      scoreRecord.score = totalScore;
       scoreRecord.answers = answers;
       scoreRecord.isComplete = true;
       scoreRecord.submitTime = Date.now();
