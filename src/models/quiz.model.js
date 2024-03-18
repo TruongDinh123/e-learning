@@ -82,6 +82,14 @@ const quizSchema = new mongoose.Schema(
       },
     ],
 
+    isDraft: { type: Boolean, default: false, index: true, select: true },
+
+    creatorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: false,
+    },
+
     essay: {
       title: {
         type: String,

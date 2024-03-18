@@ -38,6 +38,42 @@ class QuizController {
     }).send(res);
   };
 
+  saveDraftQuiz = async (req, res, next) => {
+    const {
+      quizIdDraft,
+      type,
+      courseIds,
+      name,
+      essay,
+      questions,
+      submissionTime,
+      quizTemplateId,
+      lessonId,
+      timeLimit,
+      isDraft,
+    } = req.body;
+
+    const creatorId = req.headers["x-client-id"];
+
+    new SuccessReponse({
+      message: "Create draft quiz successfully",
+      metadata: await QuizService.saveDraftQuiz({
+        quizIdDraft,
+        type,
+        courseIds,
+        name,
+        essay,
+        questions,
+        submissionTime,
+        quizTemplateId,
+        lessonId,
+        timeLimit,
+        isDraft,
+        creatorId,
+      }),
+    }).send(res);
+  };
+
   startQuiz = async (req, res, next) => {
     const { quizId } = req.params;
     const userId = req.headers["x-client-id"];
@@ -51,6 +87,24 @@ class QuizController {
     new SuccessReponse({
       message: "Get all quiz successfully",
       metadata: await QuizService.getQuizs(),
+    }).send(res);
+  };
+
+  getdraftQuiz = async (req, res, next) => {
+    const courseId = req.query.courseId;
+    const teacherId = req.headers["x-client-id"];
+    new SuccessReponse({
+      message: "Get draft quiz successfully",
+      metadata: await QuizService.getDraftQuiz({ teacherId, courseId }),
+    }).send(res);
+  };
+
+  deleteDraftQuiz = async (req, res, next) => {
+    const { quizIdDraft } = req.params;
+    console.log(quizIdDraft)
+    new SuccessReponse({
+      message: "Delete quiz draft successfully",
+      metadata: await QuizService.deleteDraftQuiz(quizIdDraft),
     }).send(res);
   };
 
@@ -173,7 +227,7 @@ class QuizController {
   };
 
   uploadQuestionImage = async (req, res, next) => {
-    const { quizId, questionId } = req.body;
+    const { quizId, questionId, isTemplateMode } = req.body;
     const { path: filename } = req.file;
 
     new SuccessReponse({
@@ -182,6 +236,7 @@ class QuizController {
         quizId,
         filename,
         questionId,
+        isTemplateMode,
       }),
     }).send(res);
   };
@@ -288,12 +343,12 @@ class QuizController {
   };
 
   getAllScoresByCourseId = async (req, res, next) => {
-      const { courseId } = req.params;
+    const { courseId } = req.params;
 
-      new SuccessReponse({
-        message: "get all scores by course successfully",
-        metadata: await QuizService.getAllScoresByCourseId(courseId),
-      }).send(res);
+    new SuccessReponse({
+      message: "get all scores by course successfully",
+      metadata: await QuizService.getAllScoresByCourseId(courseId),
+    }).send(res);
   };
 
   updateScore = async (req, res, next) => {
