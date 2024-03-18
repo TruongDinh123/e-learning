@@ -408,7 +408,9 @@ class QuizService {
       creatorId: teacherId,
       courseIds: courseId,
       isDraft: true,
-    }).lean();
+    })
+    .select('-creatorId -createdAt -updatedAt -studentIds -__v')
+    .lean();
   };
 
   static deleteDraftQuiz = async (quizIdDraft) => {
