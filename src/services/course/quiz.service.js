@@ -874,33 +874,42 @@ class QuizService {
       if (!answers || !Array.isArray(answers)) {
         throw new BadRequestError("Invalid answers format");
       }
-
+  
       const scoreRecord = await Score.findOne({ quiz: quizId, user: userId });
       if (!scoreRecord) throw new NotFoundError("Score record not found");
-
+  
       const quiz = await Quiz.findById(quizId);
       if (!quiz) throw new NotFoundError("No quiz found");
-
-      const maxScore = 10; // Điểm số tối đa
-      let correctAnswers = quiz.questions.reduce((acc, question, index) => {
-        const userAnswer = answers[index]
-          ? answers[index][Object.keys(answers[index])[0]]
-          : null;
-        return acc + (question.answer === userAnswer ? 10 : 0);
-      }, 0);
-
-      // Tính tổng điểm
-      let totalScore = correctAnswers;
-      // Làm tròn điểm số
-      totalScore = Math.round(totalScore * 100) / 100;
-
+  
+      // Điểm số cho mỗi câu trả lời đúng
+      const pointsPerCorrectAnswer = 10;
+      let correctAnswersCount = 0; // Số câu trả lời đúng
+  
+      // Chuyển đổi mảng answers thành một đối tượng để dễ dàng truy cập
+      const answersMap = answers.reduce((acc, answerObj) => {
+        const questionId = Object.keys(answerObj)[0];
+        acc[questionId] = answerObj[questionId];
+        return acc;
+      }, {});
+  
+      // Duyệt qua tất cả các câu hỏi trong quiz
+      quiz.questions.forEach((question) => {
+        const userAnswer = answersMap[question._id.toString()];
+        if (userAnswer && userAnswer === question.answer) {
+          correctAnswersCount++;
+        }
+      });
+  
+      // Tính tổng điểm dựa trên số câu trả lời đúng
+      let totalScore = correctAnswersCount * pointsPerCorrectAnswer;
+  
       // Cập nhật điểm số và trạng thái hoàn thành cho bản ghi điểm
       scoreRecord.score = totalScore;
       scoreRecord.answers = answers;
       scoreRecord.isComplete = true;
       scoreRecord.submitTime = Date.now();
       await scoreRecord.save();
-
+  
       return scoreRecord;
     } catch (error) {
       throw new BadRequestError("Failed to submit quiz", error);
