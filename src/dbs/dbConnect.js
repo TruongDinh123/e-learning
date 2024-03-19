@@ -8,7 +8,7 @@ dotenv.config();
 const config = require("../config/config.mongdb");
 const { countConnect } = require("../helpers/check.connect");
 
-const connectString ="mongodb+srv://95lab:170601Dinh@e-learning.wkxsz4m.mongodb.net/"
+const connectString = config.db.url;
 
 class Database {
   constructor() {
