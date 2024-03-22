@@ -4,9 +4,9 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 
 //init middleware
-app.use(express.json());
+app.use(express.json({ limit: '100mb' }));
 
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
 dotenv.config();
 
@@ -15,7 +15,8 @@ app.use(
     // origin: [process.env.CLIENT_URL],
     // origin: "https://e-learning-fe.onrender.com",
     // origin: "https://116.118.51.237:3000",
-    origin: ["https://www.247learn.vn", "https://247learn.vn"],
+    // origin: ["https://www.247learn.vn", "https://247learn.vn"],
+    origin: ["https://www.navibot.vn", "https://navibot.vn"],
     credentials: true,
     methods: "GET,POST,PUT,DELETE",
   })
