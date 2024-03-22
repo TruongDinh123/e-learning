@@ -55,6 +55,8 @@ class QuizController {
 
     const creatorId = req.headers["x-client-id"];
 
+    console.log("req.body:", req.body);
+
     new SuccessReponse({
       message: "Create draft quiz successfully",
       metadata: await QuizService.saveDraftQuiz({
@@ -95,13 +97,13 @@ class QuizController {
     const teacherId = req.headers["x-client-id"];
     new SuccessReponse({
       message: "Get draft quiz successfully",
-      metadata: await QuizService.getDraftQuiz({ teacherId, courseId }),
+      metadata: await QuizService.getDraftQuiz({ teacherId }),
     }).send(res);
   };
 
   deleteDraftQuiz = async (req, res, next) => {
     const { quizIdDraft } = req.params;
-    console.log(quizIdDraft)
+    console.log(quizIdDraft);
     new SuccessReponse({
       message: "Delete quiz draft successfully",
       metadata: await QuizService.deleteDraftQuiz(quizIdDraft),
