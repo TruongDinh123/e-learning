@@ -17,6 +17,23 @@ cloudinary.config({
 });
 
 class QuizService {
+  static async sendEmailWithThrottle(mailOptionsArray, transporter, delay) {
+    for (const mailOptions of mailOptionsArray) {
+      await new Promise((resolve, reject) => {
+        console.log("Sending email to:", mailOptions.to);
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            console.error("Error sending email:", error);
+            reject(error);
+          } else {
+            console.log("Email sent:", info.response);
+            setTimeout(resolve, delay); // Đợi một khoảng thời gian trước khi gửi email tiếp theo
+          }
+        });
+      }).catch(err => { throw err; });
+    }
+  }
+
   static createQuiz = async ({
     type,
     courseIds,
@@ -37,9 +54,6 @@ class QuizService {
       .select("roles quizCount quizLimit")
       .populate("roles", "name")
       .lean();
-    const isAdmin = user.roles.some(
-      (role) => role.name === "Admin" || role.name === "Admin-Super"
-    );
     const isMentor = user.roles.some((role) => role.name === "Mentor");
 
     // Kiểm tra điều kiện để tạo QuizTemplate mới
@@ -171,21 +185,15 @@ class QuizService {
         .lean();
     }
 
-    const emailPromises = studentIds.map(async (studentId) => {
+    let mailOptionsArray = [];
+    for (const studentId of studentIds) {
       const student = await userModel.findById(studentId).lean();
       if (!student) throw new NotFoundError("student not found");
 
       // Tìm thông tin khóa học và giáo viên từ dữ liệu đã truy vấn trước đó
-      const course = courses.find((c) =>
-        c.students.map((id) => id.toString()).includes(studentId.toString())
-      );
+      const course = courses.find((c) => c.students.map((id) => id.toString()).includes(studentId.toString()));
       const lesson = lessons?.find((l) => l._id.toString() === lessonId);
-      const teacherName =
-        course && course.teacher
-          ? [course.teacher.lastName, course.teacher.firstName]
-              .filter(Boolean)
-              .join(" ") || "Giáo viên"
-          : "Giáo viên";
+      const teacherName = course && course.teacher ? [course.teacher.lastName, course.teacher.firstName].filter(Boolean).join(" ") || "Giáo viên" : "Giáo viên";
       const lessonName = lesson ? lesson.name : undefined;
 
       if (!course) throw new NotFoundError("course not found");
@@ -246,11 +254,17 @@ class QuizService {
           </html>
         `,
       };
+      mailOptionsArray.push(mailOptions);
+    };
 
-      return transporter.sendMail(mailOptions);
-    });
+    try {
+      await this.sendEmailWithThrottle(mailOptionsArray, transporter, 500);
+    } catch (error) {
+      console.error("Failed to send emails, aborting the rest of the process.");
+      return;
+    }
 
-    await Promise.all(emailPromises);
+    // await Promise.all(emailPromises);
 
     const savedQuiz = await quiz.save();
 
@@ -604,6 +618,7 @@ class QuizService {
 
       // Find quizzes that belong to the course
       const courseQuizzes = await Quiz.find({ courseIds: courseIds })
+        .where({ isDraft: false })
         .select(
           "-questions -updatedAt -createdAt -studentIds -submissionTime -__v"
         )
