@@ -1181,12 +1181,14 @@ class CourseService {
           quizzesTaken: 0
         };
       }
-      acc[userId].totalScore += score.score;
-      acc[userId].quizzesTaken += 1;
+      if (score.score && score.score > 0) {
+        acc[userId].totalScore += score.score;
+        acc[userId].quizzesTaken += 1;
+      }
       return acc;
     }, {});
 
-    studentScores = Object.values(studentScores);
+    studentScores = Object.values(studentScores).filter(student => student.totalScore > 0);
 
     studentScores.sort((a, b) => b.totalScore - a.totalScore);
 
