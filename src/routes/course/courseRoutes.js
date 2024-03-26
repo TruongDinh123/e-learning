@@ -114,4 +114,10 @@ router.post(
   asyncHandler(courseController.createNotification)
 );
 
+router.get(
+  "/e-learning/course/:courseId/getStudentScores",
+  permission(["Mentor", "Admin", "Trainee"]),
+  asyncHandler(courseController.getStudentScoresByCourse)
+)
+
 module.exports = router;

@@ -17,7 +17,8 @@ class QuizController {
       lessonId,
       timeLimit,
     } = req.body;
-
+    console.log(req.body);
+    
     const userId = req.headers["x-client-id"];
 
     new SuccessReponse({
