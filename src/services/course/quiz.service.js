@@ -74,7 +74,7 @@ class QuizService {
             question: question.question,
             options: question.options,
             answer: question.answer,
-            image: question.image_url,
+            image_url: question.image_url,
           }))
         : [];
 
@@ -617,8 +617,8 @@ class QuizService {
       const lessonQuizIds = lessons.flatMap((lesson) => lesson.quizzes);
 
       // Find quizzes that belong to the course
-      const courseQuizzes = await Quiz.find({ courseIds: courseIds })
-        .where({ isDraft: false })
+      const courseQuizzes = await Quiz.find({ courseIds: courseIds, 
+        $or: [{ isDraft: false }, { isDraft: { $exists: false } }] })
         .select(
           "-questions -updatedAt -createdAt -studentIds -submissionTime -__v"
         )

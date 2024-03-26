@@ -200,6 +200,16 @@ class CourseController {
       }),
     }).send(res);
   };
+
+  getStudentScoresByCourse = async (req, res ,next) => {
+    const { courseId } = req.params;
+    const userId = req.headers["x-client-id"];
+
+    new SuccessReponse({
+      message: "Get student scores by course successfully",
+      metadata: await CourseService.getStudentScoresByCourse(courseId,userId),
+    }).send(res);
+  }
 }
 
 module.exports = new CourseController();

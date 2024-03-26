@@ -12,6 +12,7 @@ const { convertToObjectIdMongodb } = require("../../utils");
 const Role = require("../../models/role.model");
 const Quiz = require("../../models/quiz.model");
 const Score = require("../../models/score.model");
+const userModel = require("../../models/user.model");
 
 cloudinary.config({
   cloud_name: "dvsvd87sm",
@@ -1151,6 +1152,46 @@ class CourseService {
       throw new BadRequestError("Failed to create notification", error);
     }
   };
+
+  static getStudentScoresByCourse = async(courseId, userId) => {
+    const user = await userModel
+    .findById(userId)
+    .select("roles")
+    .populate("roles", "name")
+    .lean();
+
+    const isAdminOrMentor = user.roles.some((role) => role.name === "Admin" || role.name === "Mentor");
+
+    const quizzes = await Quiz.find({ courseIds: courseId }).select('_id').exec();
+
+    const userFields = isAdminOrMentor ? 'firstName lastName email' : 'firstName lastName';
+    const scores = await Score.find({ quiz: { $in: quizzes.map(q => q._id) } })
+                              .populate('user', userFields)
+                              .exec();
+
+    let studentScores = scores.reduce((acc, score) => {
+      const userId = score.user._id.toString();
+      const fullName = [score.user.firstName, score.user.lastName].filter(Boolean).join(' ');
+      const email = isAdminOrMentor && score.user.email ? `${score.user.email}` : '';
+      if (!acc[userId]) {
+        acc[userId] = {
+          name: fullName,
+          email: email,
+          totalScore: 0,
+          quizzesTaken: 0
+        };
+      }
+      acc[userId].totalScore += score.score;
+      acc[userId].quizzesTaken += 1;
+      return acc;
+    }, {});
+
+    studentScores = Object.values(studentScores);
+
+    studentScores.sort((a, b) => b.totalScore - a.totalScore);
+
+    return studentScores;
+  }
 }
 
 module.exports = {
