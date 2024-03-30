@@ -46,6 +46,7 @@ class QuizService {
     lessonId,
     timeLimit,
     userId,
+    isTemplateMode,
   }) => {
     let quiz;
 
@@ -91,7 +92,7 @@ class QuizService {
         submissionTime,
         quizTemplate: quizTemplateId,
       });
-    } else if (isCreatingQuizTemplate) {
+    } else if (isTemplateMode) {
       // Tạo QuizTemplate mới
       quiz = new QuizTemplate({
         type,
@@ -123,7 +124,7 @@ class QuizService {
     // Tăng quizCount và lưu nếu là Mentor và không phải tạo QuizTemplate mới
     if (
       isMentor &&
-      !isCreatingQuizTemplate &&
+      !isTemplateMode &&
       courseIds &&
       courseIds.length > 0
     ) {
@@ -258,7 +259,7 @@ class QuizService {
     };
 
     try {
-      await this.sendEmailWithThrottle(mailOptionsArray, transporter, 500);
+      await this.sendEmailWithThrottle(mailOptionsArray, transporter, 1000);
     } catch (error) {
       console.error("Failed to send emails, aborting the rest of the process.");
       return;
@@ -339,21 +340,30 @@ class QuizService {
     name,
     essay,
     questions,
-    newQuestion, // Giả sử rằng newQuestion là câu hỏi mới được thêm vào
     submissionTime,
     quizTemplateId,
     lessonId,
     timeLimit,
     isDraft,
     creatorId,
+    deletedQuestionIds,
   }) => {
     try {
       let quiz;
+      
       // Kiểm tra xem có quizId không để quyết định cập nhật hay tạo mới
       if (quizIdDraft) {
         // Nếu có newQuestion, chỉ thêm câu hỏi mới vào mảng questions
         quiz = await Quiz.findById(quizIdDraft);
         if (!quiz) throw new NotFoundError("Quiz not found");
+
+        // Xử lý xóa các câu hỏi đã bị xóa bằng cách sử dụng $pull
+        if (deletedQuestionIds && deletedQuestionIds.length > 0) {
+          await Quiz.updateOne(
+            { _id: quizIdDraft },
+            { $pull: { questions: { _id: { $in: deletedQuestionIds } } } }
+          );
+        }
   
         // Cập nhật thông tin cơ bản của quiz
         Object.assign(quiz, {

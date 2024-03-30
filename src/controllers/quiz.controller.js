@@ -16,9 +16,9 @@ class QuizController {
       quizTemplateId,
       lessonId,
       timeLimit,
+      isTemplateMode,
+      deletedQuestionIds,
     } = req.body;
-    console.log(req.body);
-    
     const userId = req.headers["x-client-id"];
 
     new SuccessReponse({
@@ -35,6 +35,8 @@ class QuizController {
         lessonId,
         timeLimit,
         userId,
+        isTemplateMode,
+        deletedQuestionIds,
       }),
     }).send(res);
   };
@@ -52,11 +54,11 @@ class QuizController {
       lessonId,
       timeLimit,
       isDraft,
+      deletedQuestionIds,
     } = req.body;
 
     const creatorId = req.headers["x-client-id"];
 
-    console.log("req.body:", req.body);
 
     new SuccessReponse({
       message: "Create draft quiz successfully",
@@ -73,6 +75,7 @@ class QuizController {
         timeLimit,
         isDraft,
         creatorId,
+        deletedQuestionIds,
       }),
     }).send(res);
   };
@@ -104,7 +107,6 @@ class QuizController {
 
   deleteDraftQuiz = async (req, res, next) => {
     const { quizIdDraft } = req.params;
-    console.log(quizIdDraft);
     new SuccessReponse({
       message: "Delete quiz draft successfully",
       metadata: await QuizService.deleteDraftQuiz(quizIdDraft),
@@ -230,8 +232,9 @@ class QuizController {
   };
 
   uploadQuestionImage = async (req, res, next) => {
-    const { quizId, questionId, isTemplateMode } = req.body;
+    const { quizId, questionId, isTemplateMode  } = req.body;
     const { path: filename } = req.file;
+    console.log(req.body);
 
     new SuccessReponse({
       message: "Upload image question successfully",
