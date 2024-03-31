@@ -16,10 +16,35 @@ router.post(
   asyncHandler(quizController.createQuiz)
 );
 
+router.post(
+  "/e-learning/quiz/draft",
+  permission(["Super-Admin", "Admin", "Mentor"]),
+  asyncHandler(quizController.saveDraftQuiz)
+);
+
+
+router.delete(
+  "/e-learning/quiz/draft/:quizIdDraft",
+  permission(["Super-Admin", "Admin", "Mentor"]),
+  asyncHandler(quizController.deleteDraftQuiz)
+);
+
+router.post(
+  "/e-learning/quiz/:quizId/start",
+  permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
+  asyncHandler(quizController.startQuiz)
+);
+
 router.get(
   "/e-learning/quizs",
   permission(["Super-Admin", "Admin", "Mentor"]),
   asyncHandler(quizController.getQuizs)
+);
+
+router.get(
+  "/e-learning/draft-quiz",
+  permission(["Super-Admin", "Admin", "Mentor"]),
+  asyncHandler(quizController.getdraftQuiz)
 );
 
 router.get(
@@ -39,6 +64,12 @@ router.get(
   "/e-learning/course/:courseIds/quizzes",
   permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
   asyncHandler(quizController.getQuizsByCourse)
+);
+
+router.get(
+  "/e-learning/course/:courseIds/info-quizz",
+  permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
+  asyncHandler(quizController.getQuizsInfoByCourse)
 );
 
 router.get(
@@ -72,9 +103,21 @@ router.delete(
 );
 
 router.delete(
+  "/e-learning/quiz/delete-image-question",
+  permission(["Super-Admin", "Admin", "Mentor"]),
+  asyncHandler(quizController.deleteQuestionImage)
+)
+
+router.delete(
   "/e-learning/quiz/:quizId",
   permission(["Super-Admin", "Admin", "Mentor"]),
   asyncHandler(quizController.deleteQuiz)
+);
+
+router.delete(
+  "/e-learning/score/:scoreId/delete-score",
+  permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
+  asyncHandler(quizController.deleteScorebyQuiz)
 );
 
 router.post(
@@ -96,6 +139,12 @@ router.get(
 );
 
 router.get(
+  "/e-learning/info-score",
+  permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
+  asyncHandler(quizController.getScoreByInfo)
+);
+
+router.get(
   "/e-learning/:quizId/:userId/score",
   permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
   asyncHandler(quizController.getScoreByUserId)
@@ -105,6 +154,12 @@ router.get(
   "/e-learning/quiz/:quizId/all-score",
   permission(["Super-Admin", "Admin", "Mentor"]),
   asyncHandler(quizController.getScoreByQuizId)
+);
+
+router.get(
+  "/e-learning/get-all-score/:courseId",
+  permission(["Super-Admin", "Admin", "Mentor"]),
+  asyncHandler(quizController.getAllScoresByCourseId)
 );
 
 router.put(
@@ -118,6 +173,13 @@ router.post(
   permission(["Super-Admin", "Trainee"]),
   uploadMiddleware.single("filename"),
   asyncHandler(quizController.uploadFileUserSubmit)
+);
+
+router.post(
+  "/e-learning/quiz/upload-image-question",
+  permission(["Super-Admin", "Admin", "Mentor"]),
+  uploadMiddleware.single("filename"),
+  asyncHandler(quizController.uploadQuestionImage)
 );
 
 //quiz templates

@@ -113,7 +113,7 @@ class CategoryService {
                 <li>Mật khẩu: <strong>${password}</strong></li>
               </ul>
               <p>Vui lòng không chia sẻ thông tin tài khoản của bạn với người khác. Bạn có thể đổi mật khẩu sau khi đăng nhập lần đầu.</p>
-              <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">support@247learn.vn</a>.</p>
+              <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com"> 247learn.vn@gmail.com</a>.</p>
             </div>
             <div class="footer">
               <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
@@ -147,7 +147,7 @@ class CategoryService {
           <p>Xin chào,</p>
           <p>Chúng tôi rất vui mừng thông báo rằng bạn đã được thêm vào khoá học <strong>${course.name}</strong> do giáo viên <strong>${teacherName}</strong> hướng dẫn.</p>
           <p>Bạn có thể tiếp tục sử dụng tài khoản hiện tại của mình để truy cập vào khóa học.</p>
-          <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">support@247learn.vn</a>.</p>
+          <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com"> 247learn.vn@gmail.com</a>.</p>
         </div>
         <div class="footer">
           <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
@@ -205,6 +205,7 @@ class CategoryService {
   static getAllCategories = async () => {
     const categories = await categoryModel
       .find()
+      .select('_id name')
       .populate({
         path: "courses",
         select: "name title image_url teacher lessons showCourse _id",

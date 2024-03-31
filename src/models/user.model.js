@@ -19,6 +19,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    quizCount: {
+      type: Number,
+      default: 0,
+    },
+    quizLimit: {
+      type: Number,
+      default: 3,
+    },
     gender: {
       type: String,
       enum: ["Nam", "Nữ", "Khác"],
@@ -28,9 +36,11 @@ const userSchema = new mongoose.Schema(
     filename: {
       type: String,
     },
+
     image_url: {
       type: String,
     },
+    
     email: {
       type: String,
       required: true,

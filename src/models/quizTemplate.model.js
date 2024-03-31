@@ -20,6 +20,15 @@ const quizTemplateSchema = new mongoose.Schema(
           type: String,
           required: false,
         },
+        filename: {
+          type: String,
+          required: false,
+        },
+
+        image_url: {
+          type: String,
+          required: false,
+        },
         options: [
           {
             type: String,
@@ -60,5 +69,3 @@ const quizTemplateSchema = new mongoose.Schema(
 const QuizTemplate = mongoose.model("QuizTemplate", quizTemplateSchema);
 
 module.exports = QuizTemplate;
-
-

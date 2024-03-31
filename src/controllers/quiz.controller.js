@@ -15,7 +15,11 @@ class QuizController {
       submissionTime,
       quizTemplateId,
       lessonId,
+      timeLimit,
+      isTemplateMode,
+      deletedQuestionIds,
     } = req.body;
+    const userId = req.headers["x-client-id"];
 
     new SuccessReponse({
       message: "Create quiz successfully",
@@ -29,7 +33,60 @@ class QuizController {
         submissionTime,
         quizTemplateId,
         lessonId,
+        timeLimit,
+        userId,
+        isTemplateMode,
+        deletedQuestionIds,
       }),
+    }).send(res);
+  };
+
+  saveDraftQuiz = async (req, res, next) => {
+    const {
+      quizIdDraft,
+      type,
+      courseIds,
+      name,
+      essay,
+      questions,
+      submissionTime,
+      quizTemplateId,
+      lessonId,
+      timeLimit,
+      isDraft,
+      deletedQuestionIds,
+    } = req.body;
+
+    console.log(req.body);
+    const creatorId = req.headers["x-client-id"];
+
+
+    new SuccessReponse({
+      message: "Create draft quiz successfully",
+      metadata: await QuizService.saveDraftQuiz({
+        quizIdDraft,
+        type,
+        courseIds,
+        name,
+        essay,
+        questions,
+        submissionTime,
+        quizTemplateId,
+        lessonId,
+        timeLimit,
+        isDraft,
+        creatorId,
+        deletedQuestionIds,
+      }),
+    }).send(res);
+  };
+
+  startQuiz = async (req, res, next) => {
+    const { quizId } = req.params;
+    const userId = req.headers["x-client-id"];
+    new SuccessReponse({
+      message: "Start quiz successfully",
+      metadata: await QuizService.startQuiz(quizId, userId),
     }).send(res);
   };
 
@@ -37,6 +94,23 @@ class QuizController {
     new SuccessReponse({
       message: "Get all quiz successfully",
       metadata: await QuizService.getQuizs(),
+    }).send(res);
+  };
+
+  getdraftQuiz = async (req, res, next) => {
+    const courseId = req.query.courseId;
+    const teacherId = req.headers["x-client-id"];
+    new SuccessReponse({
+      message: "Get draft quiz successfully",
+      metadata: await QuizService.getDraftQuiz({ teacherId }),
+    }).send(res);
+  };
+
+  deleteDraftQuiz = async (req, res, next) => {
+    const { quizIdDraft } = req.params;
+    new SuccessReponse({
+      message: "Delete quiz draft successfully",
+      metadata: await QuizService.deleteDraftQuiz(quizIdDraft),
     }).send(res);
   };
 
@@ -90,6 +164,15 @@ class QuizController {
     }).send(res);
   };
 
+  getQuizsInfoByCourse = async (req, res, next) => {
+    const { courseIds } = req.params;
+
+    new SuccessReponse({
+      message: "Get quiz info successfully",
+      metadata: await QuizService.getQuizsInfoByCourse(courseIds),
+    }).send(res);
+  };
+
   getQuizzesByStudentAndCourse = async (req, res, next) => {
     const { courseId } = req.params;
     const studentId = req.headers["x-client-id"];
@@ -122,15 +205,16 @@ class QuizController {
 
   updateQuiz = async (req, res, next) => {
     const { quizId } = req.params;
-    const { questions, name, submissionTime, essay } = req.body;
+    const { questions, name, submissionTime, essay, timeLimit } = req.body;
 
     new SuccessReponse({
-      message: "Update quiz successfully",
+      message: "Cập nhật bài tập thành công",
       metadata: await QuizService.updateQuiz(quizId, {
         questions,
         name,
         submissionTime,
         essay,
+        timeLimit,
       }),
     }).send(res);
   };
@@ -148,22 +232,49 @@ class QuizController {
     }).send(res);
   };
 
-  // updateQuiz = async (req, res, next) => {
-  //   const { quizId } = req.params;
-  //   const { type, courseIds, studentIds, name, essay, questions, submissionTime } = req.body;
+  uploadQuestionImage = async (req, res, next) => {
+    const { quizId, questionId, isTemplateMode  } = req.body;
+    const { path: filename } = req.file;
+    console.log(req.body);
 
-  //   new SuccessReponse({
-  //     message: "Update quiz successfully",
-  //     metadata: await QuizService.updateQuiz(quizId, { type, courseIds, studentIds, name, essay, questions, submissionTime }),
-  //   }).send(res);
-  // };
+    new SuccessReponse({
+      message: "Upload image question successfully",
+      metadata: await QuizService.uploadQuestionImage({
+        quizId,
+        filename,
+        questionId,
+        isTemplateMode,
+      }),
+    }).send(res);
+  };
+
+  deleteQuestionImage = async (req, res, next) => {
+    const { quizId, questionId } = req.body;
+
+    new SuccessReponse({
+      message: "Delete image question successfully",
+      metadata: await QuizService.deleteQuestionImage(
+        quizId,
+        questionId,
+      ),
+    }).send(res);
+  }
 
   deleteQuiz = async (req, res, next) => {
     const { quizId } = req.params;
+    const userId = req.headers["x-client-id"];
 
     new SuccessReponse({
       message: "Delete quiz successfully",
-      metadata: await QuizService.deleteQuiz({ quizId }),
+      metadata: await QuizService.deleteQuiz({ quizId, userId }),
+    }).send(res);
+  };
+
+  deleteScorebyQuiz = async (req, res, next) => {
+    const { scoreId } = req.params;
+    new SuccessReponse({
+      message: "Delete table score successfully",
+      metadata: await QuizService.deleteScorebyQuiz({ scoreId }),
     }).send(res);
   };
 
@@ -217,6 +328,17 @@ class QuizController {
     } catch (error) {}
   };
 
+  getScoreByInfo = async (req, res, next) => {
+    try {
+      const userId = req.headers["x-client-id"];
+
+      new SuccessReponse({
+        message: "Get score info successfully",
+        metadata: await QuizService.getScoreByInfo(userId),
+      }).send(res);
+    } catch (error) {}
+  };
+
   getScoreByUserId = async (req, res, next) => {
     try {
       const { userId, quizId } = req.params;
@@ -237,6 +359,15 @@ class QuizController {
         metadata: await QuizService.getScoreByQuizId(quizId),
       }).send(res);
     } catch (error) {}
+  };
+
+  getAllScoresByCourseId = async (req, res, next) => {
+    const { courseId } = req.params;
+
+    new SuccessReponse({
+      message: "get all scores by course successfully",
+      metadata: await QuizService.getAllScoresByCourseId(courseId),
+    }).send(res);
   };
 
   updateScore = async (req, res, next) => {

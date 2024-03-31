@@ -10,8 +10,9 @@ const {
   BadRequestError,
   AuthFailureError,
   NotFoundError,
+  ForbiddenError,
 } = require("../core/error.response");
-const { findByEmail } = require("./user.service");
+const { findByEmail, generatePassword } = require("./user.service");
 const Role = require("../models/role.model");
 const validateMongoDbId = require("../config/validateMongoDbId");
 const { v2: cloudinary } = require("cloudinary");
@@ -24,6 +25,43 @@ cloudinary.config({
 });
 
 class AccessService {
+  static handleRefreshToken = async ({ keyAccount, user, refreshToken }) => {
+    const { userId, email } = user;
+
+    if (keyAccount.refreshTokensUsed.includes(refreshToken)) {
+      await KeyTokenService.deleteKeyById(userId);
+      throw new ForbiddenError("Refresh token has been used!! pls relogin");
+    }
+
+    if (keyAccount.refreshToken !== refreshToken) {
+      throw new ForbiddenError("Refresh token has been used!! pls relogin");
+    }
+
+    const foundAccount = await findByEmail({ email });
+    if (!foundAccount) throw new AuthFailureError("Refresh token not found");
+
+    //create 1 cap moi
+    const tokens = await createTokenPair(
+      { userId, email },
+      keyAccount.publicKey,
+      keyAccount.privateKey
+    );
+    //update token
+    await keyAccount.updateOne({
+      $set: {
+        refreshToken: tokens.refreshToken,
+      },
+      $addToSet: {
+        refreshTokensUsed: refreshToken,
+      },
+    });
+
+    return {
+      user,
+      tokens,
+    };
+  };
+
   static login = async ({ email, password, refreshToken = null } = null) => {
     const foundAccount = await findByEmail({ email });
     if (!foundAccount) {
@@ -36,7 +74,7 @@ class AccessService {
 
     const match = await bcrypt.compare(password, foundAccount.password);
     if (!match) {
-      throw new AuthFailureError("Email or Password is not correct");
+      throw new BadRequestError("Email or Password is not correct");
     }
 
     const privateKey = crypto.randomBytes(64).toString("hex");
@@ -59,7 +97,17 @@ class AccessService {
 
     return {
       account: getInfoData({
-        fileds: ["_id", "firstName", "email", "lastName", "roles"],
+        fileds: [
+          "_id",
+          "firstName",
+          "email",
+          "lastName",
+          "roles",
+          "image_url",
+          "quizCount",
+          "quizLimit",
+          "courses",
+        ],
         object: foundAccount,
       }),
       tokens,
@@ -78,7 +126,7 @@ class AccessService {
 
     const match = await bcrypt.compare(oldPassword, user.password);
     if (!match) {
-      throw new AuthFailureError("Mật khẩu không đúng");
+      throw new BadRequestError("Mật khẩu không đúng");
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
@@ -156,7 +204,7 @@ class AccessService {
     if (!foundEmail) {
       throw new NotFoundError("Email không đúng hoặc không tồn tại");
     } else {
-      const newPassword = crypto.randomBytes(4).toString("hex");
+      const newPassword = generatePassword();
       const passwordHash = await bcrypt.hash(newPassword, 10);
       const user = await User.findOneAndUpdate(
         { email },
@@ -200,7 +248,7 @@ class AccessService {
                         <p>Mật khẩu mới của bạn là: <strong>${newPassword}</strong></p>
                         <p>Vui lòng không chia sẻ thông tin tài khoản của bạn với người khác. Bạn có thể đổi mật khẩu sau khi đăng nhập.</p>
                         <p>Trân trọng,</p>
-                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">247learn.vn@gmail.com</a>.</p>
+                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
                     </div>
                     <div class="footer">
                         <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
@@ -264,24 +312,11 @@ class AccessService {
     try {
       // Tạo điều kiện tìm kiếm dựa trên tên và vai trò
       let query = { status: "active" };
-      if (search) {
-        query.$or = [
-          { firstName: { $regex: search, $options: "i" } },
-          { lastName: { $regex: search, $options: "i" } },
-        ];
-      }
-      if (role) {
-        query.roles = role;
-      }
 
       const users = await User.find(query)
-        .skip((page - 1) * limit)
-        .limit(limit)
+        .select("lastName firstName email status")
         .populate("roles", "_id name")
         .lean();
-
-      const total = await User.countDocuments(query);
-      const pages = Math.ceil(total / limit);
 
       if (!users) {
         throw new NotFoundError("Users not found");
@@ -289,10 +324,6 @@ class AccessService {
 
       return {
         users,
-        total,
-        pages,
-        currentPage: page,
-        pageSize: users.length,
       };
     } catch (error) {
       throw new BadRequestError("Failed to get a User", error);
@@ -303,8 +334,10 @@ class AccessService {
     validateMongoDbId(id);
     try {
       const user = await User.findOne({ status: "active", _id: id })
+        .select("-createdAt -updatedAt -__v -password -courses")
         .populate("roles", "_id name")
         .populate("quizzes")
+        .populate("courses", "_id name teacherQuizzes")
         .lean();
 
       return user;

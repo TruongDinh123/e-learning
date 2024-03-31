@@ -32,14 +32,19 @@ class CourseController {
   };
 
   getCourses = async (req, res, next) => {
-    // const teacherId = req.headers["x-client-id"];
-
     new Created({
       message: "Success!",
       metadata: await CourseService.getCourse(),
       options: {
         limit: 10,
       },
+    }).send(res);
+  };
+
+  selectCourse = async (req, res, next) => {
+    new Created({
+      message: "Success!",
+      metadata: await CourseService.selectCourse(),
     }).send(res);
   };
 
@@ -54,10 +59,20 @@ class CourseController {
 
   getACourse = async (req, res, next) => {
     const { id } = req.params;
+    const userId = req.headers["x-client-id"];
 
     new SuccessReponse({
       message: "Get a course successfully!",
-      metadata: await CourseService.getACourse({ id }),
+      metadata: await CourseService.getACourse({ id, userId }),
+    }).send(res);
+  };
+
+  getACourseByInfo = async (req, res, next) => {
+    const { id } = req.params;
+
+    new SuccessReponse({
+      message: "Get a course successfully!",
+      metadata: await CourseService.getACourseByInfo({ id }),
     }).send(res);
   };
 
@@ -131,6 +146,15 @@ class CourseController {
     }).send(res);
   };
 
+  getCourseSummary = async (req, res, next) => {
+    const userId = req.headers["x-client-id"];
+
+    new SuccessReponse({
+      message: "Get student courses successfully!",
+      metadata: await CourseService.getCourseSummary(userId),
+    }).send(res);
+  };
+
   getCourseCompletion = async (req, res, next) => {
     const { courseId } = req.params;
     const userId = req.headers["x-client-id"];
@@ -176,6 +200,16 @@ class CourseController {
       }),
     }).send(res);
   };
+
+  getStudentScoresByCourse = async (req, res ,next) => {
+    const { courseId } = req.params;
+    const userId = req.headers["x-client-id"];
+
+    new SuccessReponse({
+      message: "Get student scores by course successfully",
+      metadata: await CourseService.getStudentScoresByCourse(courseId,userId),
+    }).send(res);
+  }
 }
 
 module.exports = new CourseController();

@@ -31,6 +31,11 @@ router.get(
 );
 
 router.get(
+  "/e-learning/course/:id",
+  asyncHandler(courseController.getACourse)
+);
+
+router.get(
   "/e-learning/public-course",
   asyncHandler(courseController.getCoursePublic)
 );
@@ -92,5 +97,7 @@ router.put(
 );
 
 router.post("/e-learning/logout", asyncHandler(accessController.logOut));
+
+router.post("/e-learning/handleRefreshToken", asyncHandler(accessController.handlerRefreshToken));
 
 module.exports = router;

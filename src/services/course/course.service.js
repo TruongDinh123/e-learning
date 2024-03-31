@@ -10,6 +10,9 @@ const { v2: cloudinary } = require("cloudinary");
 const categoryModel = require("../../models/category.model");
 const { convertToObjectIdMongodb } = require("../../utils");
 const Role = require("../../models/role.model");
+const Quiz = require("../../models/quiz.model");
+const Score = require("../../models/score.model");
+const userModel = require("../../models/user.model");
 
 cloudinary.config({
   cloud_name: "dvsvd87sm",
@@ -77,8 +80,17 @@ class CourseService {
     try {
       const courses = await courseModel
         .find()
+        .select("_id name title showCourse image_url category teacher")
         .populate("students", "firstName lastName")
-        .populate("lessons");
+        .populate({
+          path: "lessons",
+          populate: [
+            { path: "videos", model: "VideoLesson", select: "_id url" },
+            { path: "quizzes", model: "Quiz" },
+          ],
+        })
+        .populate("quizzes")
+        .lean();
 
       if (!courses) throw new NotFoundError("Courses not found");
       return courses;
@@ -87,16 +99,68 @@ class CourseService {
     }
   };
 
-  static getACourse = async ({ id }) => {
+  static selectCourse = async () => {
+    try {
+      const courses = await courseModel
+        .find()
+        .select("_id name teacher")
+        .populate("students", "firstName lastName")
+        .populate({
+          path: "lessons",
+          select: "_id name",
+        })
+        .lean();
+
+      if (!courses) throw new NotFoundError("Courses not found");
+      return courses;
+    } catch (error) {
+      throw new BadRequestError("Failed to get a Course", error);
+    }
+  };
+
+  static getACourse = async ({ id, userId }) => {
     try {
       const aCourse = await courseModel
         .findById({
           _id: id,
         })
-        .populate("students", "lastName email roles notifications")
+        .populate("students", "lastName firstName email roles notifications")
         .populate("teacher")
-        .populate("lessons")
-        .populate("quizzes");
+        .populate({
+          path: "lessons",
+          populate: [
+            { path: "videos", model: "VideoLesson" },
+            { path: "quizzes", model: "Quiz" },
+          ],
+        })
+        .populate("quizzes")
+        .lean();
+
+        // Tìm tất cả điểm số của người dùng cho các bài quiz trong khóa học
+        const scores = await Score.find({ user: userId, quiz: { $in: aCourse.quizzes.map(quiz => quiz._id) } }).lean();
+    
+        // Thêm thông tin hoàn thành cho mỗi bài quiz trong khóa học
+        aCourse.quizzes.forEach(quiz => {
+          const score = scores.find(score => score.quiz.toString() === quiz._id.toString());
+          quiz.isCompleted = !!score; // Đánh dấu là đã hoàn thành nếu tìm thấy điểm số
+          quiz.scoreDetails = score; // Thêm chi tiết điểm số nếu có
+        });
+
+      return aCourse;
+    } catch (error) {
+      throw new BadRequestError("Failed to get a Course", error);
+    }
+  };
+
+  static getACourseByInfo = async ({ id }) => {
+    try {
+      const aCourse = await courseModel
+        .findById({
+          _id: id,
+        })
+        .select("_id name title notifications")
+        .populate("students", "lastName email roles notifications")
+      .populate("teacher", "_id lastName firstName email image_url");
 
       return aCourse;
     } catch (error) {
@@ -185,6 +249,17 @@ class CourseService {
 
   static deleteCourse = async (id) => {
     try {
+      // Xóa tất cả các bài học thuộc về khóa học
+      const lessons = await lessonModel.find({ courseId: id });
+      const lessonIds = lessons.map((lesson) => lesson._id);
+
+      // Xóa tất cả các quiz liên quan đến các bài học của khóa học
+      await Quiz.deleteMany({ lessonId: { $in: lessonIds } });
+
+      // Xóa tất cả các quiz liên quan trực tiếp đến khóa học thông qua trường courseIds
+      await Quiz.updateMany({ courseIds: id }, { $pull: { courseIds: id } });
+
+      // Tiếp tục với việc xóa khóa học như bình thường
       await lessonModel.deleteMany({ courseId: id });
 
       const course = await courseModel.findById(id);
@@ -196,35 +271,45 @@ class CourseService {
           resource_type: "image",
         });
       }
-      // Find the category that contains the course
-      const category = await categoryModel.findOne({
-        courses: convertToObjectIdMongodb(id),
-      });
 
+      // Find the category that contains the course and remove the course from the category's course list
+      const category = await categoryModel.findOne({
+        courses: id,
+      });
       if (category) {
-        // Remove the course from the category's course list
-        category.courses = category.courses.filter((courseId) => {
-          return courseId.toString() !== id.toString();
-        });
+        category.courses.pull(id);
         await category.save();
       }
 
+      // Thêm bước xóa khóa học khỏi danh sách khóa học của người dùng
+      await User.updateMany({ courses: id }, { $pull: { courses: id } });
+
       await courseModel.findByIdAndDelete(id);
     } catch (error) {
+      console.log(error);
       throw new BadRequestError(error);
     }
   };
 
   static addStudentToCours = async ({ courseId, email, userId }) => {
     try {
-      let user = await User.findOne({ email });
+      let [user, course, loggedInUser, adminRole] = await Promise.all([
+        User.findOne({ email }),
+        courseModel
+          .findById(courseId)
+          .populate("teacher", "firstName lastName"),
+        User.findById(userId),
+        Role.find({ $or: [{ name: "Admin" }, { name: "Super-Admin" }] }).lean(),
+      ]);
 
-      const course = await courseModel.findById(courseId);
       if (!course) throw new NotFoundError("Khóa học không tồn tại");
+      if (!adminRole) throw new NotFoundError("Role 'Admin' not found");
 
-      const loggedInUser = await User.findById(userId);
-
-      const teacherName = loggedInUser.firstName;
+      const teacherName = course.teacher
+        ? [course.teacher.lastName, course.teacher.firstName]
+            .filter(Boolean)
+            .join(" ") || "Giáo viên"
+        : "Giáo viên";
 
       const transporter = nodemailer.createTransport({
         service: "gmail",
@@ -241,20 +326,12 @@ class CourseService {
         html: "",
       };
 
-      const adminRole = await Role.find({
-        $or: [{ name: "Admin" }, { name: "Super-Admin" }],
-      }).lean();
-      if (!adminRole) {
-        throw new NotFoundError("Role 'Admin' not found");
-      }
-
       const adminRoleIds = adminRole.map((role) => role._id.toString());
-
       if (
         !loggedInUser.roles.some((role) =>
           adminRoleIds.includes(role.toString())
         ) &&
-        loggedInUser._id.toString() !== course.teacher.toString()
+        loggedInUser._id.toString() !== course.teacher._id.toString()
       ) {
         throw new BadRequestError(
           "Chỉ giáo viên của khóa học hoặc Admin mới có thể thêm người dùng vào khóa học"
@@ -311,7 +388,8 @@ class CourseService {
                 <li>Mật khẩu: <strong>${password}</strong></li>
               </ul>
               <p>Vui lòng không chia sẻ thông tin tài khoản của bạn với người khác. Bạn có thể đổi mật khẩu sau khi đăng nhập lần đầu.</p>
-              <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">support@247learn.vn</a>.</p>
+              <p>Để truy cập vào khóa học, vui lòng <a href="https://www.247learn.vn/courses/view-course-details/${courseId}?autoLogin=true">click vào đây</a>.</p>
+              <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com"> 247learn.vn@gmail.com</a>.</p>
             </div>
             <div class="footer">
               <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
@@ -345,7 +423,8 @@ class CourseService {
           <p>Xin chào,</p>
           <p>Chúng tôi rất vui mừng thông báo rằng bạn đã được thêm vào khoá học <strong>${course.name}</strong> do giáo viên <strong>${teacherName}</strong> hướng dẫn.</p>
           <p>Bạn có thể tiếp tục sử dụng tài khoản hiện tại của mình để truy cập vào khóa học.</p>
-          <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">support@247learn.vn</a>.</p>
+          <p>Để truy cập vào khóa học, vui lòng <a href="https://www.247learn.vn/courses/view-course-details/${courseId}?autoLogin=true">click vào đây</a>.</p>
+          <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com"> 247learn.vn@gmail.com</a>.</p>
         </div>
         <div class="footer">
           <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
@@ -360,31 +439,102 @@ class CourseService {
 
       // Gửi email nếu cần
       if (shouldSendEmail) {
-        transporter.sendMail(mailOptions, function (error, info) {
-          if (error) {
-            console.error("Failed to send email", error);
-          } else {
-            console.log("Email sent: " + info.response);
-          }
+        transporter.sendMail(mailOptions).catch((error) => {
+          console.error("Failed to send email", error);
         });
       }
 
-      if (!user.courses.includes(courseId)) {
-        user.courses.push(courseId);
-        await user.save();
-      }
+      // Sử dụng $addToSet để thêm mà không cần kiểm tra trùng lặp
+      const userUpdate = User.findByIdAndUpdate(
+        user._id,
+        {
+          $addToSet: { courses: courseId },
+        },
+        { new: true }
+      );
 
-      if (!course.students.includes(user._id)) {
-        course.students.push(user._id);
-        await course.save();
-      }
+      const courseUpdate = courseModel.findByIdAndUpdate(
+        course._id,
+        {
+          $addToSet: { students: user._id },
+        },
+        { new: true }
+      );
 
-      return user;
+      // Cập nhật quizzes và lessons bằng cách sử dụng $addToSet trong một vòng lặp
+      const quizzes = await Quiz.find({ courseIds: courseId });
+      const quizUpdates = quizzes.map((quiz) =>
+        Quiz.findByIdAndUpdate(
+          quiz._id,
+          {
+            $addToSet: { studentIds: user._id },
+          },
+          { new: true }
+        )
+      );
+
+      // Cập nhật các bài học và quiz liên quan đến khóa học
+      const lessons = await lessonModel.find({ courseId: courseId }).lean();
+      const lessonUpdates = lessons.map((lesson) => {
+        const quizUpdatesForLesson = lesson.quizzes.map((quizId) =>
+          Quiz.findByIdAndUpdate(
+            quizId,
+            {
+              $addToSet: { studentIds: user._id },
+            },
+            { new: true }
+          )
+        );
+        return Promise.all(quizUpdatesForLesson);
+      });
+
+      await Promise.all([
+        userUpdate,
+        courseUpdate,
+        ...quizUpdates,
+        ...lessonUpdates.flat(),
+      ]);
+
+      const quizIdsFromLessons = lessons.flatMap((lesson) => lesson.quizzes);
+      const allQuizIds = [
+        ...quizzes.map((quiz) => quiz._id),
+        ...quizIdsFromLessons,
+      ];
+
+      // Cập nhật mảng quizzes của User, sử dụng $addToSet để tránh trùng lặp
+      await User.findByIdAndUpdate(
+        user._id,
+        {
+          $addToSet: { quizzes: { $each: allQuizIds } },
+        },
+        { new: true }
+      );
+
+      // Lưu thay đổi vào User
+      await user.save();
+
+      return this.createResponseObject(user);
     } catch (error) {
-      console.log("🚀 ~ error:", error);
+      console.log(error);
       throw new BadRequestError("Lỗi server");
     }
   };
+
+  // Hàm trợ giúp để tạo đối tượng phản hồi
+  static createResponseObject(user) {
+    return {
+      message: "Student added to course successfully!",
+      status: 200,
+      metadata: {
+        firstName: user.firstName,
+        email: user.email,
+        // courses: user.courses.map(course => course.toString()),
+        // quizzes: user.quizzes.map(quiz => quiz.toString()),
+        // roles: user.roles.map(role => role.toString()),
+        // status: user.status
+      },
+    };
+  }
 
   static addTeacherToCours = async ({ courseId, email }) => {
     try {
@@ -473,7 +623,7 @@ class CourseService {
                             <li>Mật khẩu: <strong>${password}</strong></li>
                         </ul>
                         <p>Vui lòng không chia sẻ thông tin tài khoản của bạn với người khác. Bạn có thể đổi mật khẩu sau khi đăng nhập lần đầu.</p>
-                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">247learn.vn@gmail.com</a>.</p>
+                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
                     </div>
                     <div class="footer">
                         <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
@@ -506,7 +656,7 @@ class CourseService {
                         <p>Xin chào,</p>
                         <p>Chúng tôi rất vui mừng thông báo rằng bạn đã được đăng ký thành công trở thành giáo viên của khoá học <strong>${course.name}</strong></p>
                         <p>Bạn hãy đăng nhập vào tài khoản hiện tại của bạn để truy cập vào hệ thống:</p>
-                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">247learn.vn@gmail.com</a>.</p>
+                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
                     </div>
                     <div class="footer">
                         <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
@@ -601,7 +751,7 @@ class CourseService {
                       <p>Chúng tôi rất vui mừng thông báo rằng bạn đã được đăng ký thành công trở thành giáo viên của khoá học <strong>${course.name}</strong></p>
                       <p>Bạn hãy đăng nhập vào tài khoản hiện tại của bạn để truy cập vào hệ thống:</p>
                       <p>Vui lòng không chia sẻ thông tin tài khoản của bạn với người khác. Bạn có thể đổi mật khẩu sau khi đăng nhập lần đầu.</p>
-                      <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">247learn.vn@gmail.com</a>.</p>
+                      <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
                   </div>
                   <div class="footer">
                   <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
@@ -670,7 +820,7 @@ class CourseService {
                             <li>Mật khẩu: <strong>${password}</strong></li>
                         </ul>
                         <p>Vui lòng không chia sẻ thông tin tài khoản của bạn với người khác. Bạn có thể đổi mật khẩu sau khi đăng nhập lần đầu.</p>
-                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">247learn.vn@gmail.com</a>.</p>
+                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
                     </div>
                     <div class="footer">
                         <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
@@ -703,7 +853,7 @@ class CourseService {
                         <p>Xin chào,</p>
                         <p>Chúng tôi rất vui mừng thông báo rằng bạn đã được đăng ký thành công trở thành giáo viên của khoá học <strong>${course.name}</strong></p>
                         <p>Bạn hãy đăng nhập vào tài khoản hiện tại của bạn để truy cập vào hệ thống:</p>
-                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">247learn.vn@gmail.com</a>.</p>
+                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
                     </div>
                     <div class="footer">
                         <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
@@ -763,7 +913,7 @@ class CourseService {
                                       <li>Mật khẩu: <strong>${password}</strong></li>
                                   </ul>
                                   <p>Vui lòng không chia sẻ thông tin tài khoản của bạn với người khác. Bạn có thể đổi mật khẩu sau khi đăng nhập lần đầu.</p>
-                                  <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto:support@247learn.vn">247learn.vn@gmail.com</a>.</p>
+                                  <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
                               </div>
                               <div class="footer">
                                   <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
@@ -808,9 +958,23 @@ class CourseService {
     try {
       const user = await User.findById(userId);
       const course = await courseModel.findById(courseId);
-
       if (!user) throw new NotFoundError("User not found");
       if (!course) throw new NotFoundError("Course not found");
+
+      // Tìm tất cả quizzes liên quan đến khóa học
+      const courseQuizzes = await Quiz.find({
+        $or: [
+          { courseIds: courseId }, // Quizzes trực tiếp từ khóa học
+          { lessonId: { $in: course.lessons } } // Quizzes từ các bài học thuộc khóa học
+        ]
+      }).select('_id').lean();
+
+      // Lấy ra id của tất cả quizzes liên quan
+      const quizIds = courseQuizzes.map(quiz => quiz._id.toString());
+      console.log(quizIds);
+
+      // Xóa các quizzes tìm được khỏi mảng quizzes của user
+      user.quizzes = user.quizzes.filter(quizId => !quizIds.includes(quizId.toString()));
 
       user.courses.pull(courseId);
       course.students.pull(userId);
@@ -825,20 +989,98 @@ class CourseService {
 
   static getStudentCourses = async (userId) => {
     try {
-      const user = await User.findById(userId).populate({
-        path: "courses",
-        populate: {
-          path: "teacher",
-          model: "User",
-        },
-      });
+      const user = await User.findById(userId)
+        .select("_id")
+        .populate({
+          path: "courses",
+          select: "_id image_url name title",
+          populate: [
+            {
+              path: "teacher",
+              model: "User",
+              select: "firstName",
+            },
+            {
+              path: "lessons",
+              model: "Lesson",
+              select: "quizzes",
+              populate: {
+                path: "quizzes",
+                model: "Quiz",
+                select: "_id",
+              },
+            },
+            {
+              path: "quizzes",
+              model: "Quiz",
+              select: "_id",
+            },
+          ],
+        });
       if (!user) throw new NotFoundError("User not found");
 
-      return user.courses;
+      return user;
     } catch (error) {
       throw new BadRequestError("Failed to get student courses");
     }
   };
+
+  static getCourseSummary = async (userId) => {
+    try {
+      const user = await User.findById(userId)
+        .select("_id")
+        .populate({
+          path: "courses",
+          select: "_id image_url name title",
+          populate: [
+            {
+              path: "teacher",
+              model: "User",
+              select: "firstName",
+            },
+            {
+              path: "lessons",
+              model: "Lesson",
+              select: "quizzes",
+              populate: {
+                path: "quizzes",
+                model: "Quiz",
+                select: "_id",
+              },
+            },
+            {
+              path: "quizzes",
+              model: "Quiz",
+              select: "_id",
+            },
+          ],
+        });
+      if (!user) throw new NotFoundError("User not found");
+
+      const coursesWithQuizCount = user.courses.map(course => {
+        const lessonQuizCount = course.lessons.reduce((acc,lesson) => acc + lesson.quizzes.length, 0);
+        const totalLessons = course.lessons.length;
+        const totalQuizCount = course.quizzes.length + lessonQuizCount;
+        return {
+          _id: course._id,
+          image_url: course.image_url,
+          name: course.name,
+          title: course.title,
+          teacher: {
+            firstName: course.teacher ? course.teacher.firstName : 'Unknown',
+            _id: course.teacher ? course.teacher._id : 'Unknown'
+          },
+          totalLesson: totalLessons,
+          totalQuizCount,
+        }
+      })
+
+    return coursesWithQuizCount;
+    } catch (error) {
+      console.error(error);
+      throw new BadRequestError("Failed to get course summaries");
+    }
+  }
 
   static getCourseCompletion = async ({ courseId, userId }) => {
     validateMongoDbId(courseId);
@@ -910,6 +1152,48 @@ class CourseService {
       throw new BadRequestError("Failed to create notification", error);
     }
   };
+
+  static getStudentScoresByCourse = async(courseId, userId) => {
+    const user = await userModel
+    .findById(userId)
+    .select("roles")
+    .populate("roles", "name")
+    .lean();
+
+    const isAdminOrMentor = user.roles.some((role) => role.name === "Admin" || role.name === "Mentor");
+
+    const quizzes = await Quiz.find({ courseIds: courseId }).select('_id').exec();
+
+    const userFields = isAdminOrMentor ? 'firstName lastName email' : 'firstName lastName';
+    const scores = await Score.find({ quiz: { $in: quizzes.map(q => q._id) } })
+                              .populate('user', userFields)
+                              .exec();
+
+    let studentScores = scores.reduce((acc, score) => {
+      const userId = score.user._id.toString();
+      const fullName = [score.user.firstName, score.user.lastName].filter(Boolean).join(' ');
+      const email = isAdminOrMentor && score.user.email ? `${score.user.email}` : '';
+      if (!acc[userId]) {
+        acc[userId] = {
+          name: fullName,
+          email: email,
+          totalScore: 0,
+          quizzesTaken: 0
+        };
+      }
+      if (score.score && score.score > 0) {
+        acc[userId].totalScore += score.score;
+        acc[userId].quizzesTaken += 1;
+      }
+      return acc;
+    }, {});
+
+    studentScores = Object.values(studentScores).filter(student => student.totalScore > 0);
+
+    studentScores.sort((a, b) => b.totalScore - a.totalScore);
+
+    return studentScores;
+  }
 }
 
 module.exports = {

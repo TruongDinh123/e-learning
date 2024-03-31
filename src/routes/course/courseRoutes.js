@@ -31,9 +31,15 @@ router.get(
 );
 
 router.get(
-  "/e-learning/course/:id",
+  "/e-learning/select-course",
+  permission(["Super-Admin", "Mentor", "Admin"]),
+  asyncHandler(courseController.selectCourse)
+);
+
+router.get(
+  "/e-learning/get-info-course/:id",
   permission(["Super-Admin", "Mentor", "Admin", "Trainee"]),
-  asyncHandler(courseController.getACourse)
+  asyncHandler(courseController.getACourseByInfo)
 );
 
 router.put(
@@ -79,6 +85,12 @@ router.get(
 );
 
 router.get(
+  "/e-learning/users/courses/summary",
+  permission(["Trainee", "Mentor", "Admin", "Super-Admin"]),
+  asyncHandler(courseController.getCourseSummary)
+);
+
+router.get(
   "/e-learning/get-complete-course/:courseId",
   permission(["Mentor", "Admin", "Super-Admin", , "Trainee"]),
   asyncHandler(courseController.getCourseCompletion)
@@ -101,5 +113,11 @@ router.post(
   permission(["Mentor", "Admin"]),
   asyncHandler(courseController.createNotification)
 );
+
+router.get(
+  "/e-learning/course/:courseId/getStudentScores",
+  permission(["Mentor", "Admin", "Trainee"]),
+  asyncHandler(courseController.getStudentScoresByCourse)
+)
 
 module.exports = router;

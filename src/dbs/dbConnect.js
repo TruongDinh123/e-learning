@@ -5,12 +5,10 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
-const {
-  db: { host, name, port },
-} = require("../config/config.mongdb");
+const config = require("../config/config.mongdb");
 const { countConnect } = require("../helpers/check.connect");
 
-const connectString = process.env.DB_URL;
+const connectString = config.db.url;
 
 class Database {
   constructor() {

@@ -20,6 +20,17 @@ class AccessController {
     }).send(res);
   };
 
+  handlerRefreshToken = async (req, res, next) => {
+    new SuccessReponse({
+      message: "Get token success",
+      metadata: await AccessService.handleRefreshToken({
+        refreshToken: req.refreshToken,
+        user: req.user,
+        keyAccount: req.keyAccount,
+      }),
+    }).send(res);
+  };
+
   changePassword = async (req, res, next) => {
     const { oldPassword, newPassword } = req.body;
     const currentUserId = req.user.userId;
@@ -57,11 +68,11 @@ class AccessController {
   };
 
   getAllUser = async (req, res, next) => {
-    const { page, limit, search, role } = req.query;
+    // const { page, limit, search, role } = req.query;
     try {
       new SuccessReponse({
         message: "Get all user success",
-        metadata: await AccessService.getAllUser(page, limit, search, role),
+        metadata: await AccessService.getAllUser(),
       }).send(res);
     } catch (error) {
       return res.status(500).json({ message: "Internal server error" });
