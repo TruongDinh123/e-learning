@@ -549,6 +549,47 @@ class QuizService {
     return updatedQuizTemplate;
   };
 
+  static deleteQuestionImage = async(quizId, questionId) => {
+    try {
+      // Tìm quiz để lấy URL ảnh hiện tại
+      const quiz = await Quiz.findById(quizId);
+      if (!quiz) throw new Error('Quiz not found');
+
+      const questionIndex = quiz.questions.findIndex(q => q._id.toString() === questionId);
+      if (questionIndex === -1) throw new Error('Question not found');
+
+      const imageUrl = quiz.questions[questionIndex].image_url;
+      if (!imageUrl) throw new Error('Image does not exist');
+
+      // Xác định publicId từ URL ảnh
+      const publicId = imageUrl.split("/").pop().split(".")[0];
+
+      // Xóa ảnh từ Cloudinary
+      await cloudinary.uploader.destroy(publicId, {
+        folder: "quiz_questions",
+        resource_type: "image",
+      });
+
+      const result = await Quiz.findOneAndUpdate(
+        { _id: quizId, "questions._id": questionId },
+        {
+          $set: {
+            "questions.$.image_url": '',
+          },
+        },
+        { new: true }
+      );
+      
+      if (!result) {
+        throw new Error('Quiz not found or question index is out of bounds');
+      }
+  
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   static uploadFile = async ({ filename, quizId }) => {
     validateMongoDbId(quizId);
     try {

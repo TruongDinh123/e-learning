@@ -57,6 +57,7 @@ class QuizController {
       deletedQuestionIds,
     } = req.body;
 
+    console.log(req.body);
     const creatorId = req.headers["x-client-id"];
 
 
@@ -246,6 +247,18 @@ class QuizController {
       }),
     }).send(res);
   };
+
+  deleteQuestionImage = async (req, res, next) => {
+    const { quizId, questionId } = req.body;
+
+    new SuccessReponse({
+      message: "Delete image question successfully",
+      metadata: await QuizService.deleteQuestionImage(
+        quizId,
+        questionId,
+      ),
+    }).send(res);
+  }
 
   deleteQuiz = async (req, res, next) => {
     const { quizId } = req.params;
