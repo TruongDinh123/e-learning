@@ -103,6 +103,12 @@ router.delete(
 );
 
 router.delete(
+  "/e-learning/quiz/delete-image-question",
+  permission(["Super-Admin", "Admin", "Mentor"]),
+  asyncHandler(quizController.deleteQuestionImage)
+)
+
+router.delete(
   "/e-learning/quiz/:quizId",
   permission(["Super-Admin", "Admin", "Mentor"]),
   asyncHandler(quizController.deleteQuiz)
