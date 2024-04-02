@@ -8,7 +8,6 @@ const userLessonModel = require("../../models/userLesson.model");
 const validateMongoDbId = require("../../config/validateMongoDbId");
 const { v2: cloudinary } = require("cloudinary");
 const categoryModel = require("../../models/category.model");
-const { convertToObjectIdMongodb } = require("../../utils");
 const Role = require("../../models/role.model");
 const Quiz = require("../../models/quiz.model");
 const Score = require("../../models/score.model");
@@ -142,8 +141,13 @@ class CourseService {
         // Thêm thông tin hoàn thành cho mỗi bài quiz trong khóa học
         aCourse.quizzes.forEach(quiz => {
           const score = scores.find(score => score.quiz.toString() === quiz._id.toString());
-          quiz.isCompleted = !!score; // Đánh dấu là đã hoàn thành nếu tìm thấy điểm số
-          quiz.scoreDetails = score; // Thêm chi tiết điểm số nếu có
+          if (score) {
+            quiz.isCompleted = score.isComplete; // Sử dụng trạng thái isComplete từ bảng Score
+            quiz.scoreDetails = score; // Thêm chi tiết điểm số
+          } else {
+            quiz.isCompleted = false; // Đánh dấu là chưa hoàn thành nếu không tìm thấy điểm số
+            quiz.scoreDetails = null; // Không có chi tiết điểm số
+          }
         });
 
       return aCourse;
@@ -1159,12 +1163,14 @@ class CourseService {
     .select("roles")
     .populate("roles", "name")
     .lean();
+    const course = await courseModel.findById(courseId).populate('teacherQuizzes.teacherId', 'email').lean();
 
-    const isAdminOrMentor = user.roles.some((role) => role.name === "Admin" || role.name === "Mentor");
+      const isAdminOrMentorOfCourse = user.roles.some(role => role.name === "Admin") || 
+                                  course.teacherQuizzes.some(tq => tq.teacherId._id.toString() === userId);
 
     const quizzes = await Quiz.find({ courseIds: courseId }).select('_id').exec();
 
-    const userFields = isAdminOrMentor ? 'firstName lastName email' : 'firstName lastName';
+    const userFields = isAdminOrMentorOfCourse ? 'firstName lastName email' : 'firstName lastName';
     const scores = await Score.find({ quiz: { $in: quizzes.map(q => q._id) } })
                               .populate('user', userFields)
                               .exec();
@@ -1172,9 +1178,10 @@ class CourseService {
     let studentScores = scores.reduce((acc, score) => {
       const userId = score.user._id.toString();
       const fullName = [score.user.firstName, score.user.lastName].filter(Boolean).join(' ');
-      const email = isAdminOrMentor && score.user.email ? `${score.user.email}` : '';
+      const email = isAdminOrMentorOfCourse && score.user.email ? `${score.user.email}` : '';
       if (!acc[userId]) {
         acc[userId] = {
+          _id: userId,
           name: fullName,
           email: email,
           totalScore: 0,
