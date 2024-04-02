@@ -635,12 +635,12 @@ class QuizService {
       const lessonQuizIds = lessons.flatMap((lesson) => lesson.quizzes);
 
       // Find quizzes that belong to the course
-      const courseQuizzes = await Quiz.find({ courseIds: courseIds })
+      const courseQuizzes = await Quiz.find({ courseIds: courseIds ,  $or: [{ isDraft: false }, { isDraft: { $exists: false } }]})
         .populate("questions")
         .lean();
 
       // Find quizzes that belong to the lessons
-      const lessonQuizzes = await Quiz.find({ _id: { $in: lessonQuizIds } })
+      const lessonQuizzes = await Quiz.find({ _id: { $in: lessonQuizIds }, $or: [{ isDraft: false }, { isDraft: { $exists: false } }]})
         .populate("questions")
         .lean();
 
@@ -826,18 +826,6 @@ class QuizService {
         }
       }
 
-      // for (const course of coursesToUpdate) {
-      //   const updatedTeacherQuizzes = course.teacherQuizzes.map(teacherQuiz => {
-      //     if (userId.toString() === teacherQuiz.teacherId.toString()) {
-      //       const newQuizCount = Math.max(0, teacherQuiz.quizCount - 1);
-      //       return { ...teacherQuiz, quizCount: newQuizCount };
-      //     }
-      //     return teacherQuiz;
-      //   });
-
-      //   await courseModel.findByIdAndUpdate(course._id, { teacherQuizzes: updatedTeacherQuizzes });
-      // }
-
       await courseModel.updateMany(
         { quizzes: quizId },
         { $pull: { quizzes: quizId } }
@@ -923,7 +911,7 @@ class QuizService {
         },
         {
           new: true,
-          upsert: true, // Tạo một tài liệu mới nếu không tồn tại.
+          upsert: true,
           setDefaultsOnInsert: true,
           runValidators: true,
         }

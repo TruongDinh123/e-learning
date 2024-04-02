@@ -71,7 +71,7 @@ class CourseController {
     const { id } = req.params;
 
     new SuccessReponse({
-      message: "Get a course successfully!",
+      message: "Get a course by info successfully!",
       metadata: await CourseService.getACourseByInfo({ id }),
     }).send(res);
   };
