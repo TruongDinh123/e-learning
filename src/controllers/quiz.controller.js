@@ -98,7 +98,6 @@ class QuizController {
   };
 
   getdraftQuiz = async (req, res, next) => {
-    const courseId = req.query.courseId;
     const teacherId = req.headers["x-client-id"];
     new SuccessReponse({
       message: "Get draft quiz successfully",

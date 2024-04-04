@@ -5,7 +5,7 @@ const { CourseService } = require("../services/course/course.service");
 
 class CourseController {
   createCourse = async (req, res, next) => {
-    const { name, title, categoryId } = req.body;
+    const { name, title, categoryId, nameCenter } = req.body;
     const userId = req.headers["x-client-id"];
     new Created({
       message: "Course Created!",
@@ -14,6 +14,7 @@ class CourseController {
         title,
         userId,
         categoryId,
+        nameCenter,
       }),
       options: {
         limit: 10,
@@ -50,11 +51,17 @@ class CourseController {
 
   updateCourse = async (req, res, next) => {
     const { id } = req.params;
-    const { name, title, categoryId } = req.body;
+    const { name, title, categoryId, nameCenter } = req.body;
 
-    return res
-      .status(200)
-      .json(await CourseService.updateCourse({ id, name, title, categoryId }));
+    return res.status(200).json(
+      await CourseService.updateCourse({
+        id,
+        name,
+        title,
+        categoryId,
+        nameCenter,
+      })
+    );
   };
 
   getACourse = async (req, res, next) => {
@@ -201,15 +208,15 @@ class CourseController {
     }).send(res);
   };
 
-  getStudentScoresByCourse = async (req, res ,next) => {
+  getStudentScoresByCourse = async (req, res, next) => {
     const { courseId } = req.params;
     const userId = req.headers["x-client-id"];
 
     new SuccessReponse({
       message: "Get student scores by course successfully",
-      metadata: await CourseService.getStudentScoresByCourse(courseId,userId),
+      metadata: await CourseService.getStudentScoresByCourse(courseId, userId),
     }).send(res);
-  }
+  };
 }
 
 module.exports = new CourseController();

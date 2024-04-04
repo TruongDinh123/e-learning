@@ -7,6 +7,10 @@ const courseSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    nameCenter: {
+      type: String,
+      required: false,
+    },
     title: {
       type: String,
       required: true,

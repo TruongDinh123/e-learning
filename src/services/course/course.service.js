@@ -20,11 +20,18 @@ cloudinary.config({
 });
 
 class CourseService {
-  static createCourse = async ({ name, title, userId, categoryId }) => {
+  static createCourse = async ({
+    name,
+    title,
+    nameCenter,
+    userId,
+    categoryId,
+  }) => {
     try {
       const course = await courseModel.create({
         name,
         title,
+        nameCenter,
         category: categoryId,
       });
       const createCourse = course.save();
@@ -79,7 +86,9 @@ class CourseService {
     try {
       const courses = await courseModel
         .find()
-        .select("_id name title showCourse image_url category teacher")
+        .select(
+          "_id name title nameCenter showCourse image_url category teacher"
+        )
         .populate("students", "firstName lastName")
         .populate({
           path: "lessons",
@@ -135,20 +144,25 @@ class CourseService {
         .populate("quizzes")
         .lean();
 
-        // Tìm tất cả điểm số của người dùng cho các bài quiz trong khóa học
-        const scores = await Score.find({ user: userId, quiz: { $in: aCourse.quizzes.map(quiz => quiz._id) } }).lean();
-    
-        // Thêm thông tin hoàn thành cho mỗi bài quiz trong khóa học
-        aCourse.quizzes.forEach(quiz => {
-          const score = scores.find(score => score.quiz.toString() === quiz._id.toString());
-          if (score) {
-            quiz.isCompleted = score.isComplete; // Sử dụng trạng thái isComplete từ bảng Score
-            quiz.scoreDetails = score; // Thêm chi tiết điểm số
-          } else {
-            quiz.isCompleted = false; // Đánh dấu là chưa hoàn thành nếu không tìm thấy điểm số
-            quiz.scoreDetails = null; // Không có chi tiết điểm số
-          }
-        });
+      // Tìm tất cả điểm số của người dùng cho các bài quiz trong khóa học
+      const scores = await Score.find({
+        user: userId,
+        quiz: { $in: aCourse.quizzes.map((quiz) => quiz._id) },
+      }).lean();
+
+      // Thêm thông tin hoàn thành cho mỗi bài quiz trong khóa học
+      aCourse.quizzes.forEach((quiz) => {
+        const score = scores.find(
+          (score) => score.quiz.toString() === quiz._id.toString()
+        );
+        if (score) {
+          quiz.isCompleted = score.isComplete; // Sử dụng trạng thái isComplete từ bảng Score
+          quiz.scoreDetails = score; // Thêm chi tiết điểm số
+        } else {
+          quiz.isCompleted = false; // Đánh dấu là chưa hoàn thành nếu không tìm thấy điểm số
+          quiz.scoreDetails = null; // Không có chi tiết điểm số
+        }
+      });
 
       return aCourse;
     } catch (error) {
@@ -162,9 +176,9 @@ class CourseService {
         .findById({
           _id: id,
         })
-        .select("_id name title notifications")
+        .select("_id name nameCenter title notifications")
         .populate("students", "lastName email roles notifications")
-      .populate("teacher", "_id lastName firstName email image_url");
+        .populate("teacher", "_id lastName firstName email image_url");
 
       return aCourse;
     } catch (error) {
@@ -217,7 +231,7 @@ class CourseService {
     return course;
   };
 
-  static updateCourse = async ({ id, name, title, categoryId }) => {
+  static updateCourse = async ({ id, name, title, nameCenter, categoryId }) => {
     try {
       const course = await courseModel.findById(id);
 
@@ -240,6 +254,7 @@ class CourseService {
       }
 
       course.name = name;
+      course.nameCenter = nameCenter;
       course.title = title;
       course.category = categoryId;
 
@@ -969,16 +984,20 @@ class CourseService {
       const courseQuizzes = await Quiz.find({
         $or: [
           { courseIds: courseId }, // Quizzes trực tiếp từ khóa học
-          { lessonId: { $in: course.lessons } } // Quizzes từ các bài học thuộc khóa học
-        ]
-      }).select('_id').lean();
+          { lessonId: { $in: course.lessons } }, // Quizzes từ các bài học thuộc khóa học
+        ],
+      })
+        .select("_id")
+        .lean();
 
       // Lấy ra id của tất cả quizzes liên quan
-      const quizIds = courseQuizzes.map(quiz => quiz._id.toString());
+      const quizIds = courseQuizzes.map((quiz) => quiz._id.toString());
       console.log(quizIds);
 
       // Xóa các quizzes tìm được khỏi mảng quizzes của user
-      user.quizzes = user.quizzes.filter(quizId => !quizIds.includes(quizId.toString()));
+      user.quizzes = user.quizzes.filter(
+        (quizId) => !quizIds.includes(quizId.toString())
+      );
 
       user.courses.pull(courseId);
       course.students.pull(userId);
@@ -1061,8 +1080,11 @@ class CourseService {
         });
       if (!user) throw new NotFoundError("User not found");
 
-      const coursesWithQuizCount = user.courses.map(course => {
-        const lessonQuizCount = course.lessons.reduce((acc,lesson) => acc + lesson.quizzes.length, 0);
+      const coursesWithQuizCount = user.courses.map((course) => {
+        const lessonQuizCount = course.lessons.reduce(
+          (acc, lesson) => acc + lesson.quizzes.length,
+          0
+        );
         const totalLessons = course.lessons.length;
         const totalQuizCount = course.quizzes.length + lessonQuizCount;
         return {
@@ -1071,20 +1093,20 @@ class CourseService {
           name: course.name,
           title: course.title,
           teacher: {
-            firstName: course.teacher ? course.teacher.firstName : 'Unknown',
-            _id: course.teacher ? course.teacher._id : 'Unknown'
+            firstName: course.teacher ? course.teacher.firstName : "Unknown",
+            _id: course.teacher ? course.teacher._id : "Unknown",
           },
           totalLesson: totalLessons,
           totalQuizCount,
-        }
-      })
+        };
+      });
 
-    return coursesWithQuizCount;
+      return coursesWithQuizCount;
     } catch (error) {
       console.error(error);
       throw new BadRequestError("Failed to get course summaries");
     }
-  }
+  };
 
   static getCourseCompletion = async ({ courseId, userId }) => {
     validateMongoDbId(courseId);
@@ -1157,35 +1179,52 @@ class CourseService {
     }
   };
 
-  static getStudentScoresByCourse = async(courseId, userId) => {
+  static getStudentScoresByCourse = async (courseId, userId) => {
     const user = await userModel
-    .findById(userId)
-    .select("roles")
-    .populate("roles", "name")
-    .lean();
-    const course = await courseModel.findById(courseId).populate('teacherQuizzes.teacherId', 'email').lean();
+      .findById(userId)
+      .select("roles")
+      .populate("roles", "name")
+      .lean();
+    const course = await courseModel
+      .findById(courseId)
+      .populate("teacherQuizzes.teacherId", "email")
+      .lean();
 
-      const isAdminOrMentorOfCourse = user.roles.some(role => role.name === "Admin") || 
-                                  course.teacherQuizzes.some(tq => tq.teacherId._id.toString() === userId);
+    const isAdminOrMentorOfCourse =
+      user.roles.some((role) => role.name === "Admin") ||
+      course.teacherQuizzes.some(
+        (tq) => tq.teacherId._id.toString() === userId
+      );
 
-    const quizzes = await Quiz.find({ courseIds: courseId }).select('_id').exec();
+    const quizzes = await Quiz.find({ courseIds: courseId })
+      .select("_id")
+      .exec();
 
-    const userFields = isAdminOrMentorOfCourse ? 'firstName lastName email' : 'firstName lastName';
-    const scores = await Score.find({ quiz: { $in: quizzes.map(q => q._id) } })
-                              .populate('user', userFields)
-                              .exec();
+    const userFields = isAdminOrMentorOfCourse
+      ? "firstName lastName email"
+      : "firstName lastName";
+    const scores = await Score.find({
+      quiz: { $in: quizzes.map((q) => q._id) },
+    })
+      .populate("user", userFields)
+      .exec();
 
     let studentScores = scores.reduce((acc, score) => {
       const userId = score.user._id.toString();
-      const fullName = [score.user.firstName, score.user.lastName].filter(Boolean).join(' ');
-      const email = isAdminOrMentorOfCourse && score.user.email ? `${score.user.email}` : '';
+      const fullName = [score.user.firstName, score.user.lastName]
+        .filter(Boolean)
+        .join(" ");
+      const email =
+        isAdminOrMentorOfCourse && score.user.email
+          ? `${score.user.email}`
+          : "";
       if (!acc[userId]) {
         acc[userId] = {
           _id: userId,
           name: fullName,
           email: email,
           totalScore: 0,
-          quizzesTaken: 0
+          quizzesTaken: 0,
         };
       }
       if (score.score && score.score > 0) {
@@ -1195,12 +1234,14 @@ class CourseService {
       return acc;
     }, {});
 
-    studentScores = Object.values(studentScores).filter(student => student.totalScore > 0);
+    studentScores = Object.values(studentScores).filter(
+      (student) => student.totalScore > 0
+    );
 
     studentScores.sort((a, b) => b.totalScore - a.totalScore);
 
     return studentScores;
-  }
+  };
 }
 
 module.exports = {
