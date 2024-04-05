@@ -176,7 +176,7 @@ class CourseService {
         .findById({
           _id: id,
         })
-        .select("_id name nameCenter title notifications")
+        .select("_id name nameCenter image_url title notifications")
         .populate("students", "lastName email roles notifications")
         .populate("teacher", "_id lastName firstName email image_url");
 
