@@ -9,6 +9,7 @@ const nodemailer = require("nodemailer");
 const { v2: cloudinary } = require("cloudinary");
 const QuizTemplate = require("../../models/quizTemplate.model");
 const lessonModel = require("../../models/lesson.model");
+const Role = require("../../models/role.model");
 
 cloudinary.config({
   cloud_name: "dvsvd87sm",
@@ -428,8 +429,24 @@ class QuizService {
   };
 
   static getDraftQuiz = async ({ teacherId }) => {
+    // Kiểm tra xem teacherId có vai trò là Admin hay không
+    const isAdmin = await userModel.findOne({
+      _id: teacherId,
+      roles: { $in: (await Role.find({ name: 'Admin' })).map(role => role._id) },
+    });
+  
+    // Nếu teacherId không phải là Admin, chỉ trả về quiz mà họ tạo
+    if (!isAdmin) {
+      return Quiz.find({
+        creatorId: teacherId,
+        isDraft: true,
+      })
+      .select('-creatorId -createdAt -updatedAt -studentIds -__v')
+      .lean();
+    }
+  
+    // Nếu teacherId là Admin, trả về tất cả quiz dạng nháp
     return Quiz.find({
-      creatorId: teacherId,
       isDraft: true,
     })
     .select('-creatorId -createdAt -updatedAt -studentIds -__v')
@@ -635,12 +652,12 @@ class QuizService {
       const lessonQuizIds = lessons.flatMap((lesson) => lesson.quizzes);
 
       // Find quizzes that belong to the course
-      const courseQuizzes = await Quiz.find({ courseIds: courseIds })
+      const courseQuizzes = await Quiz.find({ courseIds: courseIds ,  $or: [{ isDraft: false }, { isDraft: { $exists: false } }]})
         .populate("questions")
         .lean();
 
       // Find quizzes that belong to the lessons
-      const lessonQuizzes = await Quiz.find({ _id: { $in: lessonQuizIds } })
+      const lessonQuizzes = await Quiz.find({ _id: { $in: lessonQuizIds }, $or: [{ isDraft: false }, { isDraft: { $exists: false } }]})
         .populate("questions")
         .lean();
 
@@ -826,18 +843,6 @@ class QuizService {
         }
       }
 
-      // for (const course of coursesToUpdate) {
-      //   const updatedTeacherQuizzes = course.teacherQuizzes.map(teacherQuiz => {
-      //     if (userId.toString() === teacherQuiz.teacherId.toString()) {
-      //       const newQuizCount = Math.max(0, teacherQuiz.quizCount - 1);
-      //       return { ...teacherQuiz, quizCount: newQuizCount };
-      //     }
-      //     return teacherQuiz;
-      //   });
-
-      //   await courseModel.findByIdAndUpdate(course._id, { teacherQuizzes: updatedTeacherQuizzes });
-      // }
-
       await courseModel.updateMany(
         { quizzes: quizId },
         { $pull: { quizzes: quizId } }
@@ -923,7 +928,7 @@ class QuizService {
         },
         {
           new: true,
-          upsert: true, // Tạo một tài liệu mới nếu không tồn tại.
+          upsert: true,
           setDefaultsOnInsert: true,
           runValidators: true,
         }
