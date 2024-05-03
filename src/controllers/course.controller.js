@@ -5,7 +5,7 @@ const { CourseService } = require("../services/course/course.service");
 
 class CourseController {
   createCourse = async (req, res, next) => {
-    const { name, title, categoryId, nameCenter } = req.body;
+    const { name, title, nameCenter } = req.body;
     const userId = req.headers["x-client-id"];
     new Created({
       message: "Course Created!",
@@ -13,7 +13,6 @@ class CourseController {
         name,
         title,
         userId,
-        categoryId,
         nameCenter,
       }),
       options: {
@@ -24,11 +23,16 @@ class CourseController {
 
   uploadImageCourse = async (req, res, next) => {
     const { courseId } = req.params;
-    const { path: filename } = req.file;
+    // const { path: filename } = req.files;
+    const logo = req.files[0].path;
+    const banner = req.files[1].path;
+    console.log("FILE =>>>>>>>>>>>>>>>>", req.files);
+    console.log("LOGO =>>>>>>>>>>>>>>>>", logo);
+    console.log("BANNER =>>>>>>>>>>>>>>>>", banner);
 
     new SuccessReponse({
       message: "Upload image course successfully",
-      metadata: await CourseService.uploadImageCourse({ courseId, filename }),
+      metadata: await CourseService.uploadImageCourse({ logo, courseId, banner }),
     }).send(res);
   };
 

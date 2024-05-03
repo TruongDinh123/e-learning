@@ -21,6 +21,14 @@ const courseSchema = new mongoose.Schema(
     image_url: {
       type: String,
     },
+      banner_name: {
+          type: String,
+          required: false,
+      },
+      banner_url: {
+          type: String,
+          required: false,
+      },
     teacher: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -38,20 +46,10 @@ const courseSchema = new mongoose.Schema(
         },
       },
     ],
-    category: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Category",
-    },
     quizzes: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Quiz",
-      },
-    ],
-    lessons: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Lesson",
       },
     ],
     students: [

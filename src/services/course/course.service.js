@@ -32,7 +32,6 @@ class CourseService {
         name,
         title,
         nameCenter,
-        category: categoryId,
       });
       const createCourse = course.save();
 
@@ -42,19 +41,13 @@ class CourseService {
       user.courses.push(course._id);
       await user.save();
 
-      const category = await categoryModel.findById(categoryId);
-      if (!category) throw new NotFoundError("category not found");
-
-      category.courses.push(course._id);
-      await category.save();
-
       return createCourse;
     } catch (error) {
       throw new BadRequestError("Failed to create course", error);
     }
   };
 
-  static uploadImageCourse = async ({ filename, courseId }) => {
+  static uploadImageCourse = async ({ logo, courseId, banner }) => {
     validateMongoDbId(courseId);
     try {
       const findCourse = await courseModel.findById(courseId);
@@ -68,16 +61,21 @@ class CourseService {
         });
       }
 
-      const result = await cloudinary.uploader.upload(filename, {
+      const result = await cloudinary.uploader.upload(logo, {
         resource_type: "image",
       });
       findCourse.filename = result.public_id;
       findCourse.image_url = result.secure_url;
 
+      const bannerObj = await cloudinary.uploader.upload(banner, {  resource_type: "image",});
+      findCourse.banner_name = bannerObj.public_id;
+      findCourse.banner_url = bannerObj.secure_url;
+
       await findCourse.save();
 
       return { findCourse };
     } catch (error) {
+      console.log("Error: ", error)
       throw new BadRequestError(error);
     }
   };
@@ -176,7 +174,7 @@ class CourseService {
         .findById({
           _id: id,
         })
-        .select("_id name nameCenter image_url title notifications")
+        .select("_id name nameCenter image_url title notifications banner_url")
         .populate("students", "lastName email roles notifications")
         .populate("teacher", "_id lastName firstName email image_url");
 

@@ -20,7 +20,7 @@ router.post(
 router.post(
   "/e-learning/course/:courseId/upload-image",
   permission(["Super-Admin", "Mentor", "Admin"]),
-  uploadMiddleware.single("filename"),
+  uploadMiddleware.array("files", 2),
   asyncHandler(courseController.uploadImageCourse)
 );
 
