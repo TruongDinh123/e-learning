@@ -85,16 +85,10 @@ class CourseService {
       const courses = await courseModel
         .find()
         .select(
-          "_id name title nameCenter showCourse image_url category teacher"
+          "_id name title nameCenter showCourse image_url teacher"
         )
         .populate("students", "firstName lastName")
-        .populate({
-          path: "lessons",
-          populate: [
-            { path: "videos", model: "VideoLesson", select: "_id url" },
-            { path: "quizzes", model: "Quiz" },
-          ],
-        })
+
         .populate("quizzes")
         .lean();
 
@@ -224,7 +218,6 @@ class CourseService {
       .find({
         showCourse: true,
       })
-      .populate("category", "name")
       .populate("teacher", "firstName lastName _id");
     return course;
   };
