@@ -47,8 +47,9 @@ class CourseService {
     }
   };
 
-  static uploadImageCourse = async ({ logo, courseId, banner }) => {
+  static uploadImageCourse = async ({ courseId, dataInfo, dataFiles }) => {
     validateMongoDbId(courseId);
+
     try {
       const findCourse = await courseModel.findById(courseId);
       if (!findCourse) {
@@ -60,16 +61,19 @@ class CourseService {
           resource_type: "image",
         });
       }
+      let i = 0;
+      
+      for await (const item of Object.entries(dataInfo)) {
+        const [_, itemInfoString] = item;
+        const itemInfoObj = JSON.parse(itemInfoString);
+        const result = await cloudinary.uploader.upload(dataFiles[i].path, {
+          resource_type: "image",
+        });
 
-      const result = await cloudinary.uploader.upload(logo, {
-        resource_type: "image",
-      });
-      findCourse.filename = result.public_id;
-      findCourse.image_url = result.secure_url;
-
-      const bannerObj = await cloudinary.uploader.upload(banner, {  resource_type: "image",});
-      findCourse.banner_name = bannerObj.public_id;
-      findCourse.banner_url = bannerObj.secure_url;
+        findCourse[itemInfoObj.fieldName] = result.public_id;
+        findCourse[itemInfoObj.fieldUrl] = result.secure_url;
+        i++;
+      }
 
       await findCourse.save();
 
@@ -85,10 +89,9 @@ class CourseService {
       const courses = await courseModel
         .find()
         .select(
-          "_id name title nameCenter showCourse image_url teacher"
+          "_id name title nameCenter showCourse image_url teacher banner_url"
         )
         .populate("students", "firstName lastName")
-
         .populate("quizzes")
         .lean();
 

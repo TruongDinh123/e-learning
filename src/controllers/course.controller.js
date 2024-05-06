@@ -24,15 +24,14 @@ class CourseController {
   uploadImageCourse = async (req, res, next) => {
     const { courseId } = req.params;
     // const { path: filename } = req.files;
-    const logo = req.files[0].path;
-    const banner = req.files[1].path;
-    console.log("FILE =>>>>>>>>>>>>>>>>", req.files);
-    console.log("LOGO =>>>>>>>>>>>>>>>>", logo);
-    console.log("BANNER =>>>>>>>>>>>>>>>>", banner);
 
     new SuccessReponse({
       message: "Upload image course successfully",
-      metadata: await CourseService.uploadImageCourse({ logo, courseId, banner }),
+      metadata: await CourseService.uploadImageCourse({ 
+        courseId, 
+        dataInfo: req.body,
+        dataFiles: req.files
+       }),
     }).send(res);
   };
 
