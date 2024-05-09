@@ -36,6 +36,8 @@ const apiKey = async (req, res, next) => {
 const permission = (roles) => {
   return async (req, res, next) => {
     try {
+      if(!roles.length) return next();
+
       const userId = req.headers[HEADER.CLIENT_ID];
       if (!userId) throw new AuthFailureError(`Invalid client id`);
 

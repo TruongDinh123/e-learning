@@ -379,6 +379,15 @@ class QuizController {
       }).send(res);
     } catch (error) {}
   };
+
+  getSubmissionTimeLatestQuizByCourseId = async (req, res, next) => {
+    const { courseId } = req.params;
+
+    new SuccessReponse({
+      message: "get submissionTime in the latest quizz by course ID successfully",
+      metadata: await QuizService.getSubmissionTimeLatestQuizByCourseId(courseId),
+    }).send(res);
+  };
 }
 
 module.exports = new QuizController();

@@ -1249,6 +1249,26 @@ class QuizService {
       throw new BadRequestError("Failed to get scores by course ID", error);
     }
   };
+
+  static getSubmissionTimeLatestQuizByCourseId = async (courseId) => {
+    try {
+      // Validate the courseId
+      validateMongoDbId(courseId);
+
+      // Find the course to ensure it exists
+      const course = await courseModel.findById(courseId);
+      if (!course) throw new NotFoundError("Course not found");
+
+      // Get all quizzes associated with the course
+      const quizSubmissionTime = await Quiz.find({ courseIds: courseId }, {submissionTime:1}).sort({'createdAt':-1}).limit(1);
+
+      return quizSubmissionTime;
+    } catch (error) {
+      console.error("Error in getSubmissionTimeLatestQuizByCourseId:", error);
+      throw new BadRequestError("Failed to get submissionTime in the latest quizz by course ID", error);
+
+    }
+  }
 }
 
 exports.QuizService = QuizService;

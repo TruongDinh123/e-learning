@@ -56,17 +56,16 @@ class CourseService {
         throw new NotFoundError("Course not found");
       }
 
-      if (findCourse.filename && findCourse.image_url) {
-        await cloudinary.uploader.destroy(findCourse.filename, {
-          resource_type: "image",
-        });
-      }
       let i = 0;
       
       for await (const item of Object.entries(dataInfo)) {
         const [_, itemInfoString] = item;
         const itemInfoObj = JSON.parse(itemInfoString);
         const result = await cloudinary.uploader.upload(dataFiles[i].path, {
+          resource_type: "image",
+        });
+
+        await cloudinary.uploader.destroy(findCourse[itemInfoObj.fieldName], {
           resource_type: "image",
         });
 
