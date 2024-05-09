@@ -128,13 +128,6 @@ class CourseService {
         })
         .populate("students", "lastName firstName email roles notifications")
         .populate("teacher")
-        .populate({
-          path: "lessons",
-          populate: [
-            { path: "videos", model: "VideoLesson" },
-            { path: "quizzes", model: "Quiz" },
-          ],
-        })
         .populate("quizzes")
         .lean();
 
@@ -160,6 +153,7 @@ class CourseService {
 
       return aCourse;
     } catch (error) {
+      console.log(error)
       throw new BadRequestError("Failed to get a Course", error);
     }
   };
@@ -1017,16 +1011,6 @@ class CourseService {
               select: "firstName",
             },
             {
-              path: "lessons",
-              model: "Lesson",
-              select: "quizzes",
-              populate: {
-                path: "quizzes",
-                model: "Quiz",
-                select: "_id",
-              },
-            },
-            {
               path: "quizzes",
               model: "Quiz",
               select: "_id",
@@ -1037,6 +1021,7 @@ class CourseService {
 
       return user;
     } catch (error) {
+      console.log(error)
       throw new BadRequestError("Failed to get student courses");
     }
   };
@@ -1055,16 +1040,6 @@ class CourseService {
               select: "firstName",
             },
             {
-              path: "lessons",
-              model: "Lesson",
-              select: "quizzes",
-              populate: {
-                path: "quizzes",
-                model: "Quiz",
-                select: "_id",
-              },
-            },
-            {
               path: "quizzes",
               model: "Quiz",
               select: "_id",
@@ -1074,12 +1049,7 @@ class CourseService {
       if (!user) throw new NotFoundError("User not found");
 
       const coursesWithQuizCount = user.courses.map((course) => {
-        const lessonQuizCount = course.lessons.reduce(
-          (acc, lesson) => acc + lesson.quizzes.length,
-          0
-        );
-        const totalLessons = course.lessons.length;
-        const totalQuizCount = course.quizzes.length + lessonQuizCount;
+        const totalQuizCount = course.quizzes.length ;
         return {
           _id: course._id,
           image_url: course.image_url,
@@ -1089,7 +1059,7 @@ class CourseService {
             firstName: course.teacher ? course.teacher.firstName : "Unknown",
             _id: course.teacher ? course.teacher._id : "Unknown",
           },
-          totalLesson: totalLessons,
+          totalLesson: 0,
           totalQuizCount,
         };
       });

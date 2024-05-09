@@ -289,12 +289,12 @@ class QuizController {
   submitQuiz = async (req, res, next) => {
     try {
       const { quizId } = req.params;
-      const { answer } = req.body;
+      const { answer, predictAmount } = req.body;
       const userId = req.headers["x-client-id"];
 
       new SuccessReponse({
         message: "Submit quiz successfully",
-        metadata: await QuizService.submitQuiz(quizId, userId, answer),
+        metadata: await QuizService.submitQuiz(quizId, userId, answer, predictAmount),
       }).send(res);
     } catch (error) {}
   };
