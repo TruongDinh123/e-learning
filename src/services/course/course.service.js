@@ -1012,16 +1012,6 @@ class CourseService {
               select: "firstName",
             },
             {
-              path: "lessons",
-              model: "Lesson",
-              select: "quizzes",
-              populate: {
-                path: "quizzes",
-                model: "Quiz",
-                select: "_id",
-              },
-            },
-            {
               path: "quizzes",
               model: "Quiz",
               select: "_id",
@@ -1032,6 +1022,7 @@ class CourseService {
 
       return user;
     } catch (error) {
+      console.log(error)
       throw new BadRequestError("Failed to get student courses");
     }
   };
