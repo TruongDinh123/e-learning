@@ -195,10 +195,5 @@ router.put(
   asyncHandler(quizController.updateQuizTemplate)
 );
 
-router.get(
-  "/e-learning/course/:courseId/quizzeLatesSubmissionTime",
-  permission([]),
-  asyncHandler(quizController.getSubmissionTimeLatestQuizByCourseId)
-);
 
 module.exports = router;

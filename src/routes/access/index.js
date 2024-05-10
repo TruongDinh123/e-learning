@@ -8,12 +8,25 @@ const { uploadMiddleware } = require("../../middlewares/upload");
 const lessonController = require("../../controllers/lesson.controller");
 const categoryController = require("../../controllers/category.controller");
 const courseController = require("../../controllers/course.controller");
+const quizController = require("../../controllers/quiz.controller");
 const router = express.Router();
 
 //signUp
 router.post("/e-learning/signup", asyncHandler(accessController.signUp));
 
 //Các API không yêu cầu xác thực
+
+router.get(
+    "/e-learning/course/:courseId/quizzeLatesSubmissionTime",
+    permission([]),
+    asyncHandler(quizController.getSubmissionTimeLatestQuizByCourseId)
+);
+
+router.get(
+    "/e-learning/get-info-course/:id",
+    // permission(["Super-Admin", "Mentor", "Admin", "Trainee"]),
+    asyncHandler(courseController.getACourseByInfo)
+);
 
 router.get(
   "/e-learning/lessons/:courseId",

@@ -36,11 +36,6 @@ router.get(
   asyncHandler(courseController.selectCourse)
 );
 
-router.get(
-  "/e-learning/get-info-course/:id",
-  permission(["Super-Admin", "Mentor", "Admin", "Trainee"]),
-  asyncHandler(courseController.getACourseByInfo)
-);
 
 router.put(
   "/e-learning/update-course/:id",
@@ -96,11 +91,6 @@ router.get(
   asyncHandler(courseController.getCourseCompletion)
 );
 
-router.post(
-  "/e-learning/public-course/:courseId",
-  permission(["Mentor", "Admin", "Super-Admin"]),
-  asyncHandler(courseController.buttonShowCourse)
-);
 
 router.post(
   "/e-learning/priavte-course/:courseId",
