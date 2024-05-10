@@ -135,19 +135,19 @@ class AccessService {
     return updatedUser;
   };
 
-  static signUp = async ({ lastName, email, password }) => {
+  static signUp = async ({ email, password }) => {
     try {
       const holderAccount = await User.findOne({ email }).lean();
       if (holderAccount) {
-        throw new BadRequestError("Error: account already exists");
+        throw new BadRequestError("Error: email đã tồn tại trong hệ thống, vui lòng thử một email khác");
       }
       const passwordHash = await bcrypt.hash(password, 10);
+      const traineeRole = await Role.findOne({ name: "Trainee" });
 
       const newAccount = await User.create({
         email,
-        lastName,
         password: passwordHash,
-        roles: "Trainee",
+        roles:  [traineeRole._id]
       });
 
       if (newAccount) {
@@ -162,8 +162,8 @@ class AccessService {
 
         if (!keyAccount) {
           return {
-            code: "xxx",
-            message: "Error: keyAccount",
+            code: "403",
+            message: "Error: Không thể tạo key cho account, vui lòng thử lại ",
           };
         }
 

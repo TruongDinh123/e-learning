@@ -60,7 +60,7 @@ const courseSchema = new mongoose.Schema(
     ],
     showCourse: {
       type: Boolean,
-      default: false,
+      default: true,
     },
     assignment: {
       type: mongoose.Schema.Types.ObjectId,

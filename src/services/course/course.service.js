@@ -32,6 +32,7 @@ class CourseService {
         name,
         title,
         nameCenter,
+        showCourse: true,
       });
       const createCourse = course.save();
 
