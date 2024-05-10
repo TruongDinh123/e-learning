@@ -944,8 +944,14 @@ class QuizService {
         throw new BadRequestError("Invalid answers format");
       }
   
-      const scoreRecord = await Score.findOne({ quiz: quizId, user: userId });
-      if (!scoreRecord) throw new NotFoundError("Score record not found");
+      let scoreRecord = await Score.findOne({ quiz: quizId, user: userId });
+      if (!scoreRecord) {
+        scoreRecord = new Score({
+          user: userId,
+          quiz: quizId,
+        });
+        await scoreRecord.save();
+      }
   
       const quiz = await Quiz.findById(quizId);
       if (!quiz) throw new NotFoundError("No quiz found");
