@@ -220,6 +220,15 @@ class CourseController {
       metadata: await CourseService.getStudentScoresByCourse(courseId, userId),
     }).send(res);
   };
+
+  getRankStudentScoresByCourse = async (req, res, next) => {
+    const { courseId } = req.params;
+
+    new SuccessReponse({
+      message: "Get limit five student scores by course successfully",
+      metadata: await CourseService.getRankStudentScoresByCourse(courseId),
+    }).send(res);
+  };
 }
 
 module.exports = new CourseController();
