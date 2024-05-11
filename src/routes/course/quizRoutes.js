@@ -133,12 +133,6 @@ router.post(
 );
 
 router.get(
-  "/e-learning/score",
-  permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
-  asyncHandler(quizController.getScoreByUser)
-);
-
-router.get(
   "/e-learning/info-score",
   permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
   asyncHandler(quizController.getScoreByInfo)
