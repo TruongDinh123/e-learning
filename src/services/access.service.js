@@ -135,7 +135,7 @@ class AccessService {
     return updatedUser;
   };
 
-  static signUp = async ({ email, password }) => {
+  static signUp = async ({ email, password, cmnd, phone, address, cap, donvi, donvicon, firstName, lastName }) => {
     try {
       const holderAccount = await User.findOne({ email }).lean();
       if (holderAccount) {
@@ -147,7 +147,15 @@ class AccessService {
       const newAccount = await User.create({
         email,
         password: passwordHash,
-        roles:  [traineeRole._id]
+        roles:  [traineeRole._id],
+        cmnd: cmnd ?? "",
+        phoneNumber: phone ?? "",
+        address: address ?? "",
+        cap: cap ?? "",
+        donvi: donvi ?? "",
+        donvicon: donvicon ?? "",
+        firstName: firstName ?? "",
+        lastName: lastName ?? "",
       });
 
       if (newAccount) {

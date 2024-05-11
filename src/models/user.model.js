@@ -94,6 +94,11 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+      cmnd: String,
+      address: String,
+      cap: String,
+      donvi: String,
+      donvicon: String,
   },
   {
     timestamps: true,
