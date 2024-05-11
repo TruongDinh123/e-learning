@@ -24,6 +24,8 @@ class CourseService {
     name,
     title,
     nameCenter,
+    rules,
+    rulesFileName,
     userId,
     categoryId,
   }) => {
@@ -32,6 +34,8 @@ class CourseService {
         name,
         title,
         nameCenter,
+        rules,
+        rulesFileName,
         showCourse: true,
       });
       const createCourse = course.save();
@@ -65,11 +69,11 @@ class CourseService {
         const result = await cloudinary.uploader.upload(dataFiles[i].path, {
           resource_type: "image",
         });
-
-        await cloudinary.uploader.destroy(findCourse[itemInfoObj.fieldName], {
-          resource_type: "image",
-        });
-
+        if (findCourse.fieldName && findCourse.fieldUrl) {
+          await cloudinary.uploader.destroy(findCourse[itemInfoObj.fieldName], {
+            resource_type: "image",
+          });
+        }
         findCourse[itemInfoObj.fieldName] = result.public_id;
         findCourse[itemInfoObj.fieldUrl] = result.secure_url;
         i++;
@@ -89,7 +93,7 @@ class CourseService {
       const courses = await courseModel
         .find()
         .select(
-          "_id name title nameCenter showCourse image_url teacher banner_url"
+          "_id name title nameCenter showCourse image_url teacher banner_url rule_file_url rules rule_file_name rulesFileName"
         )
         .populate("students", "firstName lastName")
         .populate("quizzes")
@@ -165,7 +169,7 @@ class CourseService {
         .findById({
           _id: id,
         })
-        .select("_id name nameCenter image_url title notifications banner_url")
+        .select("_id name nameCenter image_url title notifications banner_url rule_file_url rule_file_name rules rulesFileName")
         .populate("students", "lastName email roles notifications")
         .populate("teacher", "_id lastName firstName email image_url");
 
@@ -219,7 +223,7 @@ class CourseService {
     return course;
   };
 
-  static updateCourse = async ({ id, name, title, nameCenter, categoryId }) => {
+  static updateCourse = async ({ id, name, title, nameCenter, categoryId, rules, rulesFileName }) => {
     try {
       const course = await courseModel.findById(id);
 
@@ -245,6 +249,8 @@ class CourseService {
       course.nameCenter = nameCenter;
       course.title = title;
       course.category = categoryId;
+      course.rules = rules;
+      course.rulesFileName = rulesFileName;
 
       const updateCourse = await course.save();
 

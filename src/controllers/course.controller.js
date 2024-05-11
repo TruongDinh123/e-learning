@@ -5,7 +5,7 @@ const { CourseService } = require("../services/course/course.service");
 
 class CourseController {
   createCourse = async (req, res, next) => {
-    const { name, title, nameCenter } = req.body;
+    const { name, title, nameCenter, rules, rulesFileName } = req.body;
     const userId = req.headers["x-client-id"];
     new Created({
       message: "Course Created!",
@@ -14,6 +14,8 @@ class CourseController {
         title,
         userId,
         nameCenter,
+        rules,
+        rulesFileName
       }),
       options: {
         limit: 10,
@@ -54,7 +56,7 @@ class CourseController {
 
   updateCourse = async (req, res, next) => {
     const { id } = req.params;
-    const { name, title, categoryId, nameCenter } = req.body;
+    const { name, title, categoryId, nameCenter, rules, rulesFileName } = req.body;
 
     return res.status(200).json(
       await CourseService.updateCourse({
@@ -63,6 +65,8 @@ class CourseController {
         title,
         categoryId,
         nameCenter,
+        rules,
+        rulesFileName
       })
     );
   };

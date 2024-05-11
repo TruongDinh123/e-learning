@@ -15,7 +15,14 @@ const courseSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    rules: {
+      type: String,
+      required: false,
+    },
     filename: {
+      type: String,
+    },
+    rulesFileName: {
       type: String,
     },
     image_url: {
@@ -29,6 +36,13 @@ const courseSchema = new mongoose.Schema(
           type: String,
           required: false,
       },
+    rule_file_name: {
+      type: String,
+      required: false,
+    },
+    rule_file_url: {
+      type: String,
+    },
     teacher: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
