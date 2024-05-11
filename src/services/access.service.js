@@ -17,6 +17,9 @@ const Role = require("../models/role.model");
 const validateMongoDbId = require("../config/validateMongoDbId");
 const { v2: cloudinary } = require("cloudinary");
 const nodemailer = require("nodemailer");
+const Score = require("../models/score.model");
+
+const {Types} = require("mongoose");
 
 cloudinary.config({
   cloud_name: "dvsvd87sm",
@@ -25,8 +28,8 @@ cloudinary.config({
 });
 
 class AccessService {
-  static handleRefreshToken = async ({ keyAccount, user, refreshToken }) => {
-    const { userId, email } = user;
+  static handleRefreshToken = async ({keyAccount, user, refreshToken}) => {
+    const {userId, email} = user;
 
     if (keyAccount.refreshTokensUsed.includes(refreshToken)) {
       await KeyTokenService.deleteKeyById(userId);
@@ -37,14 +40,14 @@ class AccessService {
       throw new ForbiddenError("Refresh token has been used!! pls relogin");
     }
 
-    const foundAccount = await findByEmail({ email });
+    const foundAccount = await findByEmail({email});
     if (!foundAccount) throw new AuthFailureError("Refresh token not found");
 
     //create 1 cap moi
     const tokens = await createTokenPair(
-      { userId, email },
-      keyAccount.publicKey,
-      keyAccount.privateKey
+        {userId, email},
+        keyAccount.publicKey,
+        keyAccount.privateKey
     );
     //update token
     await keyAccount.updateOne({
@@ -62,8 +65,8 @@ class AccessService {
     };
   };
 
-  static login = async ({ email, password, refreshToken = null } = null) => {
-    const foundAccount = await findByEmail({ email });
+  static login = async ({email, password, refreshToken = null} = null) => {
+    const foundAccount = await findByEmail({email});
     if (!foundAccount) {
       throw new BadRequestError("Email or Password is not correct");
     }
@@ -80,12 +83,12 @@ class AccessService {
     const privateKey = crypto.randomBytes(64).toString("hex");
     const publicKey = crypto.randomBytes(64).toString("hex");
 
-    const { _id: userId } = foundAccount;
+    const {_id: userId} = foundAccount;
 
     const tokens = await createTokenPair(
-      { userId, email },
-      publicKey,
-      privateKey
+        {userId, email},
+        publicKey,
+        privateKey
     );
 
     await KeyTokenService.createKeyToken({
@@ -115,10 +118,10 @@ class AccessService {
   };
 
   static changePassword = async ({
-    currentUserId,
-    oldPassword,
-    newPassword,
-  }) => {
+                                   currentUserId,
+                                   oldPassword,
+                                   newPassword,
+                                 }) => {
     const user = await User.findById(currentUserId);
     if (!user) {
       throw new NotFoundError("User not found");
@@ -135,19 +138,19 @@ class AccessService {
     return updatedUser;
   };
 
-  static signUp = async ({ email, password, cmnd, phone, address, cap, donvi, donvicon, firstName, lastName }) => {
+  static signUp = async ({email, password, cmnd, phone, address, cap, donvi, donvicon, firstName, lastName}) => {
     try {
-      const holderAccount = await User.findOne({ email }).lean();
+      const holderAccount = await User.findOne({email}).lean();
       if (holderAccount) {
         throw new BadRequestError("Error: email đã tồn tại trong hệ thống, vui lòng thử một email khác");
       }
       const passwordHash = await bcrypt.hash(password, 10);
-      const traineeRole = await Role.findOne({ name: "Trainee" });
+      const traineeRole = await Role.findOne({name: "Trainee"});
 
       const newAccount = await User.create({
         email,
         password: passwordHash,
-        roles:  [traineeRole._id],
+        roles: [traineeRole._id],
         cmnd: cmnd ?? "",
         phoneNumber: phone ?? "",
         address: address ?? "",
@@ -176,9 +179,9 @@ class AccessService {
         }
 
         const tokens = await createTokenPair(
-          { userId: newAccount._id, email },
-          publicKey,
-          privateKey
+            {userId: newAccount._id, email},
+            publicKey,
+            privateKey
         );
 
         return {
@@ -207,16 +210,16 @@ class AccessService {
     }
   };
 
-  static forgotPasword = async ({ email }) => {
-    const foundEmail = findByEmail({ email });
+  static forgotPasword = async ({email}) => {
+    const foundEmail = findByEmail({email});
     if (!foundEmail) {
       throw new NotFoundError("Email không đúng hoặc không tồn tại");
     } else {
       const newPassword = generatePassword();
       const passwordHash = await bcrypt.hash(newPassword, 10);
       const user = await User.findOneAndUpdate(
-        { email },
-        { password: passwordHash }
+          {email},
+          {password: passwordHash}
       );
       if (!user) {
         throw new NotFoundError("Email không đúng hoặc không tồn tại");
@@ -280,11 +283,11 @@ class AccessService {
 
   static logout = async (keyAccount) => {
     const delKey = await KeyTokenService.removeKeyById(keyAccount._id);
-    console.log({ delKey });
+    console.log({delKey});
     return delKey;
   };
 
-  static updateUserRoles = async ({ userId, roleId }) => {
+  static updateUserRoles = async ({userId, roleId}) => {
     try {
       // Use RoleService to get the role
       const role = await Role.findById(roleId);
@@ -301,7 +304,7 @@ class AccessService {
       // Check if the role is already assigned to the user
       // Check if the role is already assigned to the user
       if (
-        user.roles.map((role) => role.toString()).includes(role._id.toString())
+          user.roles.map((role) => role.toString()).includes(role._id.toString())
       ) {
         throw new BadRequestError("User already has this role");
       }
@@ -319,12 +322,12 @@ class AccessService {
   static getAllUser = async (page = 1, limit = 5, search = "", role = "") => {
     try {
       // Tạo điều kiện tìm kiếm dựa trên tên và vai trò
-      let query = { status: "active" };
+      let query = {status: "active"};
 
       const users = await User.find(query)
-        .select("lastName firstName email status")
-        .populate("roles", "_id name")
-        .lean();
+          .select("lastName firstName email status")
+          .populate("roles", "_id name")
+          .lean();
 
       if (!users) {
         throw new NotFoundError("Users not found");
@@ -341,12 +344,12 @@ class AccessService {
   static getAUser = async (id) => {
     validateMongoDbId(id);
     try {
-      const user = await User.findOne({ status: "active", _id: id })
-        .select("-createdAt -updatedAt -__v -password -courses")
-        .populate("roles", "_id name")
-        .populate("quizzes")
-        .populate("courses", "_id name teacherQuizzes")
-        .lean();
+      const user = await User.findOne({status: "active", _id: id})
+          .select("-createdAt -updatedAt -__v -password -courses")
+          .populate("roles", "_id name")
+          .populate("quizzes")
+          .populate("courses", "_id name teacherQuizzes")
+          .lean();
 
       return user;
     } catch (error) {
@@ -354,7 +357,7 @@ class AccessService {
     }
   };
 
-  static deleteUser = async ({ id }) => {
+  static deleteUser = async ({id}) => {
     try {
       const user = await User.findById(id);
       if (!user) {
@@ -368,14 +371,14 @@ class AccessService {
   };
 
   static updateUser = async ({
-    id,
-    lastName,
-    email,
-    firstName,
-    dob,
-    phoneNumber,
-    gender,
-  }) => {
+                               id,
+                               lastName,
+                               email,
+                               firstName,
+                               dob,
+                               phoneNumber,
+                               gender,
+                             }) => {
     const user = await User.findById(id);
     if (!user) {
       throw new NotFoundError("User not found");
@@ -390,7 +393,7 @@ class AccessService {
     return updateUser;
   };
 
-  static uploadImageUser = async ({ filename, userId }) => {
+  static uploadImageUser = async ({filename, userId}) => {
     validateMongoDbId(userId);
     try {
       const user = await User.findById(userId);
@@ -415,6 +418,43 @@ class AccessService {
       throw new BadRequestError(error);
     }
   };
+
+  static getAllUserFinishTheContest = async (quizId) => {
+    const quizIdObj = new Types.ObjectId(quizId);
+
+    try {
+      const users = await Score.aggregate([
+        {$match: {quiz: quizIdObj}}, // Lọc những score có quiz ID tương ứng
+        {
+          $lookup: { // Thực hiện join với bảng User
+            from: 'users', // Tên bảng người dùng trong MongoDB
+            localField: 'user',
+            foreignField: '_id',
+            as: 'userData'
+          }
+        },
+        {$unwind: '$userData'}, // Duỗi mảng userData để truy cập dễ dàng
+        {
+          $project: { // Chọn các trường cần hiển thị
+            _id: 0, // 0 là không hiển thị, 1 là hiển thị
+            firstName: '$userData.firstName',
+            lastName: '$userData.lastName',
+            email: '$userData.email',
+            phoneNumber: '$userData.phoneNumber',
+            status: '$userData.status',
+            cap: '$userData.cap',
+            donvi: '$userData.donvi',
+            donvicon: '$userData.donvicon',
+          }
+        }
+      ]);
+
+      return users;
+    } catch (e) {
+      console.error('Error in querying users:', e);
+      return {};
+    }
+  }
 }
 
 module.exports = AccessService;

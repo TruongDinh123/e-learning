@@ -122,5 +122,15 @@ class AccessController {
       metadata: await AccessService.uploadImageUser({ userId, filename }),
     }).send(res);
   };
+
+  getAllUserFinishTheContest = async (req, res, next) => {
+    const {quizId} = req.params;
+    const metadata = await AccessService.getAllUserFinishTheContest(quizId);
+
+    new SuccessReponse({
+      message: "Get all user finished course success",
+      metadata: metadata,
+    }).send(res);
+  }
 }
 module.exports = new AccessController();
