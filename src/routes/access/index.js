@@ -24,7 +24,6 @@ router.get(
 
 router.get(
     "/e-learning/course/:courseId/quizzeLatesSubmissionTime",
-    permission([]),
     asyncHandler(quizController.getSubmissionTimeLatestQuizByCourseId)
 );
 
