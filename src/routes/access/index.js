@@ -17,11 +17,6 @@ router.post("/e-learning/signup", asyncHandler(accessController.signUp));
 //Các API không yêu cầu xác thực
 
 router.get(
-  "/e-learning/course/:courseId/getLimitFiveStudentScores",
-  asyncHandler(courseController.getRankStudentScoresByCourse)
-)
-
-router.get(
     "/e-learning/score",
     permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
     asyncHandler(quizController.getScoreByUser)
