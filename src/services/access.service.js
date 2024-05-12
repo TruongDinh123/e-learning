@@ -443,13 +443,8 @@ class AccessService {
         },
         {$unwind: '$userData'}, // Duỗi mảng userData để truy cập dễ dàng
         {
-          $project: { // Chọn các trường cần hiển thị
-            _id: 0, // 0 là không hiển thị, 1 là hiển thị
-            firstName: '$userData.firstName',
-            lastName: '$userData.lastName',
-            email: '$userData.email',
-            phoneNumber: '$userData.phoneNumber',
-            status: '$userData.status',
+          $project: {
+            _id: 1,
             cap: '$userData.cap',
             donvi: '$userData.donvi',
             donvicon: '$userData.donvicon',
