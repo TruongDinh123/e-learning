@@ -938,7 +938,7 @@ class QuizService {
     return scoreRecord;
   }
 
-  static submitQuiz = async (quizId, userId, answers, predictAmount) => {
+  static submitQuiz = async (quizId, userId, answers, predictAmount, predictAmountMaxScore) => {
     try {
       if (!answers || !Array.isArray(answers)) {
         throw new BadRequestError("Invalid answers format");
@@ -984,6 +984,7 @@ class QuizService {
       scoreRecord.isComplete = true;
       scoreRecord.submitTime = Date.now();
       scoreRecord.predictAmount = predictAmount ?? 0;
+      scoreRecord.predictAmountMaxScore = predictAmountMaxScore ?? 0;
       await scoreRecord.save();
   
       return scoreRecord;

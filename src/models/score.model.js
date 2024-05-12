@@ -48,6 +48,10 @@ const scoreSchema = new mongoose.Schema(
       predictAmount: {
             type: Number,
             required: false,
+      },
+      predictAmountMaxScore: {
+          type: Number,
+          required: false,
       }
   },
   {
