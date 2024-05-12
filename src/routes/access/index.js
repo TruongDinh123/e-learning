@@ -123,7 +123,7 @@ router.post("/e-learning/logout", asyncHandler(accessController.logOut));
 
 router.post("/e-learning/handleRefreshToken", asyncHandler(accessController.handlerRefreshToken));
 
-router.put(
+router.get(
   "/e-learning/quiz/getTestCount/:userId",
   asyncHandler(quizController.getTestCount)
 );

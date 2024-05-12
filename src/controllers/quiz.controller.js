@@ -2,7 +2,7 @@
 
 const { SuccessReponse } = require("../core/success.reponse");
 const { QuizService } = require("../services/course/quiz.service");
-const { UserService } = require("../services/user.service");
+const UserService = require("../services/user.service");
 class QuizController {
   createQuiz = async (req, res, next) => {
     const {
@@ -389,7 +389,7 @@ class QuizController {
     }).send(res);
   };
 
-  getTestCount = async (req) => {
+  getTestCount = async (req, res, next) => {
     const { userId } = req.params;
 
     new SuccessReponse({

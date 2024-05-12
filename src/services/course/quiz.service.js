@@ -980,7 +980,6 @@ class QuizService {
       const testCount = userRecord.testCount ? userRecord.testCount + 1 : 1;
       userRecord.testCount = testCount
       
-      console.log(userRecord, 'userRecorduserRecord');
       await userRecord.save();
       
       // Tính tổng điểm dựa trên số câu trả lời đúng
@@ -989,7 +988,8 @@ class QuizService {
       // Cập nhật điểm số và trạng thái hoàn thành cho bản ghi điểm
       scoreRecord.score = totalScore;
       scoreRecord.answers = answers;
-      if(testCount === 100) {
+
+      if(testCount === 5) {
         scoreRecord.isComplete = true;
       } else {
         scoreRecord.isComplete = false;

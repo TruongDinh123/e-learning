@@ -168,11 +168,10 @@ const createResponseObject = async (user) => {
   const getTestCount = async (userId) => {
     const user = await userModel.findById(userId).lean();
 
-    return user.testCount;
+    return {
+      testCount: user.testCount || 0
+    };
   }
-  
-
-
 
 module.exports = {
   findByEmail,
