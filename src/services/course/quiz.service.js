@@ -1290,7 +1290,7 @@ class QuizService {
       if (!course) throw new NotFoundError("Course not found");
 
       // Get all quizzes associated with the course
-      const quizSubmissionTime = await Quiz.find({ courseIds: courseId }, {submissionTime:1}).sort({'createdAt':-1}).limit(1);
+      const quizSubmissionTime = await Quiz.find({ courseIds: courseId, isDraft: false }, {submissionTime:1}).sort({'createdAt':-1}).limit(1);
 
       return quizSubmissionTime;
     } catch (error) {
