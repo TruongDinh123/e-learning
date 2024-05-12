@@ -66,16 +66,20 @@ class CourseService {
       for await (const item of Object.entries(dataInfo)) {
         const [_, itemInfoString] = item;
         const itemInfoObj = JSON.parse(itemInfoString);
+        const recourse_type = dataFiles[i].originalname.includes('docx') ? 'raw' : 'image';
         const result = await cloudinary.uploader.upload(dataFiles[i].path, {
-          resource_type: "image",
+          resource_type: recourse_type,
         });
+
         if (findCourse.fieldName && findCourse.fieldUrl) {
           await cloudinary.uploader.destroy(findCourse[itemInfoObj.fieldName], {
-            resource_type: "image",
+            resource_type: recourse_type,
           });
         }
+        
         findCourse[itemInfoObj.fieldName] = result.public_id;
         findCourse[itemInfoObj.fieldUrl] = result.secure_url;
+
         i++;
       }
 
