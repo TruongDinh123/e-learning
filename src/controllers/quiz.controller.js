@@ -2,7 +2,7 @@
 
 const { SuccessReponse } = require("../core/success.reponse");
 const { QuizService } = require("../services/course/quiz.service");
-
+const { UserService } = require("../services/user.service");
 class QuizController {
   createQuiz = async (req, res, next) => {
     const {
@@ -388,6 +388,15 @@ class QuizController {
       metadata: await QuizService.getSubmissionTimeLatestQuizByCourseId(courseId),
     }).send(res);
   };
+
+  getTestCount = async (req) => {
+    const { userId } = req.params;
+
+    new SuccessReponse({
+      message: "get test count by userId",
+      metadata: await UserService.getTestCount(userId),
+    }).send(res);
+  }
 }
 
 module.exports = new QuizController();

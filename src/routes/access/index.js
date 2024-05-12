@@ -123,4 +123,9 @@ router.post("/e-learning/logout", asyncHandler(accessController.logOut));
 
 router.post("/e-learning/handleRefreshToken", asyncHandler(accessController.handlerRefreshToken));
 
+router.put(
+  "/e-learning/quiz/getTestCount/:userId",
+  asyncHandler(quizController.getTestCount)
+);
+
 module.exports = router;

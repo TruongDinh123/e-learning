@@ -164,6 +164,12 @@ const createResponseObject = async (user) => {
     }
     return retVal;
   };
+
+  const getTestCount = async (userId) => {
+    const user = await userModel.findById(userId).lean();
+
+    return user.testCount;
+  }
   
 
 
@@ -175,4 +181,5 @@ module.exports = {
   createResponseObject,
   sendEmailToStudent,
   generatePassword,
+  getTestCount
 };

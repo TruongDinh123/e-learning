@@ -950,6 +950,7 @@ class QuizService {
           user: userId,
           quiz: quizId,
         });
+
         await scoreRecord.save();
       }
   
@@ -975,16 +976,29 @@ class QuizService {
         }
       });
   
+      let userRecord = await userModel.findById(userId);
+      const testCount = userRecord.testCount ? userRecord.testCount + 1 : 1;
+      userRecord.testCount = testCount
+      
+      console.log(userRecord, 'userRecorduserRecord');
+      await userRecord.save();
+      
       // Tính tổng điểm dựa trên số câu trả lời đúng
       let totalScore = correctAnswersCount * pointsPerCorrectAnswer;
   
       // Cập nhật điểm số và trạng thái hoàn thành cho bản ghi điểm
       scoreRecord.score = totalScore;
       scoreRecord.answers = answers;
-      scoreRecord.isComplete = true;
+      if(testCount === 100) {
+        scoreRecord.isComplete = true;
+      } else {
+        scoreRecord.isComplete = false;
+
+      }
       scoreRecord.submitTime = Date.now();
       scoreRecord.predictAmount = predictAmount ?? 0;
       scoreRecord.predictAmountMaxScore = predictAmountMaxScore ?? 0;
+
       await scoreRecord.save();
   
       return scoreRecord;
