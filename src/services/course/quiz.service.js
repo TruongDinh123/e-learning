@@ -10,6 +10,7 @@ const { v2: cloudinary } = require("cloudinary");
 const QuizTemplate = require("../../models/quizTemplate.model");
 const lessonModel = require("../../models/lesson.model");
 const Role = require("../../models/role.model");
+const { encrypt } = require("../../utils");
 
 cloudinary.config({
   cloud_name: "dvsvd87sm",
@@ -730,6 +731,13 @@ class QuizService {
 
       .lean();
 
+      if (quizs && quizs.length > 0) {
+        quizs[0].questions = quizs[0].questions?.map(question => ({
+          ...question,
+          answer: encrypt(question.answer)
+        }));
+      }
+      
     if (!quizs) throw new NotFoundError("quizs not found");
 
     return quizs;
