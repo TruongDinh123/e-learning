@@ -19,22 +19,22 @@ cloudinary.config({
 });
 
 class QuizService {
-  static async sendEmailWithThrottle(mailOptionsArray, transporter, delay) {
-    for (const mailOptions of mailOptionsArray) {
-      await new Promise((resolve, reject) => {
-        console.log("Sending email to:", mailOptions.to);
-        transporter.sendMail(mailOptions, (error, info) => {
-          if (error) {
-            console.error("Error sending email:", error);
-            reject(error);
-          } else {
-            console.log("Email sent:", info.response);
-            setTimeout(resolve, delay); // Đợi một khoảng thời gian trước khi gửi email tiếp theo
-          }
-        });
-      }).catch(err => { throw err; });
-    }
-  }
+  // static async sendEmailWithThrottle(mailOptionsArray, transporter, delay) {
+  //   for (const mailOptions of mailOptionsArray) {
+  //     await new Promise((resolve, reject) => {
+  //       console.log("Sending email to:", mailOptions.to);
+  //       transporter.sendMail(mailOptions, (error, info) => {
+  //         if (error) {
+  //           console.error("Error sending email:", error);
+  //           reject(error);
+  //         } else {
+  //           console.log("Email sent:", info.response);
+  //           setTimeout(resolve, delay); // Đợi một khoảng thời gian trước khi gửi email tiếp theo
+  //         }
+  //       });
+  //     }).catch(err => { throw err; });
+  //   }
+  // }
 
   static createQuiz = async ({
     type,
@@ -124,148 +124,148 @@ class QuizService {
     }
 
     // Tăng quizCount và lưu nếu là Mentor và không phải tạo QuizTemplate mới
-    if (
-      isMentor &&
-      !isTemplateMode &&
-      courseIds &&
-      courseIds.length > 0
-    ) {
-      const courses = await courseModel
-        .find({ _id: { $in: courseIds } })
-        .lean();
+    // if (
+    //   isMentor &&
+    //   !isTemplateMode &&
+    //   courseIds &&
+    //   courseIds.length > 0
+    // ) {
+    //   const courses = await courseModel
+    //     .find({ _id: { $in: courseIds } })
+    //     .lean();
+    //
+    //   const updatePromises = courses.map(async (course) => {
+    //     if (!course.teacherQuizzes) {
+    //       course.teacherQuizzes = [];
+    //     }
+    //     const teacherQuizInfoIndex = course.teacherQuizzes.findIndex(
+    //       (tq) => tq.teacherId.toString() === userId.toString()
+    //     );
+    //     // if (
+    //     //   teacherQuizInfoIndex !== -1 &&
+    //     //   course.teacherQuizzes[teacherQuizInfoIndex].quizCount >= 3
+    //     // ) {
+    //     //   throw new Error(
+    //     //     `Bạn đã đạt giới hạn tạo bài tập cho khóa học: ${course.name}`
+    //     //   );
+    //     // }
+    //     if (teacherQuizInfoIndex === -1) {
+    //       course.teacherQuizzes.push({ teacherId: userId, quizCount: 1 });
+    //     } else {
+    //       course.teacherQuizzes[teacherQuizInfoIndex].quizCount += 1;
+    //     }
+    //     return courseModel.findByIdAndUpdate(course._id, {
+    //       teacherQuizzes: course.teacherQuizzes,
+    //     });
+    //   });
+    //
+    //   const results = await Promise.allSettled(updatePromises);
+    //   const rejected = results.find((result) => result.status === "rejected");
+    //   if (rejected) {
+    //     throw new Error(rejected.reason);
+    //   }
+    // }
 
-      const updatePromises = courses.map(async (course) => {
-        if (!course.teacherQuizzes) {
-          course.teacherQuizzes = [];
-        }
-        const teacherQuizInfoIndex = course.teacherQuizzes.findIndex(
-          (tq) => tq.teacherId.toString() === userId.toString()
-        );
-        if (
-          teacherQuizInfoIndex !== -1 &&
-          course.teacherQuizzes[teacherQuizInfoIndex].quizCount >= 3
-        ) {
-          throw new Error(
-            `Bạn đã đạt giới hạn tạo bài tập cho khóa học: ${course.name}`
-          );
-        }
-        if (teacherQuizInfoIndex === -1) {
-          course.teacherQuizzes.push({ teacherId: userId, quizCount: 1 });
-        } else {
-          course.teacherQuizzes[teacherQuizInfoIndex].quizCount += 1;
-        }
-        return courseModel.findByIdAndUpdate(course._id, {
-          teacherQuizzes: course.teacherQuizzes,
-        });
-      });
+    // const transporter = nodemailer.createTransport({
+    //   service: "gmail",
+    //   auth: {
+    //     user: "247learn.vn@gmail.com",
+    //     pass: "glpiggogzyxtfhod",
+    //   },
+    // });
 
-      const results = await Promise.allSettled(updatePromises);
-      const rejected = results.find((result) => result.status === "rejected");
-      if (rejected) {
-        throw new Error(rejected.reason);
-      }
-    }
+    // let courses, lessons;
+    // if (lessonId) {
+    //   lessons = await lessonModel
+    //     .find({ _id: { $in: lessonId } })
+    //     .populate("courseId")
+    //     .lean();
+    //   courses = lessons.map((lesson) => lesson.courseId);
+    // } else {
+    //   courses = await courseModel
+    //     .find({ _id: { $in: courseIds } })
+    //     .populate("teacher")
+    //     .lean();
+    // }
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: "247learn.vn@gmail.com",
-        pass: "glpiggogzyxtfhod",
-      },
-    });
+    // let mailOptionsArray = [];
+    // for (const studentId of studentIds) {
+    //   const student = await userModel.findById(studentId).lean();
+    //   if (!student) throw new NotFoundError("student not found");
+    //
+    //   // Tìm thông tin khóa học và giáo viên từ dữ liệu đã truy vấn trước đó
+    //   const course = courses.find((c) => c.students.map((id) => id.toString()).includes(studentId.toString()));
+    //   const lesson = lessons?.find((l) => l._id.toString() === lessonId);
+    //   const teacherName = course && course.teacher ? [course.teacher.lastName, course.teacher.firstName].filter(Boolean).join(" ") || "Giáo viên" : "Giáo viên";
+    //   const lessonName = lesson ? lesson.name : undefined;
+    //
+    //   if (!course) throw new NotFoundError("course not found");
+    //
+    //   // const formattedSubmissionTime = submissionTime
+    //   //   ? new Date(submissionTime).toLocaleString("vi-VN", {
+    //   //       hour12: false,
+    //   //       timeZone: "Asia/Ho_Chi_Minh",
+    //   //     })
+    //   //   : "Không có thời hạn";
+    //
+    //   // const mailOptions = {
+    //   //   from: "247learn.vn@gmail.com",
+    //   //   to: student.email,
+    //   //   subject: "Bạn có một bài tập mới",
+    //   //   html: `
+    //   //     <!DOCTYPE html>
+    //   //     <html>
+    //   //     <head>
+    //   //         <title>Chào mừng đến với 247learn.vn</title>
+    //   //         <style>
+    //   //             body { font-family: Arial, sans-serif; }
+    //   //             .container { width: 600px; margin: auto; }
+    //   //             .header { background-color: #002C6A; color: white; padding: 10px; text-align: center; }
+    //   //             .content { padding: 20px; }
+    //   //             .footer { background-color: #f2f2f2; padding: 10px; text-align: center; }
+    //   //         </style>
+    //   //     </head>
+    //   //     <body>
+    //   //         <div class="container">
+    //   //             <div class="header">
+    //   //                 <h1>Chào mừng đến với <a href="https://www.247learn.vn" style="color: white; text-decoration: none;">247learn.vn</a></h1>
+    //   //             </div>
+    //   //             <div class="content">
+    //   //                 <p>Xin chào,</p>
+    //   //                 <p>Giáo viên <strong>${teacherName}</strong> đã giao cho bạn một bài tập mới trong <strong>${
+    //   //     course.name
+    //   //   }</strong></p>
+    //   //                 ${
+    //   //                   lessonName
+    //   //                     ? `<p>Thuộc bài học: <strong>${lessonName}</strong></p>`
+    //   //                     : ""
+    //   //                 }
+    //   //                 <ul>
+    //   //                     <li>Thời hạn nộp bài: <strong>${formattedSubmissionTime}</strong></li>
+    //   //                 </ul>
+    //   //                 <p>Vui lòng nộp bài đúng hạn.</p>
+    //   //                 <p>Để xem danh sách bài tập, vui lòng <a href="https://www.247learn.vn/courses/view-details/${
+    //   //                   course._id
+    //   //                 }">click vào đây</a>.</p>
+    //   //                 <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
+    //   //             </div>
+    //   //             <div class="footer">
+    //   //                 <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
+    //   //             </div>
+    //   //         </div>
+    //   //     </body>
+    //   //     </html>
+    //   //   `,
+    //   // };
+    //   // mailOptionsArray.push(mailOptions);
+    // };
 
-    let courses, lessons;
-    if (lessonId) {
-      lessons = await lessonModel
-        .find({ _id: { $in: lessonId } })
-        .populate("courseId")
-        .lean();
-      courses = lessons.map((lesson) => lesson.courseId);
-    } else {
-      courses = await courseModel
-        .find({ _id: { $in: courseIds } })
-        .populate("teacher")
-        .lean();
-    }
-
-    let mailOptionsArray = [];
-    for (const studentId of studentIds) {
-      const student = await userModel.findById(studentId).lean();
-      if (!student) throw new NotFoundError("student not found");
-
-      // Tìm thông tin khóa học và giáo viên từ dữ liệu đã truy vấn trước đó
-      const course = courses.find((c) => c.students.map((id) => id.toString()).includes(studentId.toString()));
-      const lesson = lessons?.find((l) => l._id.toString() === lessonId);
-      const teacherName = course && course.teacher ? [course.teacher.lastName, course.teacher.firstName].filter(Boolean).join(" ") || "Giáo viên" : "Giáo viên";
-      const lessonName = lesson ? lesson.name : undefined;
-
-      if (!course) throw new NotFoundError("course not found");
-
-      const formattedSubmissionTime = submissionTime
-        ? new Date(submissionTime).toLocaleString("vi-VN", {
-            hour12: false,
-            timeZone: "Asia/Ho_Chi_Minh",
-          })
-        : "Không có thời hạn";
-
-      const mailOptions = {
-        from: "247learn.vn@gmail.com",
-        to: student.email,
-        subject: "Bạn có một bài tập mới",
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <head>
-              <title>Chào mừng đến với 247learn.vn</title>
-              <style>
-                  body { font-family: Arial, sans-serif; }
-                  .container { width: 600px; margin: auto; }
-                  .header { background-color: #002C6A; color: white; padding: 10px; text-align: center; }
-                  .content { padding: 20px; }
-                  .footer { background-color: #f2f2f2; padding: 10px; text-align: center; }
-              </style>
-          </head>
-          <body>
-              <div class="container">
-                  <div class="header">
-                      <h1>Chào mừng đến với <a href="https://www.247learn.vn" style="color: white; text-decoration: none;">247learn.vn</a></h1>
-                  </div>
-                  <div class="content">
-                      <p>Xin chào,</p>
-                      <p>Giáo viên <strong>${teacherName}</strong> đã giao cho bạn một bài tập mới trong <strong>${
-          course.name
-        }</strong></p>
-                      ${
-                        lessonName
-                          ? `<p>Thuộc bài học: <strong>${lessonName}</strong></p>`
-                          : ""
-                      }
-                      <ul>
-                          <li>Thời hạn nộp bài: <strong>${formattedSubmissionTime}</strong></li>
-                      </ul>
-                      <p>Vui lòng nộp bài đúng hạn.</p>
-                      <p>Để xem danh sách bài tập, vui lòng <a href="https://www.247learn.vn/courses/view-details/${
-                        course._id
-                      }">click vào đây</a>.</p>
-                      <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
-                  </div>
-                  <div class="footer">
-                      <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
-                  </div>
-              </div>
-          </body>
-          </html>
-        `,
-      };
-      mailOptionsArray.push(mailOptions);
-    };
-
-    try {
-      await this.sendEmailWithThrottle(mailOptionsArray, transporter, 1000);
-    } catch (error) {
-      console.error("Failed to send emails, aborting the rest of the process.");
-      return;
-    }
+    // try {
+    //   await this.sendEmailWithThrottle(mailOptionsArray, transporter, 1000);
+    // } catch (error) {
+    //   console.error("Failed to send emails, aborting the rest of the process.");
+    //   return;
+    // }
 
     // await Promise.all(emailPromises);
 
