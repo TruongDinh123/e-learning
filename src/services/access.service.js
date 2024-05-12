@@ -378,6 +378,9 @@ class AccessService {
                                dob,
                                phoneNumber,
                                gender,
+                               address,
+                               cmnd,
+                               cap, donvi, donvicon
                              }) => {
     const user = await User.findById(id);
     if (!user) {
@@ -389,6 +392,11 @@ class AccessService {
     user.dob = dob;
     user.phoneNumber = phoneNumber;
     user.gender = gender;
+    user.address = address;
+    user.cmnd = cmnd;
+    user.cap = cap;
+    user.donvi = donvi;
+    user.donvicon = donvicon;
     const updateUser = await user.save();
     return updateUser;
   };

@@ -1,5 +1,5 @@
-"use strict";
-const mongoose = require("mongoose");
+'use strict';
+const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema(
   {
@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema(
     },
     gender: {
       type: String,
-      enum: ["Nam", "Nữ", "Khác"],
+      enum: ['Nam', 'Nữ', 'Khác'],
       required: false,
     },
 
@@ -40,7 +40,7 @@ const userSchema = new mongoose.Schema(
     image_url: {
       type: String,
     },
-    
+
     email: {
       type: String,
       required: true,
@@ -53,26 +53,26 @@ const userSchema = new mongoose.Schema(
     },
     center: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Center",
+      ref: 'Center',
     },
     courses: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Course",
+        ref: 'Course',
       },
     ],
 
     quizzes: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Quiz",
+        ref: 'Quiz',
       },
     ],
 
     roles: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Role",
+        ref: 'Role',
         required: true,
       },
     ],
@@ -81,11 +81,11 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    
+
     status: {
       type: String,
-      enum: ["active", "inactive"],
-      default: "active",
+      enum: ['active', 'inactive'],
+      default: 'active',
     },
     passwordResetToken: String,
     passwordResetExpires: Date,
@@ -94,11 +94,11 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
-      cmnd: String,
-      address: String,
-      cap: String,
-      donvi: String,
-      donvicon: String,
+    cmnd: String,
+    address: String,
+    cap: String,
+    donvi: String,
+    donvicon: String,
   },
   {
     timestamps: true,
@@ -106,16 +106,16 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.methods.deactivate = async function () {
-  this.status = "inactive";
+  this.status = 'inactive';
   await this.save();
 
   // Remove all the related docs
-  await this.model("Course").updateMany(
-    { students: this._id },
-    { $pull: { students: this._id } }
+  await this.model('Course').updateMany(
+    {students: this._id},
+    {$pull: {students: this._id}}
   );
-  await this.model("UserLesson").deleteMany({ user: this._id });
-  await this.model("Score").deleteMany({ user: this._id });
+  await this.model('UserLesson').deleteMany({user: this._id});
+  await this.model('Score').deleteMany({user: this._id});
 };
 
-module.exports = mongoose.model("User", userSchema);
+module.exports = mongoose.model('User', userSchema);
