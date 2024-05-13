@@ -1121,7 +1121,9 @@ class QuizService {
 
   static getScoreByQuizId = async (quizId) => {
     try {
-      const maxScore = 150;
+      const quiz = await Quiz.findById(quizId);
+      const numberOfQuestion = quiz?.questions?.length ?? 0;
+      const maxScore = 10*numberOfQuestion;
       const scores = await Score.find({ quiz: quizId })
         .populate("quiz")
         .populate("user")
