@@ -742,19 +742,19 @@ class QuizService {
   };
 
   static getAQuizByCourseForUserScreen = async (quizId) => {
-    const quizs = await Quiz.find({ _id: quizId }, {studentIds:0, courseIds:0})
+    const quizs = await Quiz.findOne({ _id: quizId }, {studentIds:0, courseIds:0})
       .populate("questions")
       .lean();
 
-      if (quizs && quizs.length > 0) {
-        quizs[0].questions = quizs[0].questions?.map(question => {
+    if (!quizs) throw new NotFoundError("quizs not found");
+
+    if (quizs && quizs.length > 0) {
+        quizs.questions = quizs.questions?.map(question => {
           delete question.answer;
           return question;
         });
       }
       
-    if (!quizs) throw new NotFoundError("quizs not found");
-
     return quizs;
   };
 
