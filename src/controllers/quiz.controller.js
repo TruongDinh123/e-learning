@@ -192,6 +192,15 @@ class QuizController {
       metadata: await QuizService.getAQuizByCourse(quizId),
     }).send(res);
   };
+  
+  getAQuizByCourseForUserScreen = async (req, res, next) => {
+    const { quizId } = req.params;
+
+    new SuccessReponse({
+      message: "Get a quiz successfully",
+      metadata: await QuizService.getAQuizByCourseForUserScreen(quizId),
+    }).send(res);
+  };
 
   getAQuizTemplate = async (req, res, next) => {
     const { quizTemplateId } = req.params;

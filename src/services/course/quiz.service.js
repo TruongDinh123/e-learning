@@ -712,8 +712,7 @@ class QuizService {
   };
 
   static getAQuizByCourse = async (quizId) => {
-    const quizs = await Quiz.find()
-      .where({ _id: quizId })
+    const quizs = await Quiz.find({ _id: quizId })
       .populate("questions")
       .populate("courseIds", "name")
       .populate({
@@ -728,7 +727,6 @@ class QuizService {
           },
         },
       })
-
       .lean();
 
       if (quizs && quizs.length > 0) {
@@ -736,6 +734,36 @@ class QuizService {
           ...question,
           answer: encrypt(question.answer)
         }));
+      }
+      
+    if (!quizs) throw new NotFoundError("quizs not found");
+
+    return quizs;
+  };
+
+  static getAQuizByCourseForUserScreen = async (quizId) => {
+    const quizs = await Quiz.find({ _id: quizId })
+      .populate("questions")
+      .populate("courseIds", "name")
+      .populate({
+        path: "lessonId",
+        populate: {
+          path: "courseId",
+          model: "Course",
+          populate: {
+            path: "teacher",
+            model: "User",
+            select: "name email lastName firstName",
+          },
+        },
+      })
+      .lean();
+
+      if (quizs && quizs.length > 0) {
+        quizs[0].questions = quizs[0].questions?.map(question => {
+          delete question.answer;
+          return question;
+        });
       }
       
     if (!quizs) throw new NotFoundError("quizs not found");
