@@ -1331,7 +1331,7 @@ class QuizService {
   static getInfoCommonScoreByUserId = async (userId) => {
     try {
       const scores = await Score.find({ user: userId },
-        {isComplete:1, predictAmount:1, predictAmountMaxScore: 1, score:1, quiz:0})
+        {isComplete:1, predictAmount:1, predictAmountMaxScore: 1, score:1, startTime:1, quiz:0})
         .populate("quiz").lean();
 
       if (!scores) throw new NotFoundError("scores not found");
