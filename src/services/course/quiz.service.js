@@ -1083,7 +1083,7 @@ class QuizService {
       throw new BadRequestError("Failed to get scores", error);
     }
   };
-
+  
   static getScoreByUserId = async (userId, quizId) => {
     try {
       const scores = await Score.find({ user: userId, quiz: quizId })
@@ -1324,6 +1324,22 @@ class QuizService {
     } catch (error) {
       console.error("Error in getSubmissionTimeLatestQuizByCourseId:", error);
       throw new BadRequestError("Failed to get submissionTime in the latest quizz by course ID", error);
+
+    }
+  }
+
+  static getIsCompleteScoreByUserId = async (userId) => {
+    try {
+      const scores = await Score.find({ user: userId }, {isComplete:1}).populate("quiz").lean();
+
+      if (!scores) throw new NotFoundError("scores not found");
+
+      const isComplete = scores[0].isComplete;
+
+      return {isComplete};
+    } catch (error) {
+      console.error("Error in getIsCompleteScoreByUserId:", error);
+      throw new BadRequestError("Failed to get isComplete in the latest quizz by course ID", error);
 
     }
   }

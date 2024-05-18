@@ -22,14 +22,13 @@ router.get(
 );
 
 router.get(
-    "/e-learning/score",
-    permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
-    asyncHandler(quizController.getScoreByUser)
+    "/e-learning/course/:courseId/quizzeLatesSubmissionTime",
+    asyncHandler(quizController.getSubmissionTimeLatestQuizByCourseId)
 );
 
 router.get(
-    "/e-learning/course/:courseId/quizzeLatesSubmissionTime",
-    asyncHandler(quizController.getSubmissionTimeLatestQuizByCourseId)
+  "/e-learning/score/quizzeLatesIsComplete",
+  asyncHandler(quizController.getIsCompleteScoreByUserId)
 );
 
 router.get(
