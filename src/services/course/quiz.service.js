@@ -742,21 +742,8 @@ class QuizService {
   };
 
   static getAQuizByCourseForUserScreen = async (quizId) => {
-    const quizs = await Quiz.find({ _id: quizId })
+    const quizs = await Quiz.find({ _id: quizId }, {studentIds:0, courseIds:0})
       .populate("questions")
-      .populate("courseIds", "name")
-      .populate({
-        path: "lessonId",
-        populate: {
-          path: "courseId",
-          model: "Course",
-          populate: {
-            path: "teacher",
-            model: "User",
-            select: "name email lastName firstName",
-          },
-        },
-      })
       .lean();
 
       if (quizs && quizs.length > 0) {
