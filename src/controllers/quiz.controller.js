@@ -389,12 +389,12 @@ class QuizController {
     }).send(res);
   };
 
-  getIsCompleteScoreByUserId = async (req, res, next) => {
+  getInfoCommonScoreByUserId = async (req, res, next) => {
     const userId = req.headers["x-client-id"];
 
     new SuccessReponse({
-      message: "get isComplete in the latest quizz by userId ID successfully",
-      metadata: await QuizService.getIsCompleteScoreByUserId(userId),
+      message: "get info common in the latest quizz by userId ID successfully",
+      metadata: await QuizService.getInfoCommonScoreByUserId(userId),
     }).send(res);
   };
 

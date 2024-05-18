@@ -1328,18 +1328,20 @@ class QuizService {
     }
   }
 
-  static getIsCompleteScoreByUserId = async (userId) => {
+  static getInfoCommonScoreByUserId = async (userId) => {
     try {
-      const scores = await Score.find({ user: userId }, {isComplete:1}).populate("quiz").lean();
+      const scores = await Score.find({ user: userId },
+        {isComplete:1, predictAmount:1, predictAmountMaxScore: 1, score:1, quiz:0})
+        .populate("quiz").lean();
 
       if (!scores) throw new NotFoundError("scores not found");
 
-      const isComplete = scores[0].isComplete;
+      const data = scores[0];
 
-      return {isComplete};
+      return data;
     } catch (error) {
-      console.error("Error in getIsCompleteScoreByUserId:", error);
-      throw new BadRequestError("Failed to get isComplete in the latest quizz by course ID", error);
+      console.error("Error in getInfoCommonScoreByUserId:", error);
+      throw new BadRequestError("Failed to get info common in the latest quizz by course ID", error);
 
     }
   }

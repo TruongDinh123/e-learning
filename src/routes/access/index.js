@@ -27,8 +27,8 @@ router.get(
 );
 
 router.get(
-  "/e-learning/score/quizzeLatesIsComplete",
-  asyncHandler(quizController.getIsCompleteScoreByUserId)
+  "/e-learning/score/quizzeLatesInfoCommon",
+  asyncHandler(quizController.getInfoCommonScoreByUserId)
 );
 
 router.get(
