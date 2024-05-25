@@ -10,7 +10,7 @@ const { v2: cloudinary } = require("cloudinary");
 const QuizTemplate = require("../../models/quizTemplate.model");
 const lessonModel = require("../../models/lesson.model");
 const Role = require("../../models/role.model");
-const { encrypt } = require("../../utils");
+const { encrypt, encryptQuiz } = require("../../utils");
 
 cloudinary.config({
   cloud_name: "dvsvd87sm",
@@ -754,10 +754,10 @@ class QuizService {
           return question;
         });
       }
-    const encryptQuiz = encrypt(JSON.stringify(quizs));
+    const encryptQuizInit = encryptQuiz(JSON.stringify(quizs));
     return {
       _id: quizs._id,
-      data: encryptQuiz
+      data: encryptQuizInit
     };
   };
 
