@@ -754,8 +754,11 @@ class QuizService {
           return question;
         });
       }
-      
-    return quizs;
+    const encryptQuiz = encrypt(JSON.stringify(quizs));
+    return {
+      _id: quizs._id,
+      data: encryptQuiz
+    };
   };
 
   static getAQuizTemplate = async (quizTemplateId) => {

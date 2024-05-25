@@ -4,9 +4,8 @@ const _ = require("lodash");
 const { Types } = require("mongoose");
 const crypto = require('crypto');
 
-const secret = 'your-secret-key';
+const secret = 'upSsln2tTkQT3uMCYdxt7oraspZqRXMq';
 const secretKey = crypto.createHash('sha256').update(String(secret)).digest('base64').substr(0, 32);
-console.log("secretKey",secretKey);
 
 function encrypt(text) {
   const iv = crypto.randomBytes(16); // Vector khởi tạo
