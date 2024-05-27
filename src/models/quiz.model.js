@@ -36,6 +36,14 @@ const quizSchema = new mongoose.Schema(
       },
     ],
 
+    usersTested: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: false,
+      },
+    ],
+
     quizTemplate: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "QuizTemplate",

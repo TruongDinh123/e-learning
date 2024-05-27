@@ -982,6 +982,7 @@ class QuizService {
   
       const quiz = await Quiz.findById(quizId);
       if (!quiz) throw new NotFoundError("No quiz found");
+      
   
       // Điểm số cho mỗi câu trả lời đúng
       const pointsPerCorrectAnswer = 10;
@@ -1003,10 +1004,17 @@ class QuizService {
       });
   
       let userRecord = await userModel.findById(userId);
-      const testCount = userRecord.testCount ? userRecord.testCount + 1 : 1;
-      userRecord.testCount = testCount
+      let testNum = 0;
+      let testCount = 0;
+      if(userRecord) {
+        testNum = userRecord.testNum || 5;
+
+        testCount = userRecord.testCount ? userRecord.testCount + 1 : 1;
+        userRecord.testCount = testCount;
+
+        await userRecord.save();
+      }
       
-      await userRecord.save();
       
       // Tính tổng điểm dựa trên số câu trả lời đúng
       let totalScore = correctAnswersCount * pointsPerCorrectAnswer;
@@ -1015,7 +1023,8 @@ class QuizService {
       scoreRecord.score = totalScore;
       scoreRecord.answers = answers;
 
-      if(testCount === 5) {
+
+      if(testCount === testNum) {
         scoreRecord.isComplete = true;
       } else {
         scoreRecord.isComplete = false;
@@ -1027,7 +1036,7 @@ class QuizService {
 
       await scoreRecord.save();
   
-      return scoreRecord;
+      return Object.assign(scoreRecord, quiz);
     } catch (error) {
       throw new BadRequestError("Failed to submit quiz", error);
     }

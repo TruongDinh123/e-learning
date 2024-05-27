@@ -97,23 +97,13 @@ class AccessController {
 
   updateUser = async (req, res, next) => {
     const { id } = req.params;
-    const { lastName, email, firstName, dob, phoneNumber, gender, address, cmnd, cap, donvi, donvicon } = req.body;
+    delete req.body.roles;
 
     new SuccessReponse({
       message: "Update user success",
       metadata: await AccessService.updateUser({
         id,
-        lastName,
-        email,
-        firstName,
-        dob,
-        phoneNumber,
-        gender,
-        address,
-        cmnd,
-        cap, 
-        donvi, 
-        donvicon
+        ...req.body
       }),
     }).send(res);
   };

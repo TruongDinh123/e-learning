@@ -100,6 +100,7 @@ const userSchema = new mongoose.Schema(
     donvi: String,
     donvicon: String,
     testCount: Number,
+    testNum: Number,
   },
   {
     timestamps: true,
