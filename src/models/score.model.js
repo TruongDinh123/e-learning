@@ -45,14 +45,18 @@ const scoreSchema = new mongoose.Schema(
       default: false,
       required: false,
     },
-      predictAmount: {
-            type: Number,
-            required: false,
-      },
-      predictAmountMaxScore: {
-          type: Number,
-          required: false,
-      }
+    orderNum: {
+      type: Number,
+      required: false,
+    },
+    predictAmount: {
+      type: Number,
+      required: false,
+    },
+    predictAmountMaxScore: {
+      type: Number,
+      required: false,
+    }
   },
   {
     timestamps: true,

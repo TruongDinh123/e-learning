@@ -970,19 +970,18 @@ class QuizService {
         throw new BadRequestError("Invalid answers format");
       }
   
-      let scoreRecord = await Score.findOne({ quiz: quizId, user: userId });
-      if (!scoreRecord) {
-        scoreRecord = new Score({
+      const scoreRecordArr = await Score.find({ user: userId });
+      const scoreRecord = new Score({
           user: userId,
           quiz: quizId,
+          orderNum: scoreRecordArr.length + 1
         });
 
-        await scoreRecord.save();
-      }
-  
       const quiz = await Quiz.findById(quizId);
       if (!quiz) throw new NotFoundError("No quiz found");
+      !quiz.usersTested.includes(userId) && quiz.usersTested.push(userId);
       
+      await quiz.save();
   
       // Điểm số cho mỗi câu trả lời đúng
       const pointsPerCorrectAnswer = 10;
@@ -1004,11 +1003,8 @@ class QuizService {
       });
   
       let userRecord = await userModel.findById(userId);
-      let testNum = 0;
       let testCount = 0;
       if(userRecord) {
-        testNum = userRecord.testNum || 5;
-
         testCount = userRecord.testCount ? userRecord.testCount + 1 : 1;
         userRecord.testCount = testCount;
 
@@ -1024,7 +1020,7 @@ class QuizService {
       scoreRecord.answers = answers;
 
 
-      if(testCount === testNum) {
+      if(testCount === 5) {
         scoreRecord.isComplete = true;
       } else {
         scoreRecord.isComplete = false;
@@ -1036,11 +1032,19 @@ class QuizService {
 
       await scoreRecord.save();
   
-      return Object.assign(scoreRecord, quiz);
+      return scoreRecord;
     } catch (error) {
       throw new BadRequestError("Failed to submit quiz", error);
     }
   };
+
+  static userTested = async (quizId) => {
+    const quiz = await Quiz.findOne({_id: quizId}, {usersTested: 1}).populate('usersTested', "firstName lastName");
+    if (!quiz) throw new NotFoundError("No quiz found");
+
+    return quiz;
+  } 
+
 
   static uploadFileUserSubmit = async ({ filename, quizId, userId }) => {
     validateMongoDbId(quizId);

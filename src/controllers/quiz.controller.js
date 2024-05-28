@@ -415,6 +415,14 @@ class QuizController {
       metadata: await UserService.getTestCount(userId),
     }).send(res);
   }
+
+  userTested = async (req, res, next) => {
+    const { quizId } = req.params;
+    new SuccessReponse({
+      message: "get user tested by quizId",
+      metadata: await QuizService.userTested(quizId),
+    }).send(res);
+  }
 }
 
 module.exports = new QuizController();

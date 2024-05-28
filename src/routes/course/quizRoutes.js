@@ -188,6 +188,12 @@ router.post(
   asyncHandler(quizController.uploadQuestionImage)
 );
 
+router.get(
+  "/e-learning/quiz/:quizId/user-tested",
+  permission(["Super-Admin", "Admin", "Mentor"]),
+  asyncHandler(quizController.userTested)
+);
+
 //quiz templates
 router.delete(
   "/e-learning/quiz/templates/:quizTemplateId",

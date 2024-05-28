@@ -370,33 +370,13 @@ class AccessService {
     }
   };
 
-  static updateUser = async ({
-                               id,
-                               lastName,
-                               email,
-                               firstName,
-                               dob,
-                               phoneNumber,
-                               gender,
-                               address,
-                               cmnd,
-                               cap, donvi, donvicon
-                             }) => {
-    const user = await User.findById(id);
+  static updateUser = async (infoUpdate) => {
+    const user = await User.findById(infoUpdate.id);
     if (!user) {
       throw new NotFoundError("User not found");
     }
-    user.lastName = lastName;
-    user.firstName = firstName;
-    user.email = email;
-    user.dob = dob;
-    user.phoneNumber = phoneNumber;
-    user.gender = gender;
-    user.address = address;
-    user.cmnd = cmnd;
-    user.cap = cap;
-    user.donvi = donvi;
-    user.donvicon = donvicon;
+    Object.assign(user, infoUpdate);
+
     const updateUser = await user.save();
     return updateUser;
   };
