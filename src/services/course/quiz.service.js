@@ -817,6 +817,17 @@ class QuizService {
     return updatedQuiz;
   };
 
+  static updateQuizTimeSubmit = async ({ quizId, submissionTime }) => {
+    const quiz = await Quiz.findById(quizId);
+
+    if (!quiz) {
+      throw new NotFoundError("quiz not found");
+    }
+    quiz.submissionTime = submissionTime;
+
+    return quiz;
+  }
+
   static deleteQuiz = async ({ quizId, userId }) => {
     try {
       validateMongoDbId(quizId);

@@ -102,6 +102,12 @@ router.put(
   asyncHandler(quizController.updateQuiz)
 );
 
+router.put(
+  "/e-learning/time-submit/quiz/:quizId",
+  permission(["Super-Admin", "Admin", "Mentor"]),
+  asyncHandler(quizController.updateQuizTimeSubmit)
+);
+
 router.delete(
   "/e-learning/quiz/:quizId/question/:questionId",
   permission(["Super-Admin", "Admin", "Mentor"]),

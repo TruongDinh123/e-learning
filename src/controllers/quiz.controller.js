@@ -227,6 +227,19 @@ class QuizController {
     }).send(res);
   };
 
+  updateQuizTimeSubmit = async (req, res, next) => {
+    const { quizId } = req.params;
+    const {submissionTime} = req.body;
+
+    new SuccessReponse({
+      message: "Cập nhật thời gian nộp bài thành công!",
+      metadata: await QuizService.updateQuizTimeSubmit({
+        quizId,
+        submissionTime,
+      }),
+    }).send(res);
+  };
+
   updateQuizTemplate = async (req, res, next) => {
     const { quizTemplateId } = req.params;
     const { questions, name } = req.body;
