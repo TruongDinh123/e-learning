@@ -224,6 +224,21 @@ class CourseController {
       metadata: await CourseService.getStudentScoresByCourse(courseId, userId),
     }).send(res);
   };
+
+  activeCoursePresent = async (req, res, next) => {
+    new SuccessReponse({
+      message: "Update activeCoursePresent success!",
+      metadata: await CourseService.activeCoursePresent(req.body),
+    }).send(res);
+  };
+
+  getActiveCoursePresent = async (req, res, next) => {
+    new SuccessReponse({
+      message: "get activeCoursePresent success!",
+      metadata: await CourseService.getActiveCoursePresent(),
+    }).send(res);
+  };
+  
 }
 
 module.exports = new CourseController();

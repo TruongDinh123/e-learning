@@ -1,8 +1,8 @@
-"use strict";
+'use strict';
 
-const { SuccessReponse } = require("../core/success.reponse");
-const { QuizService } = require("../services/course/quiz.service");
-const UserService = require("../services/user.service");
+const {SuccessReponse} = require('../core/success.reponse');
+const {QuizService} = require('../services/course/quiz.service');
+const UserService = require('../services/user.service');
 class QuizController {
   createQuiz = async (req, res, next) => {
     const {
@@ -19,10 +19,10 @@ class QuizController {
       isTemplateMode,
       deletedQuestionIds,
     } = req.body;
-    const userId = req.headers["x-client-id"];
+    const userId = req.headers['x-client-id'];
 
     new SuccessReponse({
-      message: "Create quiz successfully",
+      message: 'Create quiz successfully',
       metadata: await QuizService.createQuiz({
         type,
         courseIds,
@@ -58,11 +58,10 @@ class QuizController {
     } = req.body;
 
     console.log(req.body);
-    const creatorId = req.headers["x-client-id"];
-
+    const creatorId = req.headers['x-client-id'];
 
     new SuccessReponse({
-      message: "Create draft quiz successfully",
+      message: 'Create draft quiz successfully',
       metadata: await QuizService.saveDraftQuiz({
         quizIdDraft,
         type,
@@ -82,70 +81,70 @@ class QuizController {
   };
 
   startQuiz = async (req, res, next) => {
-    const { quizId } = req.params;
-    const userId = req.headers["x-client-id"];
+    const {quizId} = req.params;
+    const userId = req.headers['x-client-id'];
     new SuccessReponse({
-      message: "Start quiz successfully",
+      message: 'Start quiz successfully',
       metadata: await QuizService.startQuiz(quizId, userId),
     }).send(res);
   };
 
   getQuizs = async (req, res, next) => {
     new SuccessReponse({
-      message: "Get all quiz successfully",
+      message: 'Get all quiz successfully',
       metadata: await QuizService.getQuizs(),
     }).send(res);
   };
 
   getdraftQuiz = async (req, res, next) => {
-    const teacherId = req.headers["x-client-id"];
+    const teacherId = req.headers['x-client-id'];
     new SuccessReponse({
-      message: "Get draft quiz successfully",
-      metadata: await QuizService.getDraftQuiz({ teacherId }),
+      message: 'Get draft quiz successfully',
+      metadata: await QuizService.getDraftQuiz({teacherId}),
     }).send(res);
   };
 
   deleteDraftQuiz = async (req, res, next) => {
-    const { quizIdDraft } = req.params;
+    const {quizIdDraft} = req.params;
     new SuccessReponse({
-      message: "Delete quiz draft successfully",
+      message: 'Delete quiz draft successfully',
       metadata: await QuizService.deleteDraftQuiz(quizIdDraft),
     }).send(res);
   };
 
   getAllQuizTemplates = async (req, res, next) => {
     new SuccessReponse({
-      message: "Get all quiz templates successfully",
+      message: 'Get all quiz templates successfully',
       metadata: await QuizService.getAllQuizTemplates(),
     }).send(res);
   };
 
   deleteQuizTemplates = async (req, res, next) => {
-    const { quizTemplateId } = req.params;
+    const {quizTemplateId} = req.params;
 
     new SuccessReponse({
-      message: "Delete quiz template successfully",
+      message: 'Delete quiz template successfully',
       metadata: await QuizService.deleteQuizTemplates(quizTemplateId),
     }).send(res);
   };
 
   uploadFileQuiz = async (req, res, next) => {
-    const { quizId } = req.params;
-    const { path: filename } = req.file;
+    const {quizId} = req.params;
+    const {path: filename} = req.file;
 
     new SuccessReponse({
-      message: "Upload file successfully",
-      metadata: await QuizService.uploadFile({ quizId, filename }),
+      message: 'Upload file successfully',
+      metadata: await QuizService.uploadFile({quizId, filename}),
     }).send(res);
   };
 
   uploadFileUserSubmit = async (req, res, next) => {
-    const { quizId } = req.params;
-    const { path: filename } = req.file;
-    const userId = req.headers["x-client-id"];
+    const {quizId} = req.params;
+    const {path: filename} = req.file;
+    const userId = req.headers['x-client-id'];
 
     new SuccessReponse({
-      message: "Upload file successfully",
+      message: 'Upload file successfully',
       metadata: await QuizService.uploadFileUserSubmit({
         quizId,
         filename,
@@ -155,28 +154,28 @@ class QuizController {
   };
 
   getQuizsByCourse = async (req, res, next) => {
-    const { courseIds } = req.params;
+    const {courseIds} = req.params;
 
     new SuccessReponse({
-      message: "Get quizs successfully",
+      message: 'Get quizs successfully',
       metadata: await QuizService.getQuizsByCourse(courseIds),
     }).send(res);
   };
 
   getQuizsInfoByCourse = async (req, res, next) => {
-    const { courseIds } = req.params;
+    const {courseIds} = req.params;
 
     new SuccessReponse({
-      message: "Get quiz info successfully",
+      message: 'Get quiz info successfully',
       metadata: await QuizService.getQuizsInfoByCourse(courseIds),
     }).send(res);
   };
 
   getQuizzesByStudentAndCourse = async (req, res, next) => {
-    const { courseId } = req.params;
-    const studentId = req.headers["x-client-id"];
+    const {courseId} = req.params;
+    const studentId = req.headers['x-client-id'];
     new SuccessReponse({
-      message: "Get quiz by student successfully",
+      message: 'Get quiz by student successfully',
       metadata: await QuizService.getQuizzesByStudentAndCourse(
         studentId,
         courseId
@@ -185,38 +184,38 @@ class QuizController {
   };
 
   getAQuizByCourse = async (req, res, next) => {
-    const { quizId } = req.params;
+    const {quizId} = req.params;
 
     new SuccessReponse({
-      message: "Get a quiz successfully",
+      message: 'Get a quiz successfully',
       metadata: await QuizService.getAQuizByCourse(quizId),
     }).send(res);
   };
-  
+
   getAQuizByCourseForUserScreen = async (req, res, next) => {
-    const { quizId } = req.params;
+    const {quizId} = req.params;
 
     new SuccessReponse({
-      message: "Get a quiz successfully",
+      message: 'Get a quiz successfully',
       metadata: await QuizService.getAQuizByCourseForUserScreen(quizId),
     }).send(res);
   };
 
   getAQuizTemplate = async (req, res, next) => {
-    const { quizTemplateId } = req.params;
+    const {quizTemplateId} = req.params;
 
     new SuccessReponse({
-      message: "Get a quiz template successfully",
+      message: 'Get a quiz template successfully',
       metadata: await QuizService.getAQuizTemplate(quizTemplateId),
     }).send(res);
   };
 
   updateQuiz = async (req, res, next) => {
-    const { quizId } = req.params;
-    const { questions, name, submissionTime, essay, timeLimit } = req.body;
+    const {quizId} = req.params;
+    const {questions, name, submissionTime, essay, timeLimit} = req.body;
 
     new SuccessReponse({
-      message: "Cập nhật bài tập thành công",
+      message: 'Cập nhật bài tập thành công',
       metadata: await QuizService.updateQuiz(quizId, {
         questions,
         name,
@@ -228,11 +227,11 @@ class QuizController {
   };
 
   updateQuizTimeSubmit = async (req, res, next) => {
-    const { quizId } = req.params;
+    const {quizId} = req.params;
     const {submissionTime} = req.body;
 
     new SuccessReponse({
-      message: "Cập nhật thời gian nộp bài thành công!",
+      message: 'Cập nhật thời gian nộp bài thành công!',
       metadata: await QuizService.updateQuizTimeSubmit({
         quizId,
         submissionTime,
@@ -241,11 +240,11 @@ class QuizController {
   };
 
   updateQuizTemplate = async (req, res, next) => {
-    const { quizTemplateId } = req.params;
-    const { questions, name } = req.body;
+    const {quizTemplateId} = req.params;
+    const {questions, name} = req.body;
 
     new SuccessReponse({
-      message: "Update quiz template successfully",
+      message: 'Update quiz template successfully',
       metadata: await QuizService.updateQuizTemplate(quizTemplateId, {
         questions,
         name,
@@ -254,12 +253,12 @@ class QuizController {
   };
 
   uploadQuestionImage = async (req, res, next) => {
-    const { quizId, questionId, isTemplateMode  } = req.body;
-    const { path: filename } = req.file;
+    const {quizId, questionId, isTemplateMode} = req.body;
+    const {path: filename} = req.file;
     console.log(req.body);
 
     new SuccessReponse({
-      message: "Upload image question successfully",
+      message: 'Upload image question successfully',
       metadata: await QuizService.uploadQuestionImage({
         quizId,
         filename,
@@ -270,65 +269,68 @@ class QuizController {
   };
 
   deleteQuestionImage = async (req, res, next) => {
-    const { quizId, questionId } = req.body;
+    const {quizId, questionId} = req.body;
 
     new SuccessReponse({
-      message: "Delete image question successfully",
-      metadata: await QuizService.deleteQuestionImage(
-        quizId,
-        questionId,
-      ),
+      message: 'Delete image question successfully',
+      metadata: await QuizService.deleteQuestionImage(quizId, questionId),
     }).send(res);
-  }
+  };
 
   deleteQuiz = async (req, res, next) => {
-    const { quizId } = req.params;
-    const userId = req.headers["x-client-id"];
+    const {quizId} = req.params;
+    const userId = req.headers['x-client-id'];
 
     new SuccessReponse({
-      message: "Delete quiz successfully",
-      metadata: await QuizService.deleteQuiz({ quizId, userId }),
+      message: 'Delete quiz successfully',
+      metadata: await QuizService.deleteQuiz({quizId, userId}),
     }).send(res);
   };
 
   deleteScorebyQuiz = async (req, res, next) => {
-    const { scoreId } = req.params;
+    const {scoreId} = req.params;
     new SuccessReponse({
-      message: "Delete table score successfully",
-      metadata: await QuizService.deleteScorebyQuiz({ scoreId }),
+      message: 'Delete table score successfully',
+      metadata: await QuizService.deleteScorebyQuiz({scoreId}),
     }).send(res);
   };
 
   deleteQuestion = async (req, res, next) => {
-    const { quizId, questionId } = req.params;
+    const {quizId, questionId} = req.params;
 
     new SuccessReponse({
-      message: "Delete quiz successfully",
+      message: 'Delete quiz successfully',
       metadata: await QuizService.deleteQuestion(quizId, questionId),
     }).send(res);
   };
 
   submitQuiz = async (req, res, next) => {
     try {
-      const { quizId } = req.params;
-      const { answer, predictAmount, predictAmountMaxScore } = req.body;
-      const userId = req.headers["x-client-id"];
+      const {quizId} = req.params;
+      const {answer, predictAmount, predictAmountMaxScore} = req.body;
+      const userId = req.headers['x-client-id'];
 
       new SuccessReponse({
-        message: "Submit quiz successfully",
-        metadata: await QuizService.submitQuiz(quizId, userId, answer, predictAmount, predictAmountMaxScore),
+        message: 'Submit quiz successfully',
+        metadata: await QuizService.submitQuiz(
+          quizId,
+          userId,
+          answer,
+          predictAmount,
+          predictAmountMaxScore
+        ),
       }).send(res);
     } catch (error) {}
   };
 
   submitQuizEssay = async (req, res, next) => {
     try {
-      const { quizId } = req.params;
-      const { essayAnswer } = req.body;
-      const userId = req.headers["x-client-id"];
+      const {quizId} = req.params;
+      const {essayAnswer} = req.body;
+      const userId = req.headers['x-client-id'];
 
       new SuccessReponse({
-        message: "Submit quiz successfully",
+        message: 'Submit quiz successfully',
         metadata: await QuizService.submitQuizEssay({
           quizId,
           userId,
@@ -340,10 +342,10 @@ class QuizController {
 
   getScoreByUser = async (req, res, next) => {
     try {
-      const userId = req.headers["x-client-id"];
+      const userId = req.headers['x-client-id'];
 
       new SuccessReponse({
-        message: "Get score successfully",
+        message: 'Get score successfully',
         metadata: await QuizService.getScoreByUser(userId),
       }).send(res);
     } catch (error) {}
@@ -351,10 +353,10 @@ class QuizController {
 
   getScoreByInfo = async (req, res, next) => {
     try {
-      const userId = req.headers["x-client-id"];
+      const userId = req.headers['x-client-id'];
 
       new SuccessReponse({
-        message: "Get score info successfully",
+        message: 'Get score info successfully',
         metadata: await QuizService.getScoreByInfo(userId),
       }).send(res);
     } catch (error) {}
@@ -362,10 +364,10 @@ class QuizController {
 
   getScoreByUserId = async (req, res, next) => {
     try {
-      const { userId, quizId } = req.params;
+      const {userId, quizId} = req.params;
 
       new SuccessReponse({
-        message: "Get score successfully",
+        message: 'Get score successfully',
         metadata: await QuizService.getScoreByUserId(userId, quizId),
       }).send(res);
     } catch (error) {}
@@ -373,20 +375,30 @@ class QuizController {
 
   getScoreByQuizId = async (req, res, next) => {
     try {
-      const { quizId } = req.params;
+      const {quizId} = req.params;
 
       new SuccessReponse({
-        message: "Get score successfully",
+        message: 'Get score successfully',
         metadata: await QuizService.getScoreByQuizId(quizId),
       }).send(res);
     } catch (error) {}
   };
 
+  getScoreByQuizIds = async (req, res, next) => {
+    try {
+      const {quizIds} = req.body;
+      new SuccessReponse({
+        message: 'Get score successfully',
+        metadata: await QuizService.getScoreByQuizIds(quizIds),
+      }).send(res);
+    } catch (error) {}
+  };
+
   getAllScoresByCourseId = async (req, res, next) => {
-    const { courseId } = req.params;
+    const {courseId} = req.params;
 
     new SuccessReponse({
-      message: "get all scores by course successfully",
+      message: 'get all scores by course successfully',
       metadata: await QuizService.getAllScoresByCourseId(courseId),
     }).send(res);
   };
@@ -396,46 +408,55 @@ class QuizController {
       const scoresToUpdate = req.body;
 
       new SuccessReponse({
-        message: "Update score successfully",
+        message: 'Update score successfully',
         metadata: await QuizService.updateScore(scoresToUpdate),
       }).send(res);
     } catch (error) {}
   };
 
   getSubmissionTimeLatestQuizByCourseId = async (req, res, next) => {
-    const { courseId } = req.params;
+    const {courseId} = req.params;
 
     new SuccessReponse({
-      message: "get submissionTime in the latest quizz by course ID successfully",
-      metadata: await QuizService.getSubmissionTimeLatestQuizByCourseId(courseId),
+      message:
+        'get submissionTime in the latest quizz by course ID successfully',
+      metadata: await QuizService.getSubmissionTimeLatestQuizByCourseId(
+        courseId
+      ),
     }).send(res);
   };
 
   getInfoCommonScoreByUserId = async (req, res, next) => {
-    const userId = req.headers["x-client-id"];
+    const userId = req.headers['x-client-id'];
 
     new SuccessReponse({
-      message: "get info common in the latest quizz by userId ID successfully",
+      message: 'get info common in the latest quizz by userId ID successfully',
       metadata: await QuizService.getInfoCommonScoreByUserId(userId),
     }).send(res);
   };
 
   getTestCount = async (req, res, next) => {
-    const { userId } = req.params;
+    const {userId} = req.params;
 
     new SuccessReponse({
-      message: "get test count by userId",
+      message: 'get test count by userId',
       metadata: await UserService.getTestCount(userId),
     }).send(res);
-  }
+  };
 
-  userTested = async (req, res, next) => {
-    const { quizId } = req.params;
+  activeQuizPresent = async (req, res, next) => {
     new SuccessReponse({
-      message: "get user tested by quizId",
-      metadata: await QuizService.userTested(quizId),
+      message: "Update activeQuizPresent success!",
+      metadata: await QuizService.activeQuizPresent(req.body),
     }).send(res);
-  }
+  };
+
+  getActiveQuizPresent = async (req, res, next) => {
+    new SuccessReponse({
+      message: 'get activeQuizPresent success!',
+      metadata: await QuizService.getActiveQuizPresent(),
+    }).send(res);
+  };
 }
 
 module.exports = new QuizController();

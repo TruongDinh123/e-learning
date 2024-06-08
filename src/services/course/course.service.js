@@ -1,22 +1,22 @@
-const { NotFoundError, BadRequestError } = require("../../core/error.response");
-const courseModel = require("../../models/course.model");
-const lessonModel = require("../../models/lesson.model");
-const User = require("../../models/user.model");
-const bcrypt = require("bcrypt");
-const nodemailer = require("nodemailer");
-const userLessonModel = require("../../models/userLesson.model");
-const validateMongoDbId = require("../../config/validateMongoDbId");
-const { v2: cloudinary } = require("cloudinary");
-const categoryModel = require("../../models/category.model");
-const Role = require("../../models/role.model");
-const Quiz = require("../../models/quiz.model");
-const Score = require("../../models/score.model");
-const userModel = require("../../models/user.model");
+const {NotFoundError, BadRequestError} = require('../../core/error.response');
+const courseModel = require('../../models/course.model');
+const lessonModel = require('../../models/lesson.model');
+const User = require('../../models/user.model');
+const bcrypt = require('bcrypt');
+const nodemailer = require('nodemailer');
+const userLessonModel = require('../../models/userLesson.model');
+const validateMongoDbId = require('../../config/validateMongoDbId');
+const {v2: cloudinary} = require('cloudinary');
+const categoryModel = require('../../models/category.model');
+const Role = require('../../models/role.model');
+const Quiz = require('../../models/quiz.model');
+const Score = require('../../models/score.model');
+const userModel = require('../../models/user.model');
 
 cloudinary.config({
-  cloud_name: "dvsvd87sm",
-  api_key: "243392977754277",
-  api_secret: "YnSIAsvn7hRPqxTdIQBX9gBzihE",
+  cloud_name: 'dvsvd87sm',
+  api_key: '243392977754277',
+  api_secret: 'YnSIAsvn7hRPqxTdIQBX9gBzihE',
 });
 
 class CourseService {
@@ -41,32 +41,34 @@ class CourseService {
       const createCourse = course.save();
 
       const user = await User.findById(userId);
-      if (!user) throw new NotFoundError("User not found");
+      if (!user) throw new NotFoundError('User not found');
 
       user.courses.push(course._id);
       await user.save();
 
       return createCourse;
     } catch (error) {
-      throw new BadRequestError("Failed to create course", error);
+      throw new BadRequestError('Failed to create course', error);
     }
   };
 
-  static uploadImageCourse = async ({ courseId, dataInfo, dataFiles }) => {
+  static uploadImageCourse = async ({courseId, dataInfo, dataFiles}) => {
     validateMongoDbId(courseId);
 
     try {
       const findCourse = await courseModel.findById(courseId);
       if (!findCourse) {
-        throw new NotFoundError("Course not found");
+        throw new NotFoundError('Course not found');
       }
 
       let i = 0;
-      
+
       for await (const item of Object.entries(dataInfo)) {
         const [_, itemInfoString] = item;
         const itemInfoObj = JSON.parse(itemInfoString);
-        const recourse_type = dataFiles[i].originalname.includes('docx') ? 'raw' : 'image';
+        const recourse_type = dataFiles[i].originalname.includes('docx')
+          ? 'raw'
+          : 'image';
         const result = await cloudinary.uploader.upload(dataFiles[i].path, {
           resource_type: recourse_type,
         });
@@ -76,7 +78,7 @@ class CourseService {
             resource_type: recourse_type,
           });
         }
-        
+
         findCourse[itemInfoObj.fieldName] = result.public_id;
         findCourse[itemInfoObj.fieldUrl] = result.secure_url;
 
@@ -85,9 +87,9 @@ class CourseService {
 
       await findCourse.save();
 
-      return { findCourse };
+      return {findCourse};
     } catch (error) {
-      console.log("Error: ", error)
+      console.log('Error: ', error);
       throw new BadRequestError(error);
     }
   };
@@ -97,16 +99,16 @@ class CourseService {
       const courses = await courseModel
         .find()
         .select(
-          "_id name title nameCenter showCourse image_url teacher banner_url rule_file_url rules rule_file_name rulesFileName"
+          '_id name title nameCenter showCourse image_url teacher banner_url rule_file_url rules rule_file_name rulesFileName'
         )
-        .populate("students", "firstName lastName")
-        .populate("quizzes")
+        .populate('students', 'firstName lastName')
+        .populate('quizzes')
         .lean();
 
-      if (!courses) throw new NotFoundError("Courses not found");
+      if (!courses) throw new NotFoundError('Courses not found');
       return courses;
     } catch (error) {
-      throw new BadRequestError("Failed to get a Course", error);
+      throw new BadRequestError('Failed to get a Course', error);
     }
   };
 
@@ -114,36 +116,36 @@ class CourseService {
     try {
       const courses = await courseModel
         .find()
-        .select("_id name teacher")
-        .populate("students", "firstName lastName")
+        .select('_id name teacher')
+        .populate('students', 'firstName lastName')
         .populate({
-          path: "lessons",
-          select: "_id name",
+          path: 'lessons',
+          select: '_id name',
         })
         .lean();
 
-      if (!courses) throw new NotFoundError("Courses not found");
+      if (!courses) throw new NotFoundError('Courses not found');
       return courses;
     } catch (error) {
-      throw new BadRequestError("Failed to get a Course", error);
+      throw new BadRequestError('Failed to get a Course', error);
     }
   };
 
-  static getACourse = async ({ id, userId }) => {
+  static getACourse = async ({id, userId}) => {
     try {
       const aCourse = await courseModel
         .findById({
           _id: id,
         })
-        .populate("students", "lastName firstName email roles notifications")
-        .populate("teacher")
-        .populate("quizzes")
+        .populate('students', 'lastName firstName email roles notifications')
+        .populate('teacher')
+        .populate('quizzes')
         .lean();
 
       // Tìm tất cả điểm số của người dùng cho các bài quiz trong khóa học
       const scores = await Score.find({
         user: userId,
-        quiz: { $in: aCourse.quizzes.map((quiz) => quiz._id) },
+        quiz: {$in: aCourse.quizzes.map((quiz) => quiz._id)},
       }).lean();
 
       // Thêm thông tin hoàn thành cho mỗi bài quiz trong khóa học
@@ -162,34 +164,36 @@ class CourseService {
 
       return aCourse;
     } catch (error) {
-      console.log(error)
-      throw new BadRequestError("Failed to get a Course", error);
+      console.log(error);
+      throw new BadRequestError('Failed to get a Course', error);
     }
   };
 
-  static getACourseByInfo = async ({ id }) => {
+  static getACourseByInfo = async ({id}) => {
     try {
       const aCourse = await courseModel
         .findById({
           _id: id,
         })
-        .select("_id name nameCenter image_url title notifications banner_url rule_file_url rule_file_name rules rulesFileName")
-        .populate("students", "lastName email roles notifications")
-        .populate("teacher", "_id lastName firstName email image_url");
+        .select(
+          '_id name nameCenter image_url title notifications banner_url rule_file_url rule_file_name rules rulesFileName'
+        )
+        .populate('students', 'lastName email roles notifications')
+        .populate('teacher', '_id lastName firstName email image_url');
 
       return aCourse;
     } catch (error) {
-      throw new BadRequestError("Failed to get a Course", error);
+      throw new BadRequestError('Failed to get a Course', error);
     }
   };
 
   static buttonShowCourse = async (courseId) => {
     try {
       const updatedCourse = await courseModel.findById(courseId);
-      if (!updatedCourse) throw new NotFoundError("Course not found");
+      if (!updatedCourse) throw new NotFoundError('Course not found');
 
       if (updatedCourse.showCourse === true)
-        throw new BadRequestError("Course is already public");
+        throw new BadRequestError('Course is already public');
 
       updatedCourse.showCourse = true;
 
@@ -197,24 +201,24 @@ class CourseService {
 
       return updatedCourse;
     } catch (error) {
-      throw new BadRequestError("Course is failed", error);
+      throw new BadRequestError('Course is failed', error);
     }
   };
 
   static buttonPrivateCourse = async (courseId) => {
     try {
       const course = await courseModel.findById(courseId);
-      if (!course) throw new NotFoundError("Course not found");
+      if (!course) throw new NotFoundError('Course not found');
 
       if (course.showCourse === false)
-        throw new BadRequestError("Course is already private");
+        throw new BadRequestError('Course is already private');
 
       course.showCourse = false;
 
       await course.save();
       return course;
     } catch (error) {
-      throw new BadRequestError("Course is failed", error);
+      throw new BadRequestError('Course is failed', error);
     }
   };
 
@@ -223,15 +227,23 @@ class CourseService {
       .find({
         showCourse: true,
       })
-      .populate("teacher", "firstName lastName _id");
+      .populate('teacher', 'firstName lastName _id');
     return course;
   };
 
-  static updateCourse = async ({ id, name, title, nameCenter, categoryId, rules, rulesFileName }) => {
+  static updateCourse = async ({
+    id,
+    name,
+    title,
+    nameCenter,
+    categoryId,
+    rules,
+    rulesFileName,
+  }) => {
     try {
       const course = await courseModel.findById(id);
 
-      if (!course) throw new BadRequestError("Course not found");
+      if (!course) throw new BadRequestError('Course not found');
 
       // Loại bỏ khóa học khỏi danh mục cũ nếu có
       if (course.category && course.category.toString() !== categoryId) {
@@ -260,32 +272,32 @@ class CourseService {
 
       return updateCourse;
     } catch (error) {
-      throw new BadRequestError("Failed to update course", error);
+      throw new BadRequestError('Failed to update course', error);
     }
   };
 
   static deleteCourse = async (id) => {
     try {
       // Xóa tất cả các bài học thuộc về khóa học
-      const lessons = await lessonModel.find({ courseId: id });
+      const lessons = await lessonModel.find({courseId: id});
       const lessonIds = lessons.map((lesson) => lesson._id);
 
       // Xóa tất cả các quiz liên quan đến các bài học của khóa học
-      await Quiz.deleteMany({ lessonId: { $in: lessonIds } });
+      await Quiz.deleteMany({lessonId: {$in: lessonIds}});
 
       // Xóa tất cả các quiz liên quan trực tiếp đến khóa học thông qua trường courseIds
-      await Quiz.updateMany({ courseIds: id }, { $pull: { courseIds: id } });
+      await Quiz.updateMany({courseIds: id}, {$pull: {courseIds: id}});
 
       // Tiếp tục với việc xóa khóa học như bình thường
-      await lessonModel.deleteMany({ courseId: id });
+      await lessonModel.deleteMany({courseId: id});
 
       const course = await courseModel.findById(id);
-      if (!course) throw new NotFoundError("Course not found");
+      if (!course) throw new NotFoundError('Course not found');
 
       if (course.filename) {
         const publicId = course.filename;
         await cloudinary.uploader.destroy(publicId, {
-          resource_type: "image",
+          resource_type: 'image',
         });
       }
 
@@ -299,7 +311,7 @@ class CourseService {
       }
 
       // Thêm bước xóa khóa học khỏi danh sách khóa học của người dùng
-      await User.updateMany({ courses: id }, { $pull: { courses: id } });
+      await User.updateMany({courses: id}, {$pull: {courses: id}});
 
       await courseModel.findByIdAndDelete(id);
     } catch (error) {
@@ -308,39 +320,39 @@ class CourseService {
     }
   };
 
-  static addStudentToCours = async ({ courseId, email, userId }) => {
+  static addStudentToCours = async ({courseId, email, userId}) => {
     try {
       let [user, course, loggedInUser, adminRole] = await Promise.all([
-        User.findOne({ email }),
+        User.findOne({email}),
         courseModel
           .findById(courseId)
-          .populate("teacher", "firstName lastName"),
+          .populate('teacher', 'firstName lastName'),
         User.findById(userId),
-        Role.find({ $or: [{ name: "Admin" }, { name: "Super-Admin" }] }).lean(),
+        Role.find({$or: [{name: 'Admin'}, {name: 'Super-Admin'}]}).lean(),
       ]);
 
-      if (!course) throw new NotFoundError("Khóa học không tồn tại");
+      if (!course) throw new NotFoundError('Khóa học không tồn tại');
       if (!adminRole) throw new NotFoundError("Role 'Admin' not found");
 
       const teacherName = course.teacher
         ? [course.teacher.lastName, course.teacher.firstName]
             .filter(Boolean)
-            .join(" ") || "Giáo viên"
-        : "Giáo viên";
+            .join(' ') || 'Giáo viên'
+        : 'Giáo viên';
 
       const transporter = nodemailer.createTransport({
-        service: "gmail",
+        service: 'gmail',
         auth: {
-          user: "247learn.vn@gmail.com",
-          pass: "glpiggogzyxtfhod",
+          user: '247learn.vn@gmail.com',
+          pass: 'glpiggogzyxtfhod',
         },
       });
 
       const mailOptions = {
-        from: "247learn.vn@gmail.com",
+        from: '247learn.vn@gmail.com',
         to: email,
         subject: `Chào mừng bạn đến khóa học ${course.name}`,
-        html: "",
+        html: '',
       };
 
       const adminRoleIds = adminRole.map((role) => role._id.toString());
@@ -351,16 +363,16 @@ class CourseService {
         loggedInUser._id.toString() !== course.teacher._id.toString()
       ) {
         throw new BadRequestError(
-          "Chỉ giáo viên của khóa học hoặc Admin mới có thể thêm người dùng vào khóa học"
+          'Chỉ giáo viên của khóa học hoặc Admin mới có thể thêm người dùng vào khóa học'
         );
       }
 
       let shouldSendEmail = false;
-      if (!user || user.status === "inactive") {
+      if (!user || user.status === 'inactive') {
         const password = Math.random().toString(36).slice(-8);
         const passwordHash = await bcrypt.hash(password, 10);
 
-        const traineeRole = await Role.findOne({ name: "Trainee" });
+        const traineeRole = await Role.findOne({name: 'Trainee'});
         if (!traineeRole) {
           throw new NotFoundError("Role 'Trainee' not found");
         }
@@ -368,13 +380,13 @@ class CourseService {
         if (!user) {
           user = await User.create({
             email,
-            firstName: "User" + Math.floor(Math.random() * 10000),
+            firstName: 'User' + Math.floor(Math.random() * 10000),
             password: passwordHash,
             roles: [traineeRole._id],
           });
         } else {
           user.password = passwordHash;
-          user.status = "active";
+          user.status = 'active';
           await user.save();
         }
 
@@ -457,7 +469,7 @@ class CourseService {
       // Gửi email nếu cần
       if (shouldSendEmail) {
         transporter.sendMail(mailOptions).catch((error) => {
-          console.error("Failed to send email", error);
+          console.error('Failed to send email', error);
         });
       }
 
@@ -465,41 +477,41 @@ class CourseService {
       const userUpdate = User.findByIdAndUpdate(
         user._id,
         {
-          $addToSet: { courses: courseId },
+          $addToSet: {courses: courseId},
         },
-        { new: true }
+        {new: true}
       );
 
       const courseUpdate = courseModel.findByIdAndUpdate(
         course._id,
         {
-          $addToSet: { students: user._id },
+          $addToSet: {students: user._id},
         },
-        { new: true }
+        {new: true}
       );
 
       // Cập nhật quizzes và lessons bằng cách sử dụng $addToSet trong một vòng lặp
-      const quizzes = await Quiz.find({ courseIds: courseId });
+      const quizzes = await Quiz.find({courseIds: courseId});
       const quizUpdates = quizzes.map((quiz) =>
         Quiz.findByIdAndUpdate(
           quiz._id,
           {
-            $addToSet: { studentIds: user._id },
+            $addToSet: {studentIds: user._id},
           },
-          { new: true }
+          {new: true}
         )
       );
 
       // Cập nhật các bài học và quiz liên quan đến khóa học
-      const lessons = await lessonModel.find({ courseId: courseId }).lean();
+      const lessons = await lessonModel.find({courseId: courseId}).lean();
       const lessonUpdates = lessons.map((lesson) => {
         const quizUpdatesForLesson = lesson.quizzes.map((quizId) =>
           Quiz.findByIdAndUpdate(
             quizId,
             {
-              $addToSet: { studentIds: user._id },
+              $addToSet: {studentIds: user._id},
             },
-            { new: true }
+            {new: true}
           )
         );
         return Promise.all(quizUpdatesForLesson);
@@ -522,9 +534,9 @@ class CourseService {
       await User.findByIdAndUpdate(
         user._id,
         {
-          $addToSet: { quizzes: { $each: allQuizIds } },
+          $addToSet: {quizzes: {$each: allQuizIds}},
         },
-        { new: true }
+        {new: true}
       );
 
       // Lưu thay đổi vào User
@@ -533,14 +545,14 @@ class CourseService {
       return this.createResponseObject(user);
     } catch (error) {
       console.log(error);
-      throw new BadRequestError("Lỗi server");
+      throw new BadRequestError('Lỗi server');
     }
   };
 
   // Hàm trợ giúp để tạo đối tượng phản hồi
   static createResponseObject(user) {
     return {
-      message: "Student added to course successfully!",
+      message: 'Student added to course successfully!',
       status: 200,
       metadata: {
         firstName: user.firstName,
@@ -553,49 +565,49 @@ class CourseService {
     };
   }
 
-  static addTeacherToCours = async ({ courseId, email }) => {
+  static addTeacherToCours = async ({courseId, email}) => {
     try {
-      let user = await User.findOne({ email });
+      let user = await User.findOne({email});
 
-      const traineeRole = await Role.findOne({ name: "Trainee" });
+      const traineeRole = await Role.findOne({name: 'Trainee'});
       if (!traineeRole) {
         throw new NotFoundError("Role 'Trainee' not found");
       }
 
       if (user?.roles?.includes(traineeRole.id)) {
         throw new BadRequestError(
-          "Người dùng hiện tại là học viên, bạn hãy chuyển thành giáo viên trước khi thêm vào khóa học"
+          'Người dùng hiện tại là học viên, bạn hãy chuyển thành giáo viên trước khi thêm vào khóa học'
         );
       }
       const course = await courseModel.findById(courseId);
-      if (!course) throw new NotFoundError("Course not found");
+      if (!course) throw new NotFoundError('Course not found');
 
       if (course.teacher) {
-        throw new BadRequestError("Không thể thêm người dùng này vào khóa học");
+        throw new BadRequestError('Không thể thêm người dùng này vào khóa học');
       }
 
       const transporter = nodemailer.createTransport({
-        service: "gmail",
+        service: 'gmail',
         auth: {
-          user: "247learn.vn@gmail.com",
-          pass: "glpiggogzyxtfhod",
+          user: '247learn.vn@gmail.com',
+          pass: 'glpiggogzyxtfhod',
         },
       });
 
       const mailOptions = {
-        from: "247learn.vn@gmail.com",
+        from: '247learn.vn@gmail.com',
         to: email,
         subject: `Chào mừng bạn đến khóa học ${course.name}`,
-        html: "",
+        html: '',
       };
 
       let shouldSendEmail = false;
 
-      if (!user || user.status === "inactive") {
+      if (!user || user.status === 'inactive') {
         const password = Math.random().toString(36).slice(-8);
         const passwordHash = await bcrypt.hash(password, 10);
 
-        const mentorRole = await Role.findOne({ name: "Mentor" });
+        const mentorRole = await Role.findOne({name: 'Mentor'});
         if (!mentorRole) {
           throw new NotFoundError("Role 'Mentor' not found");
         }
@@ -603,13 +615,13 @@ class CourseService {
         if (!user) {
           user = await User.create({
             email,
-            firstName: "User" + Math.floor(Math.random() * 10000),
+            firstName: 'User' + Math.floor(Math.random() * 10000),
             password: passwordHash,
             roles: [mentorRole._id],
           });
         } else {
           user.password = passwordHash;
-          user.status = "active";
+          user.status = 'active';
           await user.save();
         }
 
@@ -690,9 +702,9 @@ class CourseService {
       if (shouldSendEmail) {
         transporter.sendMail(mailOptions, function (error, info) {
           if (error) {
-            console.error("Failed to send email", error);
+            console.error('Failed to send email', error);
           } else {
-            console.log("Email sent: " + info.response);
+            console.log('Email sent: ' + info.response);
           }
         });
       }
@@ -709,36 +721,36 @@ class CourseService {
       return user;
     } catch (error) {
       throw new BadRequestError(
-        "Người dùng hiện tại là học viên, bạn hãy chuyển thành giáo viên trước khi thêm vào khóa học"
+        'Người dùng hiện tại là học viên, bạn hãy chuyển thành giáo viên trước khi thêm vào khóa học'
       );
     }
   };
 
-  static updateCourseTeacher = async ({ courseId, email }) => {
-    let user = await User.findOne({ email });
+  static updateCourseTeacher = async ({courseId, email}) => {
+    let user = await User.findOne({email});
 
-    const traineeRole = await Role.findOne({ name: "Trainee" });
-    const mentorRole = await Role.findOne({ name: "Mentor" });
+    const traineeRole = await Role.findOne({name: 'Trainee'});
+    const mentorRole = await Role.findOne({name: 'Mentor'});
     if (!traineeRole || !mentorRole) {
-      throw new NotFoundError("Required roles not found");
+      throw new NotFoundError('Required roles not found');
     }
 
     const course = await courseModel.findById(courseId);
-    if (!course) throw new NotFoundError("Course not found");
+    if (!course) throw new NotFoundError('Course not found');
 
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      service: 'gmail',
       auth: {
-        user: "247learn.vn@gmail.com",
-        pass: "glpiggogzyxtfhod",
+        user: '247learn.vn@gmail.com',
+        pass: 'glpiggogzyxtfhod',
       },
     });
 
     const mailOptions = {
-      from: "247learn.vn@gmail.com",
+      from: '247learn.vn@gmail.com',
       to: email,
       subject: `Chào mừng bạn đến khóa học ${course.name}`,
-      html: "",
+      html: '',
     };
 
     let shouldSendEmail = false;
@@ -787,12 +799,12 @@ class CourseService {
 
     if (
       !user ||
-      (user.status === "inactive" && user.roles.includes(mentorRole.id))
+      (user.status === 'inactive' && user.roles.includes(mentorRole.id))
     ) {
       const password = Math.random().toString(36).slice(-8);
       const passwordHash = await bcrypt.hash(password, 10);
 
-      const mentorRole = await Role.findOne({ name: "Mentor" });
+      const mentorRole = await Role.findOne({name: 'Mentor'});
       if (!mentorRole) {
         throw new NotFoundError("Role 'Mentor' not found");
       }
@@ -800,13 +812,13 @@ class CourseService {
       if (!user) {
         user = await User.create({
           email,
-          firstName: "User" + Math.floor(Math.random() * 10000),
+          firstName: 'User' + Math.floor(Math.random() * 10000),
           password: passwordHash,
           roles: [mentorRole._id],
         });
       } else {
         user.password = passwordHash;
-        user.status = "active";
+        user.status = 'active';
         await user.save();
       }
 
@@ -886,7 +898,7 @@ class CourseService {
     // Kiểm tra và cập nhật vai trò nếu người dùng inactive và là học viên
     if (
       user &&
-      user.status === "inactive" &&
+      user.status === 'inactive' &&
       user.roles.includes(traineeRole.id)
     ) {
       const password = Math.random().toString(36).slice(-8);
@@ -899,7 +911,7 @@ class CourseService {
 
       user.roles.push(mentorRole._id); // Thêm vai trò Mentor
 
-      user.status = "active"; // Cập nhật trạng thái người dùng thành active
+      user.status = 'active'; // Cập nhật trạng thái người dùng thành active
 
       user.password = passwordHash;
 
@@ -944,7 +956,7 @@ class CourseService {
       await user.save();
     } else if (user?.roles?.includes(traineeRole.id)) {
       throw new BadRequestError(
-        "Người dùng hiện tại là học viên, bạn hãy chuyển thành giáo viên trước khi thêm vào khóa học"
+        'Người dùng hiện tại là học viên, bạn hãy chuyển thành giáo viên trước khi thêm vào khóa học'
       );
     }
 
@@ -952,9 +964,9 @@ class CourseService {
     if (shouldSendEmail) {
       transporter.sendMail(mailOptions, function (error, info) {
         if (error) {
-          console.error("Failed to send email", error);
+          console.error('Failed to send email', error);
         } else {
-          console.log("Email sent: " + info.response);
+          console.log('Email sent: ' + info.response);
         }
       });
     }
@@ -971,21 +983,21 @@ class CourseService {
     return user;
   };
 
-  static removeStudentFromCourse = async ({ courseId, userId }) => {
+  static removeStudentFromCourse = async ({courseId, userId}) => {
     try {
       const user = await User.findById(userId);
       const course = await courseModel.findById(courseId);
-      if (!user) throw new NotFoundError("User not found");
-      if (!course) throw new NotFoundError("Course not found");
+      if (!user) throw new NotFoundError('User not found');
+      if (!course) throw new NotFoundError('Course not found');
 
       // Tìm tất cả quizzes liên quan đến khóa học
       const courseQuizzes = await Quiz.find({
         $or: [
-          { courseIds: courseId }, // Quizzes trực tiếp từ khóa học
-          { lessonId: { $in: course.lessons } }, // Quizzes từ các bài học thuộc khóa học
+          {courseIds: courseId}, // Quizzes trực tiếp từ khóa học
+          {lessonId: {$in: course.lessons}}, // Quizzes từ các bài học thuộc khóa học
         ],
       })
-        .select("_id")
+        .select('_id')
         .lean();
 
       // Lấy ra id của tất cả quizzes liên quan
@@ -1004,71 +1016,71 @@ class CourseService {
 
       return user;
     } catch (error) {
-      throw new BadRequestError("Failed to remove student from course");
+      throw new BadRequestError('Failed to remove student from course');
     }
   };
 
   static getStudentCourses = async (userId) => {
     try {
       const user = await User.findById(userId)
-        .select("_id")
+        .select('_id')
         .populate({
-          path: "courses",
-          select: "_id image_url name title",
+          path: 'courses',
+          select: '_id image_url name title',
           populate: [
             {
-              path: "teacher",
-              model: "User",
-              select: "firstName",
+              path: 'teacher',
+              model: 'User',
+              select: 'firstName',
             },
             {
-              path: "quizzes",
-              model: "Quiz",
-              select: "_id",
+              path: 'quizzes',
+              model: 'Quiz',
+              select: '_id',
             },
           ],
         });
-      if (!user) throw new NotFoundError("User not found");
+      if (!user) throw new NotFoundError('User not found');
 
       return user;
     } catch (error) {
-      console.log(error)
-      throw new BadRequestError("Failed to get student courses");
+      console.log(error);
+      throw new BadRequestError('Failed to get student courses');
     }
   };
 
   static getCourseSummary = async (userId) => {
     try {
       const user = await User.findById(userId)
-        .select("_id")
+        .select('_id')
         .populate({
-          path: "courses",
-          select: "_id image_url name title",
+          path: 'courses',
+          select: '_id image_url name title',
           populate: [
             {
-              path: "teacher",
-              model: "User",
-              select: "firstName",
+              path: 'teacher',
+              model: 'User',
+              select: 'firstName',
             },
             {
-              path: "quizzes",
-              model: "Quiz",
-              select: "_id",
+              path: 'quizzes',
+              model: 'Quiz',
+              select: '_id',
             },
           ],
         });
-      if (!user) throw new NotFoundError("User not found");
+      if (!user) throw new NotFoundError('User not found');
 
       const coursesWithQuizCount = user.courses.map((course) => {
-        const totalQuizCount = course.quizzes.length ;
+        const totalQuizCount = course.quizzes.length;
         return {
           _id: course._id,
           image_url: course.image_url,
           name: course.name,
           title: course.title,
           teacher: {
-            firstName: course.teacher ? course.teacher.firstName : "Unknown",
-            _id: course.teacher ? course.teacher._id : "Unknown",
+            firstName: course.teacher ? course.teacher.firstName : 'Unknown',
+            _id: course.teacher ? course.teacher._id : 'Unknown',
           },
           totalLesson: 0,
           totalQuizCount,
@@ -1078,27 +1090,27 @@ class CourseService {
       return coursesWithQuizCount;
     } catch (error) {
       console.error(error);
-      throw new BadRequestError("Failed to get course summaries");
+      throw new BadRequestError('Failed to get course summaries');
     }
   };
 
-  static getCourseCompletion = async ({ courseId, userId }) => {
+  static getCourseCompletion = async ({courseId, userId}) => {
     validateMongoDbId(courseId);
     validateMongoDbId(userId);
     try {
-      const course = await courseModel.findById(courseId).populate("lessons");
+      const course = await courseModel.findById(courseId).populate('lessons');
       if (!course) {
-        throw new NotFoundError("Course not found");
+        throw new NotFoundError('Course not found');
       }
       const totalLessons = course.lessons.length;
       const completedLessons = await userLessonModel.countDocuments({
         user: userId,
-        lesson: { $in: course.lessons.map((lesson) => lesson._id) },
+        lesson: {$in: course.lessons.map((lesson) => lesson._id)},
         completed: true,
       });
       const userLessonInfo = await userLessonModel.find({
         user: userId,
-        lesson: { $in: course.lessons.map((lesson) => lesson._id) },
+        lesson: {$in: course.lessons.map((lesson) => lesson._id)},
       });
       const completionPercentage = (completedLessons / totalLessons) * 100;
       return {
@@ -1107,32 +1119,32 @@ class CourseService {
         userLessonInfo,
       };
     } catch (error) {
-      throw new BadRequestError("Failed to get course completion", error);
+      throw new BadRequestError('Failed to get course completion', error);
     }
   };
 
-  static createNotification = async ({ courseId, message }) => {
+  static createNotification = async ({courseId, message}) => {
     validateMongoDbId(courseId);
     try {
       const course = await courseModel.findById(courseId);
       if (!course) {
-        throw new NotFoundError("Course not found");
+        throw new NotFoundError('Course not found');
       }
 
       // Get the emails of all students in the course
-      const students = await User.find({ _id: { $in: course.students } });
+      const students = await User.find({_id: {$in: course.students}});
       const studentEmails = students.map((student) => student.email);
 
       const transporter = nodemailer.createTransport({
-        service: "gmail",
+        service: 'gmail',
         auth: {
-          user: "247learn.vn@gmail.com",
-          pass: "glpiggogzyxtfhod",
+          user: '247learn.vn@gmail.com',
+          pass: 'glpiggogzyxtfhod',
         },
       });
 
       const mailOptions = {
-        from: "247learn.vn@gmail.com",
+        from: '247learn.vn@gmail.com',
         to: studentEmails,
         subject: `Có thông báo mới từ giáo viên`,
         text: message,
@@ -1140,58 +1152,56 @@ class CourseService {
 
       transporter.sendMail(mailOptions, function (error, info) {
         if (error) {
-          throw new BadRequestError("Failed to send email", error);
+          throw new BadRequestError('Failed to send email', error);
         } else {
-          console.log("Email sent: " + info.response);
+          console.log('Email sent: ' + info.response);
         }
       });
 
-      course.notifications.push({ message });
+      course.notifications.push({message});
       await course.save();
     } catch (error) {
-      throw new BadRequestError("Failed to create notification", error);
+      throw new BadRequestError('Failed to create notification', error);
     }
   };
 
   static getStudentScoresByCourse = async (courseId, userId) => {
     const user = await userModel
       .findById(userId)
-      .select("roles")
-      .populate("roles", "name")
+      .select('roles')
+      .populate('roles', 'name')
       .lean();
     const course = await courseModel
       .findById(courseId)
-      .populate("teacherQuizzes.teacherId", "email")
+      .populate('teacherQuizzes.teacherId', 'email')
       .lean();
 
     const isAdminOrMentorOfCourse =
-      user.roles.some((role) => role.name === "Admin") ||
+      user.roles.some((role) => role.name === 'Admin') ||
       course.teacherQuizzes.some(
         (tq) => tq.teacherId._id.toString() === userId
       );
 
-    const quizzes = await Quiz.find({ courseIds: courseId })
-      .select("_id")
-      .exec();
+    const quizzes = await Quiz.find({courseIds: courseId}).select('_id').exec();
 
     const userFields = isAdminOrMentorOfCourse
-      ? "firstName lastName email"
-      : "firstName lastName";
+      ? 'firstName lastName email'
+      : 'firstName lastName';
     const scores = await Score.find({
-      quiz: { $in: quizzes.map((q) => q._id) },
+      quiz: {$in: quizzes.map((q) => q._id)},
     })
-      .populate("user", userFields)
+      .populate('user', userFields)
       .exec();
 
     let studentScores = scores.reduce((acc, score) => {
       const userId = score.user._id.toString();
       const fullName = [score.user.firstName, score.user.lastName]
         .filter(Boolean)
-        .join(" ");
+        .join(' ');
       const email =
         isAdminOrMentorOfCourse && score.user.email
           ? `${score.user.email}`
-          : "";
+          : '';
       if (!acc[userId]) {
         acc[userId] = {
           _id: userId,
@@ -1215,6 +1225,43 @@ class CourseService {
     studentScores.sort((a, b) => b.totalScore - a.totalScore);
 
     return studentScores;
+  };
+
+  static activeCoursePresent = async ({newCourseId, oldCourseId}) => {
+    try {
+      oldCourseId &&
+        (await courseModel.updateOne(
+          {
+            _id: oldCourseId,
+          },
+          {$set: {activePresent: false}}
+        ));
+
+      const course = await courseModel.findOneAndUpdate(
+        {
+          _id: newCourseId,
+        },
+        {$set: {activePresent: true}}
+      );
+
+      return course;
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestError('Failed to update activeCoursePresent');
+    }
+  };
+
+  static getActiveCoursePresent = async () => {
+    try {
+      const course = await courseModel.findOne({
+        activePresent: true,
+      });
+
+      return course;
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestError('Failed to get activeCoursePresent');
+    }
   };
 }
 

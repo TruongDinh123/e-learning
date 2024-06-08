@@ -1,5 +1,5 @@
-"use strict";
-const mongoose = require("mongoose");
+'use strict';
+const mongoose = require('mongoose');
 
 const courseSchema = new mongoose.Schema(
   {
@@ -28,14 +28,14 @@ const courseSchema = new mongoose.Schema(
     image_url: {
       type: String,
     },
-      banner_name: {
-          type: String,
-          required: false,
-      },
-      banner_url: {
-          type: String,
-          required: false,
-      },
+    banner_name: {
+      type: String,
+      required: false,
+    },
+    banner_url: {
+      type: String,
+      required: false,
+    },
     rule_file_name: {
       type: String,
       required: false,
@@ -45,14 +45,14 @@ const courseSchema = new mongoose.Schema(
     },
     teacher: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: false,
     },
     teacherQuizzes: [
       {
         teacherId: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
+          ref: 'User',
         },
         quizCount: {
           type: Number,
@@ -63,13 +63,13 @@ const courseSchema = new mongoose.Schema(
     quizzes: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Quiz",
+        ref: 'Quiz',
       },
     ],
     students: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        ref: 'User',
       },
     ],
     showCourse: {
@@ -78,7 +78,7 @@ const courseSchema = new mongoose.Schema(
     },
     assignment: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Assignment",
+      ref: 'Assignment',
     },
 
     notifications: [
@@ -93,10 +93,15 @@ const courseSchema = new mongoose.Schema(
         },
       },
     ],
+    activePresent: {
+      type: Boolean,
+      default: false,
+    },
   },
+
   {
     timestamps: true,
   }
 );
 
-module.exports = mongoose.model("Course", courseSchema);
+module.exports = mongoose.model('Course', courseSchema);

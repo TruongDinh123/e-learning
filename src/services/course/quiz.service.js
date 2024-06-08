@@ -848,6 +848,7 @@ class QuizService {
       throw new NotFoundError('quiz not found');
     }
     quiz.submissionTime = submissionTime;
+    quiz.save();
 
     return quiz;
   };
@@ -1069,16 +1070,6 @@ class QuizService {
     } catch (error) {
       throw new BadRequestError('Failed to submit quiz', error);
     }
-  };
-
-  static userTested = async (quizId) => {
-    const quiz = await Quiz.findOne({_id: quizId}, {usersTested: 1}).populate(
-      'usersTested',
-      'firstName lastName'
-    );
-    if (!quiz) throw new NotFoundError('No quiz found');
-
-    return quiz;
   };
 
   static uploadFileUserSubmit = async ({filename, quizId, userId}) => {
@@ -1443,6 +1434,120 @@ class QuizService {
         'Failed to get info common in the latest quizz by course ID',
         error
       );
+    }
+  };
+
+  static activeQuizPresent = async ({newQuizId, oldQuizId}) => {
+    try {
+      oldQuizId &&
+        (await Quiz.updateOne(
+          {
+            _id: oldQuizId,
+          },
+          {$set: {activePresent: false}}
+        ));
+
+      const quiz = await Quiz.findOneAndUpdate(
+        {
+          _id: newQuizId,
+        },
+        {$set: {activePresent: true}}
+      );
+
+      return quiz;
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestError('Failed to update activeQuizPresent');
+    }
+  };
+
+  static getActiveQuizPresent = async () => {
+    try {
+      const quiz = await Quiz.findOne({
+        activePresent: true,
+      });
+
+      return quiz;
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestError('Failed to get activeCoursePresent');
+    }
+  };
+
+  static getScoreByQuizIds = async (quizIds) => {
+    try {
+      const quizs = await Quiz.find({
+        _id: {$in: quizIds},
+        usersTested: {$exists: true},
+      }).populate('usersTested', 'firstName lastName');
+
+      if (!quizs) throw new NotFoundError('scores not found');
+      const result = {};
+      const usersTested = {};
+
+      for await (const quiz of quizs) {
+        Object.assign(usersTested, {
+          [`${quiz._id}`]: {
+            courseIds: quiz.courseIds,
+            usersTested: quiz.usersTested,
+          }
+        })
+
+        const numberOfQuestion = quiz?.questions?.length ?? 0;
+        const maxScore = 10 * numberOfQuestion;
+        const scores = await Score.find({quiz: quiz._id})
+          .populate('quiz')
+          .populate('user')
+          .lean();
+
+        // Tính điểm cho câu 1
+        const maxScore1 = 10;
+        let actualUserAttend = scores.length;
+        let score1 = Array(actualUserAttend).fill(0);
+        const maxDistance = Math.max(
+          ...scores.map((score) =>
+            Math.abs(score.predictAmount ?? 0 - actualUserAttend)
+          )
+        );
+        for (let i = 0; i < actualUserAttend; i++) {
+          const distance = Math.abs(
+            scores[i].predictAmount ?? 0 - actualUserAttend
+          );
+          score1[i] = maxScore1 * (1 - Math.min(distance / maxDistance, 1));
+        }
+
+        // Tính điểm cho câu 2
+        const maxScore2 = 10;
+        let score2 = Array(actualUserAttend).fill(0);
+        let actualUserCorrectAll = (
+          await Score.find({quiz: quiz._id, score: maxScore})
+        ).length;
+        const maxDistance2 = Math.max(
+          ...scores.map((score) =>
+            Math.abs(score.predictAmountMaxScore ?? 0 - actualUserCorrectAll)
+          )
+        );
+        for (let i = 0; i < actualUserAttend; i++) {
+          const distance = Math.abs(
+            scores[i].predictAmountMaxScore ?? 0 - actualUserCorrectAll
+          );
+          score2[i] = maxScore2 * (1 - Math.min(distance / maxDistance2, 1));
+        }
+
+        // Tính điểm thực lại
+        for (let i = 0; i < actualUserAttend; i++) {
+          scores[i].score =
+            Math.round((scores[i].score + score1[i] + score2[i]) * 100) / 100;
+        }
+
+        if (!scores) throw new NotFoundError('scores not found');
+
+        result[quiz._id] = scores;
+      }
+
+      return {scores: result, usersTested};
+    } catch (error) {
+      throw new BadRequestError('Failed to get scores', error);
     }
   };
 }

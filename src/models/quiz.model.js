@@ -115,6 +115,10 @@ const quizSchema = new mongoose.Schema(
         type: String,
         required: false,
       },
+      activePresent: {
+        type: Boolean,
+        default: false,
+      },
     },
   },
   {

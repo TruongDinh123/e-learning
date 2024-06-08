@@ -110,4 +110,17 @@ router.get(
   asyncHandler(courseController.getStudentScoresByCourse)
 )
 
+router.put(
+  "/e-learning/course/active-course-present",
+  permission(["Mentor", "Admin", "Trainee"]),
+  asyncHandler(courseController.activeCoursePresent)
+)
+
+router.get(
+  "/e-learning/get-active-course-present",
+  permission(["Mentor", "Admin", "Trainee"]),
+  asyncHandler(courseController.getActiveCoursePresent)
+)
+
+
 module.exports = router;
