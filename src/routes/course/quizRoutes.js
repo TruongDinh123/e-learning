@@ -85,7 +85,7 @@ router.get(
 );
 
 router.get(
-  "/e-learning/quizForUserScreen/:quizId",
+  "/e-learning/quizForUserScreen",
   permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
   asyncHandler(quizController.getAQuizByCourseForUserScreen)
 );
@@ -224,6 +224,13 @@ router.get(
   permission(["Mentor", "Admin", "Trainee"]),
   asyncHandler(quizController.getActiveQuizPresent)
 );
+
+router.get(
+  "/e-learning/get-all-quiz-not-draft",
+  permission(["Mentor", "Admin", "Trainee"]),
+  asyncHandler(quizController.getAllQuizsNotDraft)
+);
+
 
 
 module.exports = router;

@@ -1,74 +1,76 @@
-"use strict";
+'use strict';
 
-const express = require("express");
-const accessController = require("../../controllers/access.controller");
-const { permission, asyncHandler, apiKey } = require("../../auth/checkAuthen");
-const { authentication } = require("../../auth/authUtils");
-const { uploadMiddleware } = require("../../middlewares/upload");
-const lessonController = require("../../controllers/lesson.controller");
-const categoryController = require("../../controllers/category.controller");
-const courseController = require("../../controllers/course.controller");
-const quizController = require("../../controllers/quiz.controller");
+const express = require('express');
+const accessController = require('../../controllers/access.controller');
+const {permission, asyncHandler, apiKey} = require('../../auth/checkAuthen');
+const {authentication} = require('../../auth/authUtils');
+const {uploadMiddleware} = require('../../middlewares/upload');
+const lessonController = require('../../controllers/lesson.controller');
+const categoryController = require('../../controllers/category.controller');
+const courseController = require('../../controllers/course.controller');
+const quizController = require('../../controllers/quiz.controller');
 const router = express.Router();
 
 //signUp
-router.post("/e-learning/signup", asyncHandler(accessController.signUp));
+router.post('/e-learning/signup', asyncHandler(accessController.signUp));
 
 //Các API không yêu cầu xác thực
 
 router.get(
-    "/e-learning/userFinishedCourses/:quizId",
-    asyncHandler(accessController.getAllUserFinishTheContest)
+  '/e-learning/get-active-course-present',
+  asyncHandler(courseController.getActiveCoursePresent)
 );
 
 router.get(
-    "/e-learning/course/:courseId/quizzeLatesSubmissionTime",
-    asyncHandler(quizController.getSubmissionTimeLatestQuizByCourseId)
+  '/e-learning/userFinishedCourses/:quizId',
+  asyncHandler(accessController.getAllUserFinishTheContest)
 );
 
 router.get(
-  "/e-learning/score/quizzeLatesInfoCommon",
+  '/e-learning/course/:courseId/quizzeActiveSubmissionTime',
+  asyncHandler(quizController.getSubmissionTimeActiveQuizByCourseId)
+);
+
+router.get(
+  '/e-learning/score/quizzeLatesInfoCommon',
   asyncHandler(quizController.getInfoCommonScoreByUserId)
 );
 
 router.get(
-    "/e-learning/get-info-course/:id",
-    // permission(["Super-Admin", "Mentor", "Admin", "Trainee"]),
-    asyncHandler(courseController.getACourseByInfo)
+  '/e-learning/get-info-course/:id',
+  // permission(["Super-Admin", "Mentor", "Admin", "Trainee"]),
+  asyncHandler(courseController.getACourseByInfo)
 );
 
 router.get(
-  "/e-learning/lessons/:courseId",
+  '/e-learning/lessons/:courseId',
   asyncHandler(lessonController.getAllCourseLeesonForStudents)
 );
 
 router.get(
-  "/e-learning/lesson/:lessonId",
+  '/e-learning/lesson/:lessonId',
   asyncHandler(lessonController.getALession)
 );
 
 router.get(
-  "/e-learning/get-all-categories",
+  '/e-learning/get-all-categories',
   asyncHandler(categoryController.getAllCategoryAndSubCourses)
 );
 
-router.get(
-  "/e-learning/course/:id",
-  asyncHandler(courseController.getACourse)
-);
+router.get('/e-learning/course/:id', asyncHandler(courseController.getACourse));
 
 router.get(
-  "/e-learning/public-course",
+  '/e-learning/public-course',
   asyncHandler(courseController.getCoursePublic)
 );
 
 /////////
 router.use(apiKey);
 
-router.post("/e-learning/login", asyncHandler(accessController.login));
+router.post('/e-learning/login', asyncHandler(accessController.login));
 
 router.post(
-  "/e-learning/forgot-password",
+  '/e-learning/forgot-password',
   asyncHandler(accessController.forgotPassword)
 );
 
@@ -76,54 +78,57 @@ router.post(
 router.use(authentication);
 
 router.put(
-  "/e-learning/user/update-user-role",
-  permission(["Super-Admin", "Admin", "Mentor"]),
+  '/e-learning/user/update-user-role',
+  permission(['Super-Admin', 'Admin', 'Mentor']),
   asyncHandler(accessController.updateUserRoles)
 );
 
 router.post(
-  "/e-learning/user/:userId/upload-image",
-  permission(["Super-Admin", "Mentor", "Admin", "Trainee"]),
-  uploadMiddleware.single("filename"),
+  '/e-learning/user/:userId/upload-image',
+  permission(['Super-Admin', 'Mentor', 'Admin', 'Trainee']),
+  uploadMiddleware.single('filename'),
   asyncHandler(accessController.uploadImageUser)
 );
 
 router.post(
-  "/e-learning/change-password",
-  permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
+  '/e-learning/change-password',
+  permission(['Super-Admin', 'Admin', 'Mentor', 'Trainee']),
   asyncHandler(accessController.changePassword)
 );
 
 router.get(
-  "/e-learning/users",
-  permission(["Super-Admin", "Admin", "Mentor"]),
+  '/e-learning/users',
+  permission(['Super-Admin', 'Admin', 'Mentor']),
   asyncHandler(accessController.getAllUser)
 );
 
 router.get(
-  "/e-learning/user/:id",
-  permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
+  '/e-learning/user/:id',
+  permission(['Super-Admin', 'Admin', 'Mentor', 'Trainee']),
   asyncHandler(accessController.getAUser)
 );
 
 router.delete(
-  "/e-learning/user/:id",
-  permission(["Super-Admin", "Admin", "Mentor"]),
+  '/e-learning/user/:id',
+  permission(['Super-Admin', 'Admin', 'Mentor']),
   asyncHandler(accessController.deleteUser)
 );
 
 router.put(
-  "/e-learning/update-user/:id",
-  permission(["Super-Admin", "Admin", "Mentor", "Trainee"]),
+  '/e-learning/update-user/:id',
+  permission(['Super-Admin', 'Admin', 'Mentor', 'Trainee']),
   asyncHandler(accessController.updateUser)
 );
 
-router.post("/e-learning/logout", asyncHandler(accessController.logOut));
+router.post('/e-learning/logout', asyncHandler(accessController.logOut));
 
-router.post("/e-learning/handleRefreshToken", asyncHandler(accessController.handlerRefreshToken));
+router.post(
+  '/e-learning/handleRefreshToken',
+  asyncHandler(accessController.handlerRefreshToken)
+);
 
 router.get(
-  "/e-learning/quiz/getTestCount/:userId",
+  '/e-learning/quiz/getTestCount/:userId',
   asyncHandler(quizController.getTestCount)
 );
 

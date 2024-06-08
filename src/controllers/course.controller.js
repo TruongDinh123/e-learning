@@ -239,6 +239,7 @@ class CourseController {
     }).send(res);
   };
   
+  
 }
 
 module.exports = new CourseController();

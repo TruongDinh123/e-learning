@@ -1,5 +1,5 @@
-"use strict";
-const mongoose = require("mongoose");
+'use strict';
+const mongoose = require('mongoose');
 
 const quizSchema = new mongoose.Schema(
   {
@@ -10,28 +10,28 @@ const quizSchema = new mongoose.Schema(
 
     type: {
       type: String,
-      enum: ["essay", "multiple_choice"],
+      enum: ['essay', 'multiple_choice'],
       required: true,
     },
 
     courseIds: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Course",
+        ref: 'Course',
         required: false,
       },
     ],
 
     lessonId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Lesson",
+      ref: 'Lesson',
       required: false,
     },
 
     studentIds: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        ref: 'User',
         required: false,
       },
     ],
@@ -39,14 +39,14 @@ const quizSchema = new mongoose.Schema(
     usersTested: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        ref: 'User',
         required: false,
       },
     ],
 
     quizTemplate: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "QuizTemplate",
+      ref: 'QuizTemplate',
       required: false,
     },
 
@@ -71,7 +71,7 @@ const quizSchema = new mongoose.Schema(
           type: String,
           required: false,
         },
-    
+
         image_url: {
           type: String,
           required: false,
@@ -90,11 +90,11 @@ const quizSchema = new mongoose.Schema(
       },
     ],
 
-    isDraft: { type: Boolean, default: false, index: true, select: true },
+    isDraft: {type: Boolean, default: false, index: true, select: true},
 
     creatorId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: false,
     },
 
@@ -115,10 +115,10 @@ const quizSchema = new mongoose.Schema(
         type: String,
         required: false,
       },
-      activePresent: {
-        type: Boolean,
-        default: false,
-      },
+    },
+    activePresent: {
+      type: Boolean,
+      default: false,
     },
   },
   {
@@ -126,6 +126,6 @@ const quizSchema = new mongoose.Schema(
   }
 );
 
-const Quiz = mongoose.model("Quiz", quizSchema);
+const Quiz = mongoose.model('Quiz', quizSchema);
 
 module.exports = Quiz;

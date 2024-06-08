@@ -193,11 +193,10 @@ class QuizController {
   };
 
   getAQuizByCourseForUserScreen = async (req, res, next) => {
-    const {quizId} = req.params;
 
     new SuccessReponse({
       message: 'Get a quiz successfully',
-      metadata: await QuizService.getAQuizByCourseForUserScreen(quizId),
+      metadata: await QuizService.getAQuizByCourseForUserScreen(),
     }).send(res);
   };
 
@@ -414,13 +413,13 @@ class QuizController {
     } catch (error) {}
   };
 
-  getSubmissionTimeLatestQuizByCourseId = async (req, res, next) => {
+  getSubmissionTimeActiveQuizByCourseId = async (req, res, next) => {
     const {courseId} = req.params;
 
     new SuccessReponse({
       message:
         'get submissionTime in the latest quizz by course ID successfully',
-      metadata: await QuizService.getSubmissionTimeLatestQuizByCourseId(
+      metadata: await QuizService.getSubmissionTimeActiveQuizByCourseId(
         courseId
       ),
     }).send(res);
@@ -457,6 +456,14 @@ class QuizController {
       metadata: await QuizService.getActiveQuizPresent(),
     }).send(res);
   };
+
+  getAllQuizsNotDraft = async (req, res, next) => {
+    new SuccessReponse({
+      message: 'get getAllQuizsNotDraft success!',
+      metadata: await QuizService.getAllQuizsNotDraft(),
+    }).send(res);
+  };
+
 }
 
 module.exports = new QuizController();

@@ -756,9 +756,9 @@ class QuizService {
     return quizs;
   };
 
-  static getAQuizByCourseForUserScreen = async (quizId) => {
+  static getAQuizByCourseForUserScreen = async () => {
     const quizs = await Quiz.findOne(
-      {_id: quizId},
+      {activePresent: true},
       {studentIds: 0, courseIds: 0}
     )
       .populate('questions')
@@ -1380,7 +1380,7 @@ class QuizService {
     }
   };
 
-  static getSubmissionTimeLatestQuizByCourseId = async (courseId) => {
+  static getSubmissionTimeActiveQuizByCourseId = async (courseId) => {
     try {
       // Validate the courseId
       validateMongoDbId(courseId);
@@ -1391,15 +1391,14 @@ class QuizService {
 
       // Get all quizzes associated with the course
       const quizSubmissionTime = await Quiz.find(
-        {courseIds: courseId, isDraft: false},
+        {courseIds: courseId, isDraft: false, activePresent: true},
         {submissionTime: 1}
       )
-        .sort({createdAt: -1})
         .limit(1);
 
       return quizSubmissionTime;
     } catch (error) {
-      console.error('Error in getSubmissionTimeLatestQuizByCourseId:', error);
+      console.error('Error in getSubmissionTimeActiveQuizByCourseId:', error);
       throw new BadRequestError(
         'Failed to get submissionTime in the latest quizz by course ID',
         error
@@ -1454,6 +1453,7 @@ class QuizService {
         {$set: {activePresent: true}}
       );
 
+      console.log(quiz, 'quizquiz');
       return quiz;
     } catch (error) {
       console.log(error);
@@ -1548,6 +1548,39 @@ class QuizService {
       return {scores: result, usersTested};
     } catch (error) {
       throw new BadRequestError('Failed to get scores', error);
+    }
+  };
+
+  static getAllQuizsNotDraft = async (courseIds) => {
+    try {
+
+      // Find quizzes that belong to the course
+      const courseQuizzes = await Quiz.find({$or: [{isDraft: false}, {isDraft: {$exists: false}}]})
+        .select('-updatedAt -createdAt -studentIds -__v')
+        .populate('courseIds', 'name')
+        .populate({
+          path: 'lessonId',
+          populate: {
+            path: 'courseId',
+            model: 'Course',
+            populate: {
+              path: 'teacher',
+              model: 'User',
+              select: 'name email lastName firstName',
+            },
+          },
+        })
+        .lean()
+        .sort({updatedAt: -1, createdAt: -1});
+
+      // Combine courseQuizzes and lessonQuizzes
+      const quizzes = courseQuizzes;
+
+      if (!quizzes) throw new NotFoundError('Quizzes not found');
+
+      return quizzes;
+    } catch (error) {
+      throw new BadRequestError('Failed to get quizs', error);
     }
   };
 }

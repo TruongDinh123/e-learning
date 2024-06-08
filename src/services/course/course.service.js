@@ -1255,7 +1255,12 @@ class CourseService {
     try {
       const course = await courseModel.findOne({
         activePresent: true,
-      });
+      })
+      .select(
+        '_id name nameCenter image_url title notifications banner_url rule_file_url rule_file_name rules rulesFileName'
+      )
+      .populate('students', 'lastName email roles notifications')
+      .populate('teacher', '_id lastName firstName email image_url');;
 
       return course;
     } catch (error) {
