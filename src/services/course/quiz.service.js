@@ -1474,10 +1474,9 @@ class QuizService {
     }
   };
 
-  static getScoreByQuizIds = async (quizIds) => {
+  static getScoreHasUsersTested = async () => {
     try {
       const quizs = await Quiz.find({
-        _id: {$in: quizIds},
         usersTested: {$exists: true},
       }).populate('usersTested', 'firstName lastName');
 

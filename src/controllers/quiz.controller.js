@@ -383,12 +383,11 @@ class QuizController {
     } catch (error) {}
   };
 
-  getScoreByQuizIds = async (req, res, next) => {
+  getScoreHasUsersTested = async (req, res, next) => {
     try {
-      const {quizIds} = req.body;
       new SuccessReponse({
         message: 'Get score successfully',
-        metadata: await QuizService.getScoreByQuizIds(quizIds),
+        metadata: await QuizService.getScoreHasUsersTested(),
       }).send(res);
     } catch (error) {}
   };

@@ -168,10 +168,10 @@ router.get(
   asyncHandler(quizController.getScoreByQuizId)
 );
 
-router.post(
-  "/e-learning/score-all-quiz",
+router.get(
+  "/e-learning/scores-has-users-tested",
   permission(["Super-Admin", "Admin", "Mentor"]),
-  asyncHandler(quizController.getScoreByQuizIds)
+  asyncHandler(quizController.getScoreHasUsersTested)
 );
 
 router.get(
