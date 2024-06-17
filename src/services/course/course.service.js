@@ -333,13 +333,13 @@ class CourseService {
       const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
-          user: "247learn.vn@gmail.com",
-          pass: "glpiggogzyxtfhod",
+          user: "kimochi2033@gmail.com",
+          pass: "fmthngflsjewmpyl",
         },
       });
 
       const mailOptions = {
-        from: "247learn.vn@gmail.com",
+        from: "kimochi2033@gmail.com",
         to: email,
         subject: `Chào mừng bạn đến khóa học ${course.name}`,
         html: "",
@@ -384,7 +384,7 @@ class CourseService {
         <!DOCTYPE html>
         <html>
         <head>
-          <title>Chào mừng đến với 247learn.vn</title>
+          <title>Chào mừng đến với learn.vn</title>
           <style>
             body { font-family: Arial, sans-serif; }
             .container { width: 600px; margin: auto; }
@@ -396,7 +396,7 @@ class CourseService {
         <body>
           <div class="container">
             <div class="header">
-              <h1>Chào mừng đến với <a href="https://www.247learn.vn" style="color: white; text-decoration: none;">247learn.vn</a></h1>
+              <h1>Chào mừng đến với <a href="https://www.learn.vn" style="color: white; text-decoration: none;">learn.vn</a></h1>
             </div>
             <div class="content">
               <p>Xin chào,</p>
@@ -407,11 +407,11 @@ class CourseService {
                 <li>Mật khẩu: <strong>${password}</strong></li>
               </ul>
               <p>Vui lòng không chia sẻ thông tin tài khoản của bạn với người khác. Bạn có thể đổi mật khẩu sau khi đăng nhập lần đầu.</p>
-              <p>Để truy cập vào khóa học, vui lòng <a href="https://www.247learn.vn/courses/view-course-details/${courseId}?autoLogin=true">click vào đây</a>.</p>
-              <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com"> 247learn.vn@gmail.com</a>.</p>
+              <p>Để truy cập vào khóa học, vui lòng <a href="https://www.learn.vn/courses/view-course-details/${courseId}?autoLogin=true">click vào đây</a>.</p>
+              <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: kimochi2033@gmail.com"> kimochi2033@gmail.com</a>.</p>
             </div>
             <div class="footer">
-              <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
+              <p>&copy; 2024 <a href="https://www.learn.vn" style="color: inherit; text-decoration: none;">learn.vn</a>. All rights reserved.</p>
             </div>
           </div>
         </body>
@@ -424,7 +424,7 @@ class CourseService {
     <!DOCTYPE html>
     <html>
     <head>
-      <title>Chào mừng đến với 247learn.vn</title>
+      <title>Chào mừng đến với learn.vn</title>
       <style>
         body { font-family: Arial, sans-serif; }
         .container { width: 600px; margin: auto; }
@@ -436,17 +436,17 @@ class CourseService {
     <body>
       <div class="container">
         <div class="header">
-          <h1>Chào mừng đến với <a href="https://www.247learn.vn" style="color: white; text-decoration: none;">247learn.vn</a></h1>
+          <h1>Chào mừng đến với <a href="https://www.learn.vn" style="color: white; text-decoration: none;">learn.vn</a></h1>
         </div>
         <div class="content">
           <p>Xin chào,</p>
           <p>Chúng tôi rất vui mừng thông báo rằng bạn đã được thêm vào khoá học <strong>${course.name}</strong> do giáo viên <strong>${teacherName}</strong> hướng dẫn.</p>
           <p>Bạn có thể tiếp tục sử dụng tài khoản hiện tại của mình để truy cập vào khóa học.</p>
-          <p>Để truy cập vào khóa học, vui lòng <a href="https://www.247learn.vn/courses/view-course-details/${courseId}?autoLogin=true">click vào đây</a>.</p>
-          <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com"> 247learn.vn@gmail.com</a>.</p>
+          <p>Để truy cập vào khóa học, vui lòng <a href="https://www.learn.vn/courses/view-course-details/${courseId}?autoLogin=true">click vào đây</a>.</p>
+          <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: kimochi2033@gmail.com"> kimochi2033@gmail.com</a>.</p>
         </div>
         <div class="footer">
-          <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
+          <p>&copy; 2024 <a href="https://www.learn.vn" style="color: inherit; text-decoration: none;">learn.vn</a>. All rights reserved.</p>
         </div>
       </div>
     </body>
@@ -579,13 +579,13 @@ class CourseService {
       const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
-          user: "247learn.vn@gmail.com",
-          pass: "glpiggogzyxtfhod",
+          user: "kimochi2033@gmail.com",
+          pass: "fmthngflsjewmpyl",
         },
       });
 
       const mailOptions = {
-        from: "247learn.vn@gmail.com",
+        from: "kimochi2033@gmail.com",
         to: email,
         subject: `Chào mừng bạn đến khóa học ${course.name}`,
         html: "",
@@ -619,7 +619,7 @@ class CourseService {
             <!DOCTYPE html>
             <html>
             <head>
-                <title>Chào mừng đến với 247learn.vn</title>
+                <title>Chào mừng đến với learn.vn</title>
                 <style>
                     body { font-family: Arial, sans-serif; }
                     .container { width: 600px; margin: auto; }
@@ -631,7 +631,7 @@ class CourseService {
             <body>
                 <div class="container">
                     <div class="header">
-                        <h1>Chào mừng đến với <a href="https://www.247learn.vn" style="color: white; text-decoration: none;">247learn.vn</a></h1>
+                        <h1>Chào mừng đến với <a href="https://www.learn.vn" style="color: white; text-decoration: none;">learn.vn</a></h1>
                     </div>
                     <div class="content">
                         <p>Xin chào,</p>
@@ -642,10 +642,10 @@ class CourseService {
                             <li>Mật khẩu: <strong>${password}</strong></li>
                         </ul>
                         <p>Vui lòng không chia sẻ thông tin tài khoản của bạn với người khác. Bạn có thể đổi mật khẩu sau khi đăng nhập lần đầu.</p>
-                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
+                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: kimochi2033@gmail.com">kimochi2033@gmail.com</a>.</p>
                     </div>
                     <div class="footer">
-                        <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
+                        <p>&copy; 2024 <a href="https://www.learn.vn" style="color: inherit; text-decoration: none;">learn.vn</a>. All rights reserved.</p>
                     </div>
                 </div>
             </body>
@@ -657,7 +657,7 @@ class CourseService {
             <!DOCTYPE html>
             <html>
             <head>
-                <title>Chào mừng đến với 247learn.vn</title>
+                <title>Chào mừng đến với learn.vn</title>
                 <style>
                     body { font-family: Arial, sans-serif; }
                     .container { width: 600px; margin: auto; }
@@ -669,16 +669,16 @@ class CourseService {
             <body>
                 <div class="container">
                     <div class="header">
-                        <h1>Chào mừng đến với <a href="https://www.247learn.vn" style="color: white; text-decoration: none;">247learn.vn</a></h1>
+                        <h1>Chào mừng đến với <a href="https://www.learn.vn" style="color: white; text-decoration: none;">learn.vn</a></h1>
                     </div>
                     <div class="content">
                         <p>Xin chào,</p>
                         <p>Chúng tôi rất vui mừng thông báo rằng bạn đã được đăng ký thành công trở thành giáo viên của khoá học <strong>${course.name}</strong></p>
                         <p>Bạn hãy đăng nhập vào tài khoản hiện tại của bạn để truy cập vào hệ thống:</p>
-                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
+                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: kimochi2033@gmail.com">kimochi2033@gmail.com</a>.</p>
                     </div>
                     <div class="footer">
-                        <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
+                        <p>&copy; 2024 <a href="https://www.learn.vn" style="color: inherit; text-decoration: none;">learn.vn</a>. All rights reserved.</p>
                     </div>
                 </div>
             </body>
@@ -731,13 +731,13 @@ class CourseService {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "247learn.vn@gmail.com",
-        pass: "glpiggogzyxtfhod",
+        user: "kimochi2033@gmail.com",
+        pass: "fmthngflsjewmpyl",
       },
     });
 
     const mailOptions = {
-      from: "247learn.vn@gmail.com",
+      from: "kimochi2033@gmail.com",
       to: email,
       subject: `Chào mừng bạn đến khóa học ${course.name}`,
       html: "",
@@ -763,17 +763,17 @@ class CourseService {
           <body>
               <div class="container">
                   <div class="header">
-                  <h1>Chào mừng đến với <a href="https://www.247learn.vn" style="color: white; text-decoration: none;">247learn.vn</a></h1>
+                  <h1>Chào mừng đến với <a href="https://www.learn.vn" style="color: white; text-decoration: none;">learn.vn</a></h1>
                   </div>
                   <div class="content">
                       <p>Xin chào,</p>
                       <p>Chúng tôi rất vui mừng thông báo rằng bạn đã được đăng ký thành công trở thành giáo viên của khoá học <strong>${course.name}</strong></p>
                       <p>Bạn hãy đăng nhập vào tài khoản hiện tại của bạn để truy cập vào hệ thống:</p>
                       <p>Vui lòng không chia sẻ thông tin tài khoản của bạn với người khác. Bạn có thể đổi mật khẩu sau khi đăng nhập lần đầu.</p>
-                      <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
+                      <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: kimochi2033@gmail.com">kimochi2033@gmail.com</a>.</p>
                   </div>
                   <div class="footer">
-                  <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
+                  <p>&copy; 2024 <a href="https://www.learn.vn" style="color: inherit; text-decoration: none;">learn.vn</a>. All rights reserved.</p>
                   </div>
               </div>
           </body>
@@ -816,7 +816,7 @@ class CourseService {
             <!DOCTYPE html>
             <html>
             <head>
-                <title>Chào mừng đến với 247learn.vn</title>
+                <title>Chào mừng đến với learn.vn</title>
                 <style>
                     body { font-family: Arial, sans-serif; }
                     .container { width: 600px; margin: auto; }
@@ -828,7 +828,7 @@ class CourseService {
             <body>
                 <div class="container">
                     <div class="header">
-                        <h1>Chào mừng đến với <a href="https://www.247learn.vn" style="color: white; text-decoration: none;">247learn.vn</a></h1>
+                        <h1>Chào mừng đến với <a href="https://www.learn.vn" style="color: white; text-decoration: none;">learn.vn</a></h1>
                     </div>
                     <div class="content">
                         <p>Xin chào,</p>
@@ -839,10 +839,10 @@ class CourseService {
                             <li>Mật khẩu: <strong>${password}</strong></li>
                         </ul>
                         <p>Vui lòng không chia sẻ thông tin tài khoản của bạn với người khác. Bạn có thể đổi mật khẩu sau khi đăng nhập lần đầu.</p>
-                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
+                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: kimochi2033@gmail.com">kimochi2033@gmail.com</a>.</p>
                     </div>
                     <div class="footer">
-                        <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
+                        <p>&copy; 2024 <a href="https://www.learn.vn" style="color: inherit; text-decoration: none;">learn.vn</a>. All rights reserved.</p>
                     </div>
                 </div>
             </body>
@@ -854,7 +854,7 @@ class CourseService {
             <!DOCTYPE html>
             <html>
             <head>
-                <title>Chào mừng đến với 247learn.vn</title>
+                <title>Chào mừng đến với learn.vn</title>
                 <style>
                     body { font-family: Arial, sans-serif; }
                     .container { width: 600px; margin: auto; }
@@ -866,16 +866,16 @@ class CourseService {
             <body>
                 <div class="container">
                     <div class="header">
-                        <h1>Chào mừng đến với <a href="https://www.247learn.vn" style="color: white; text-decoration: none;">247learn.vn</a></h1>
+                        <h1>Chào mừng đến với <a href="https://www.learn.vn" style="color: white; text-decoration: none;">learn.vn</a></h1>
                     </div>
                     <div class="content">
                         <p>Xin chào,</p>
                         <p>Chúng tôi rất vui mừng thông báo rằng bạn đã được đăng ký thành công trở thành giáo viên của khoá học <strong>${course.name}</strong></p>
                         <p>Bạn hãy đăng nhập vào tài khoản hiện tại của bạn để truy cập vào hệ thống:</p>
-                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
+                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: kimochi2033@gmail.com">kimochi2033@gmail.com</a>.</p>
                     </div>
                     <div class="footer">
-                        <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
+                        <p>&copy; 2024 <a href="https://www.learn.vn" style="color: inherit; text-decoration: none;">learn.vn</a>. All rights reserved.</p>
                     </div>
                 </div>
             </body>
@@ -909,7 +909,7 @@ class CourseService {
                       <!DOCTYPE html>
                       <html>
                       <head>
-                          <title>Chào mừng đến với 247learn.vn</title>
+                          <title>Chào mừng đến với learn.vn</title>
                           <style>
                               body { font-family: Arial, sans-serif; }
                               .container { width: 600px; margin: auto; }
@@ -921,7 +921,7 @@ class CourseService {
                       <body>
                           <div class="container">
                               <div class="header">
-                                  <h1>Chào mừng đến với <a href="https://www.247learn.vn" style="color: white; text-decoration: none;">247learn.vn</a></h1>
+                                  <h1>Chào mừng đến với <a href="https://www.learn.vn" style="color: white; text-decoration: none;">learn.vn</a></h1>
                               </div>
                               <div class="content">
                                   <p>Xin chào,</p>
@@ -932,10 +932,10 @@ class CourseService {
                                       <li>Mật khẩu: <strong>${password}</strong></li>
                                   </ul>
                                   <p>Vui lòng không chia sẻ thông tin tài khoản của bạn với người khác. Bạn có thể đổi mật khẩu sau khi đăng nhập lần đầu.</p>
-                                  <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
+                                  <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: kimochi2033@gmail.com">kimochi2033@gmail.com</a>.</p>
                               </div>
                               <div class="footer">
-                                  <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
+                                  <p>&copy; 2024 <a href="https://www.learn.vn" style="color: inherit; text-decoration: none;">learn.vn</a>. All rights reserved.</p>
                               </div>
                           </div>
                       </body>
@@ -1152,13 +1152,13 @@ class CourseService {
       const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
-          user: "247learn.vn@gmail.com",
-          pass: "glpiggogzyxtfhod",
+          user: "kimochi2033@gmail.com",
+          pass: "fmthngflsjewmpyl",
         },
       });
 
       const mailOptions = {
-        from: "247learn.vn@gmail.com",
+        from: "kimochi2033@gmail.com",
         to: studentEmails,
         subject: `Có thông báo mới từ giáo viên`,
         text: message,

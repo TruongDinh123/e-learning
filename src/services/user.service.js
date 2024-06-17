@@ -41,13 +41,13 @@ const sendEmail = async ({ to, subject, text }) => {
   let transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "247learn.vn@gmail.com",
-      pass: "glpiggogzyxtfhod",
+      user: "kimochi2033@gmail.com",
+      pass: "fmthngflsjewmpyl",
     },
   });
 
   let mailOptions = {
-    from: "247learn.vn@gmail.com",
+    from: "kimochi2033@gmail.com",
     to,
     subject,
     text,
@@ -76,42 +76,48 @@ const createResponseObject = async (user) => {
   };
 };
 
-  // Hàm gửi email được tách ra để dễ quản lý và tái sử dụng
-  const sendEmailToStudent = async (studentId, courses, lessons, submissionTime, lessonId) => {
-    const student = await userModel.findById(studentId).lean();
-    if (!student) throw new NotFoundError("student not found");
+// Hàm gửi email được tách ra để dễ quản lý và tái sử dụng
+const sendEmailToStudent = async (
+  studentId,
+  courses,
+  lessons,
+  submissionTime,
+  lessonId
+) => {
+  const student = await userModel.findById(studentId).lean();
+  if (!student) throw new NotFoundError("student not found");
 
-    // Tìm thông tin khóa học và giáo viên từ dữ liệu đã truy vấn trước đó
-    const course = courses.find((c) =>
-      c.students.map((id) => id.toString()).includes(studentId.toString())
-    );
-    const lesson = lessons?.find((l) => l._id.toString() === lessonId);
-    const teacherName =
-      course && course.teacher
-        ? [course.teacher.lastName, course.teacher.firstName]
-            .filter(Boolean)
-            .join(" ") || "Giáo viên"
-        : "Giáo viên";
-    const lessonName = lesson ? lesson.name : undefined;
+  // Tìm thông tin khóa học và giáo viên từ dữ liệu đã truy vấn trước đó
+  const course = courses.find((c) =>
+    c.students.map((id) => id.toString()).includes(studentId.toString())
+  );
+  const lesson = lessons?.find((l) => l._id.toString() === lessonId);
+  const teacherName =
+    course && course.teacher
+      ? [course.teacher.lastName, course.teacher.firstName]
+          .filter(Boolean)
+          .join(" ") || "Giáo viên"
+      : "Giáo viên";
+  const lessonName = lesson ? lesson.name : undefined;
 
-    if (!course) throw new NotFoundError("course not found");
+  if (!course) throw new NotFoundError("course not found");
 
-    const formattedSubmissionTime = submissionTime
-      ? new Date(submissionTime).toLocaleString("vi-VN", {
-          hour12: false,
-          timeZone: "Asia/Ho_Chi_Minh",
-        })
-      : "Không có thời hạn";
+  const formattedSubmissionTime = submissionTime
+    ? new Date(submissionTime).toLocaleString("vi-VN", {
+        hour12: false,
+        timeZone: "Asia/Ho_Chi_Minh",
+      })
+    : "Không có thời hạn";
 
-    const mailOptions = {
-      from: "247learn.vn@gmail.com",
-      to: student.email,
-      subject: "Bạn có một bài tập mới",
-      html: `
+  const mailOptions = {
+    from: "kimochi2033@gmail.com",
+    to: student.email,
+    subject: "Bạn có một bài tập mới",
+    html: `
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Chào mừng đến với 247learn.vn</title>
+            <title>Chào mừng đến với learn.vn</title>
             <style>
                 body { font-family: Arial, sans-serif; }
                 .container { width: 600px; margin: auto; }
@@ -123,50 +129,54 @@ const createResponseObject = async (user) => {
         <body>
             <div class="container">
                 <div class="header">
-                    <h1>Chào mừng đến với <a href="https://www.247learn.vn" style="color: white; text-decoration: none;">247learn.vn</a></h1>
+                    <h1>Chào mừng đến với <a href="https://www.learn.vn" style="color: white; text-decoration: none;">learn.vn</a></h1>
                 </div>
                 <div class="content">
                     <p>Xin chào,</p>
-                    <p>Giáo viên <strong>${teacherName}</strong> đã giao cho bạn một bài tập mới trong <strong>${course.name}</strong></p>
-                    ${lessonName ? `<p>Thuộc bài học: <strong>${lessonName}</strong></p>` : ""}
+                    <p>Giáo viên <strong>${teacherName}</strong> đã giao cho bạn một bài tập mới trong <strong>${
+      course.name
+    }</strong></p>
+                    ${
+                      lessonName
+                        ? `<p>Thuộc bài học: <strong>${lessonName}</strong></p>`
+                        : ""
+                    }
                     <ul>
                         <li>Thời hạn nộp bài: <strong>${formattedSubmissionTime}</strong></li>
                     </ul>
                     <p>Vui lòng nộp bài đúng hạn.</p>
-                    <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
+                    <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: kimochi2033@gmail.com">kimochi2033@gmail.com</a>.</p>
                 </div>
                 <div class="footer">
-                    <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
+                    <p>&copy; 2024 <a href="https://www.learn.vn" style="color: inherit; text-decoration: none;">learn.vn</a>. All rights reserved.</p>
                 </div>
             </div>
         </body>
         </html>
       `,
-    };
-
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: "247learn.vn@gmail.com",
-        pass: "glpiggogzyxtfhod",
-      },
-    });
-
-    return transporter.sendMail(mailOptions);
-  }
-
-  const generatePassword = () => {
-    const length = 8;
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let retVal = "";
-    for (let i = 0, n = charset.length; i < length; ++i) {
-      retVal += charset.charAt(Math.floor(Math.random() * n));
-    }
-    return retVal;
   };
-  
 
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: "kimochi2033@gmail.com",
+      pass: "fmthngflsjewmpyl",
+    },
+  });
 
+  return transporter.sendMail(mailOptions);
+};
+
+const generatePassword = () => {
+  const length = 8;
+  const charset =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let retVal = "";
+  for (let i = 0, n = charset.length; i < length; ++i) {
+    retVal += charset.charAt(Math.floor(Math.random() * n));
+  }
+  return retVal;
+};
 
 module.exports = {
   findByEmail,

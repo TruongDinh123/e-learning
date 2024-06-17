@@ -9,6 +9,7 @@ const HEADER = {
   CLIENT_ID: "x-client-id",
 };
 
+// cách hđ của apikey là để bảo mật thông tin trình duyệt.
 const apiKey = async (req, res, next) => {
   try {
     const key = await req.headers[HEADER.API_KEY]?.toString();
@@ -32,7 +33,7 @@ const apiKey = async (req, res, next) => {
     });
   }
 };
-
+//check roles
 const permission = (roles) => {
   return async (req, res, next) => {
     try {

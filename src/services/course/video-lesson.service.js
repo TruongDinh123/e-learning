@@ -13,6 +13,9 @@ cloudinary.config({
 class VideoLessonService {
   static createVdLesson = async ({ filename, lessonId }) => {
     validateMongoDbId(lessonId);
+    const data = { filename, lessonId };
+    console.log("🚀 ~ data:", data);
+
     try {
       const findLesson = await lessonModel.findById(lessonId);
       if (!findLesson) {
@@ -28,11 +31,13 @@ class VideoLessonService {
       const result = await cloudinary.uploader.upload(filename, {
         resource_type: "video",
       });
+      console.log("🚀 ~ result:", result);
       const videoLesson = await videoLessonModel.create({
         filename: result.public_id,
         url: result.secure_url,
         lesson: lessonId,
       });
+      console.log("🚀 ~ videoLesson:", videoLesson);
 
       await videoLesson.save();
 
@@ -45,6 +50,7 @@ class VideoLessonService {
 
       return { videoLesson, findLesson: updateVdLesson };
     } catch (error) {
+      console.log("🚀 ~ error:", error);
       throw new BadRequestError(error);
     }
   };

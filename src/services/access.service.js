@@ -216,15 +216,15 @@ class AccessService {
         const transporter = nodemailer.createTransport({
           service: "gmail",
           auth: {
-            user: "247learn.vn@gmail.com",
-            pass: "glpiggogzyxtfhod",
+            user: "kimochi2033@gmail.com",
+            pass: "fmthngflsjewmpyl",
           },
         });
 
         const mailOptions = {
-          from: "247learn.vn@gmail.com",
+          from: "kimochi2033@gmail.com",
           to: email,
-          subject: `Chào mừng bạn đến với 247learn.vn`,
+          subject: `Chào mừng bạn đến với learn.vn`,
           html: `
             <!DOCTYPE html>
             <html>
@@ -241,17 +241,17 @@ class AccessService {
             <body>
                 <div class="container">
                     <div class="header">
-                        <h1>Chào mừng đến với <a href="https://www.247learn.vn" style="color: white; text-decoration: none;">247learn.vn</a></h1>
+                        <h1>Chào mừng đến với <a href="https://www.learn.vn" style="color: white; text-decoration: none;">learn.vn</a></h1>
                     </div>
                     <div class="content">
                         <p>Xin chào,</p>
                         <p>Mật khẩu mới của bạn là: <strong>${newPassword}</strong></p>
                         <p>Vui lòng không chia sẻ thông tin tài khoản của bạn với người khác. Bạn có thể đổi mật khẩu sau khi đăng nhập.</p>
                         <p>Trân trọng,</p>
-                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: 247learn.vn@gmail.com">247learn.vn@gmail.com</a>.</p>
+                        <p>Nếu có bất kỳ thắc mắc nào, xin đừng ngần ngại liên hệ với chúng tôi qua <a href="mailto: kimochi2033@gmail.com">kimochi2033@gmail.com</a>.</p>
                     </div>
                     <div class="footer">
-                        <p>&copy; 2024 <a href="https://www.247learn.vn" style="color: inherit; text-decoration: none;">247learn.vn</a>. All rights reserved.</p>
+                        <p>&copy; 2024 <a href="https://www.learn.vn" style="color: inherit; text-decoration: none;">learn.vn</a>. All rights reserved.</p>
                     </div>
                 </div>
             </body>
