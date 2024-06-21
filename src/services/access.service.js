@@ -4,7 +4,7 @@ const User = require("../models/user.model");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const KeyTokenService = require("./keyToken.service");
-const { createTokenPair, verifyJwt } = require("../auth/authUtils");
+const { createTokenPair } = require("../auth/authUtils");
 const { getInfoData } = require("../utils");
 const {
   BadRequestError,

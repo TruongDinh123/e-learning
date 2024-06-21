@@ -10,7 +10,7 @@ const {
 } = require("../config/config.mongdb");
 const { countConnect } = require("../helpers/check.connect");
 
-const connectString = 'mongodb+srv://dinhtq170601:170601Dinh@cluster0.z96tvlw.mongodb.net/';
+const connectString = `mongodb://${host}:${port}/${name}`;
 
 class Database {
   constructor() {

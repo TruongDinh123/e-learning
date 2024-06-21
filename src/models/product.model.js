@@ -49,7 +49,6 @@ productSchema.pre("save", function (next) {
   next();
 });
 
-
 const ElectronicShema = new mongoose.Schema(
   {
     manufacturer: { type: String, required: true },
