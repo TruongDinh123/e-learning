@@ -43,6 +43,7 @@ const publishProductByShop = async ({ product_account, product_id }) => {
 const findAllProducts = async ({ limit, sort, page, filter, select }) => {
   const skip = (page - 1) * limit;
   const sortBy = sort === "ctime" ? { _id: -1 } : { _id: 1 };
+  //ctime: lấy ra sản phẩm mới nhất.
   const products = await product
     .find(filter)
     .sort(sortBy)
@@ -76,7 +77,7 @@ const updateProductById = async ({
   isNew = true,
 }) => {
   return await product.findByIdAndUpdate(productId, bodyUpdate, {
-    new: true,
+    new: true, //thuộc tính này sẽ luôn trả về là 1 object
   });
 };
 

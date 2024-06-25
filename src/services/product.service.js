@@ -141,7 +141,7 @@ class Clothing extends Product {
     /*
      {
       a: underfined,
-      b: nulll
+      b: null
      } 
     */
     //1. remove attr has null underfined

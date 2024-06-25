@@ -9,7 +9,7 @@ const productSchema = new mongoose.Schema(
     inven_productId: { type: mongoose.Types.ObjectId, ref: "Product" },
     inven_location: { type: String, default: "unKnow" },
     inven_stock: { type: Number, require: true, ref: "User" },
-    iven_accountId: { type: mongoose.Types.ObjectId, ref: "ProUserduct" },
+    iven_accountId: { type: mongoose.Types.ObjectId, ref: "User" },
     iven_reservations: { type: Array, default: [] },
   },
   {
