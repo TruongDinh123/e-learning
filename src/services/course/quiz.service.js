@@ -1393,8 +1393,7 @@ class QuizService {
       const quizSubmissionTime = await Quiz.find(
         {courseIds: courseId, isDraft: false, activePresent: true},
         {submissionTime: 1}
-      )
-        .limit(1);
+      ).limit(1);
 
       return quizSubmissionTime;
     } catch (error) {
@@ -1483,14 +1482,21 @@ class QuizService {
       if (!quizs) throw new NotFoundError('scores not found');
       const result = {};
       const usersTested = {};
+      const quizsHasUserTested = quizs.filter(
+        (quizItem) => quizItem.usersTested.length
+      );
 
-      for await (const quiz of quizs) {
+      for await (const quiz of quizsHasUserTested) {
         Object.assign(usersTested, {
           [`${quiz._id}`]: {
             courseIds: quiz.courseIds,
-            usersTested: quiz.usersTested,
-          }
-        })
+            usersTested: quiz.usersTested.map((usersTestedItem) => ({
+              ...usersTestedItem._doc,
+              quizName: quiz.name,
+              quizId: quiz._id
+            })),
+          },
+        });
 
         const numberOfQuestion = quiz?.questions?.length ?? 0;
         const maxScore = 10 * numberOfQuestion;
@@ -1552,9 +1558,10 @@ class QuizService {
 
   static getAllQuizsNotDraft = async (courseIds) => {
     try {
-
       // Find quizzes that belong to the course
-      const courseQuizzes = await Quiz.find({$or: [{isDraft: false}, {isDraft: {$exists: false}}]})
+      const courseQuizzes = await Quiz.find({
+        $or: [{isDraft: false}, {isDraft: {$exists: false}}],
+      })
         .select('-updatedAt -createdAt -studentIds -__v')
         .populate('courseIds', 'name')
         .populate({
