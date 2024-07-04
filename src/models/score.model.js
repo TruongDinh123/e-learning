@@ -28,6 +28,10 @@ const scoreSchema = new mongoose.Schema(
       type: Number,
       required: false,
     },
+    scoreCustom: {
+      type: Number,
+      required: false,
+    },
     answers: {
       type: Array,
       required: false,

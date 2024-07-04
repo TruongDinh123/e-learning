@@ -995,6 +995,52 @@ class QuizService {
     return scoreRecord;
   }
 
+  static generateCustomPoint = async ({quiz, scoreCurrent}) => {
+    let scoreCustom = 0;
+    const numberOfQuestion = quiz?.questions?.length ?? 0;
+    const maxScore = 10 * numberOfQuestion;
+    const scores = await Score.find({quiz: quiz._id})
+      .populate('quiz')
+      .populate('user')
+      .lean();
+
+    // Tính điểm cho câu 1
+    const maxScore1 = 10;
+    let actualUserAttend = scores.length;
+    let score1 = 0;
+    const maxDistance = Math.max(
+      ...scores.map((score) =>
+        Math.abs(score.predictAmount ?? 0 - actualUserAttend)
+      )
+    );
+    const distance1 = Math.abs(
+      scoreCurrent.predictAmount ?? 0 - actualUserAttend
+    );
+    score1 = maxScore1 * (1 - Math.min(distance1 / maxDistance, 1));
+
+    // Tính điểm cho câu 2
+    const maxScore2 = 10;
+    let score2 = 0;
+    let actualUserCorrectAll = (
+      await Score.find({quiz: quiz._id, score: maxScore})
+    ).length;
+    const maxDistance2 = Math.max(
+      ...scores.map((score) =>
+        Math.abs(score.predictAmountMaxScore ?? 0 - actualUserCorrectAll)
+      )
+    );
+    const distance2 = Math.abs(
+      scoreCurrent.predictAmountMaxScore ?? 0 - actualUserCorrectAll
+    );
+    score2 = maxScore2 * (1 - Math.min(distance2 / maxDistance2, 1));
+
+    // Tính điểm thực lại
+    scoreCustom =
+      Math.round((scoreCurrent.score + score1 + score2) * 100) / 100;
+
+    return scoreCustom;
+  };
+
   static submitQuiz = async (
     quizId,
     userId,
@@ -1063,6 +1109,11 @@ class QuizService {
       scoreRecord.submitTime = Date.now();
       scoreRecord.predictAmount = predictAmount ?? 0;
       scoreRecord.predictAmountMaxScore = predictAmountMaxScore ?? 0;
+
+      scoreRecord.scoreCustom = await this.generateCustomPoint({
+        quiz,
+        scoreCurrent: scoreRecord,
+      });
 
       await scoreRecord.save();
 
@@ -1485,6 +1536,10 @@ class QuizService {
       const quizsHasUserTested = quizs.filter(
         (quizItem) => quizItem.usersTested.length
       );
+      const scoresInit = await Score.find()
+        .populate('quiz')
+        .populate('user')
+        .lean();
 
       for await (const quiz of quizsHasUserTested) {
         Object.assign(usersTested, {
@@ -1493,59 +1548,15 @@ class QuizService {
             usersTested: quiz.usersTested.map((usersTestedItem) => ({
               ...usersTestedItem._doc,
               quizName: quiz.name,
-              quizId: quiz._id
+              quizId: quiz._id,
             })),
           },
         });
 
-        const numberOfQuestion = quiz?.questions?.length ?? 0;
-        const maxScore = 10 * numberOfQuestion;
-        const scores = await Score.find({quiz: quiz._id})
-          .populate('quiz')
-          .populate('user')
-          .lean();
-
-        // Tính điểm cho câu 1
-        const maxScore1 = 10;
-        let actualUserAttend = scores.length;
-        let score1 = Array(actualUserAttend).fill(0);
-        const maxDistance = Math.max(
-          ...scores.map((score) =>
-            Math.abs(score.predictAmount ?? 0 - actualUserAttend)
-          )
+        const scores = scoresInit?.filter(
+          (score) => score?.quiz?._id.toString() === quiz._id.toString()
         );
-        for (let i = 0; i < actualUserAttend; i++) {
-          const distance = Math.abs(
-            scores[i].predictAmount ?? 0 - actualUserAttend
-          );
-          score1[i] = maxScore1 * (1 - Math.min(distance / maxDistance, 1));
-        }
-
-        // Tính điểm cho câu 2
-        const maxScore2 = 10;
-        let score2 = Array(actualUserAttend).fill(0);
-        let actualUserCorrectAll = (
-          await Score.find({quiz: quiz._id, score: maxScore})
-        ).length;
-        const maxDistance2 = Math.max(
-          ...scores.map((score) =>
-            Math.abs(score.predictAmountMaxScore ?? 0 - actualUserCorrectAll)
-          )
-        );
-        for (let i = 0; i < actualUserAttend; i++) {
-          const distance = Math.abs(
-            scores[i].predictAmountMaxScore ?? 0 - actualUserCorrectAll
-          );
-          score2[i] = maxScore2 * (1 - Math.min(distance / maxDistance2, 1));
-        }
-
-        // Tính điểm thực lại
-        for (let i = 0; i < actualUserAttend; i++) {
-          scores[i].score =
-            Math.round((scores[i].score + score1[i] + score2[i]) * 100) / 100;
-        }
-
-        if (!scores) throw new NotFoundError('scores not found');
+        // console.log(scoresInit, 'scoresInitscoresInit', scores);
 
         result[quiz._id] = scores;
       }
