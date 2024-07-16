@@ -1539,7 +1539,8 @@ class QuizService {
       const scoresInit = await Score.find()
         .populate('quiz')
         .populate('user')
-        .lean();
+        .lean()
+        .sort({'createdAt': -1});
 
       for await (const quiz of quizsHasUserTested) {
         Object.assign(usersTested, {

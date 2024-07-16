@@ -327,7 +327,8 @@ class AccessService {
       const users = await User.find(query)
           .select("lastName firstName email status")
           .populate("roles", "_id name")
-          .lean();
+          .lean()
+          .sort({updatedAt: -1, createdAt: -1});
 
       if (!users) {
         throw new NotFoundError("Users not found");
