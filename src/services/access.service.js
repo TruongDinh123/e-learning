@@ -12,7 +12,7 @@ const {
   NotFoundError,
   ForbiddenError,
 } = require("../core/error.response");
-const { findByEmail, generatePassword } = require("./user.service");
+const { findByEmail, generatePassword, findByLoginName } = require("./user.service");
 const Role = require("../models/role.model");
 const validateMongoDbId = require("../config/validateMongoDbId");
 const { v2: cloudinary } = require("cloudinary");
@@ -29,7 +29,7 @@ cloudinary.config({
 
 class AccessService {
   static handleRefreshToken = async ({keyAccount, user, refreshToken}) => {
-    const {userId, email} = user;
+    const {userId, loginName} = user;
 
     if (keyAccount.refreshTokensUsed.includes(refreshToken)) {
       await KeyTokenService.deleteKeyById(userId);
@@ -40,12 +40,12 @@ class AccessService {
       throw new ForbiddenError("Refresh token has been used!! pls relogin");
     }
 
-    const foundAccount = await findByEmail({email});
+    const foundAccount = await findByLoginName({loginName});
     if (!foundAccount) throw new AuthFailureError("Refresh token not found");
 
     //create 1 cap moi
     const tokens = await createTokenPair(
-        {userId, email},
+        {userId, loginName},
         keyAccount.publicKey,
         keyAccount.privateKey
     );
@@ -65,8 +65,8 @@ class AccessService {
     };
   };
 
-  static login = async ({email, password, refreshToken = null} = null) => {
-    const foundAccount = await findByEmail({email});
+  static login = async ({loginName, password, refreshToken = null} = null) => {
+    const foundAccount = await findByLoginName({loginName});
     if (!foundAccount) {
       throw new BadRequestError("Email or Password is not correct");
     }
@@ -86,7 +86,7 @@ class AccessService {
     const {_id: userId} = foundAccount;
 
     const tokens = await createTokenPair(
-        {userId, email},
+        {userId, loginName},
         publicKey,
         privateKey
     );
@@ -103,7 +103,9 @@ class AccessService {
         fileds: [
           "_id",
           "firstName",
+          "loginName",
           "email",
+          "loginName",
           "lastName",
           "roles",
           "image_url",
@@ -138,16 +140,17 @@ class AccessService {
     return updatedUser;
   };
 
-  static signUp = async ({email, password, cmnd, phone, address, cap, donvi, donvicon, firstName, lastName}) => {
+  static signUp = async ({loginName, email, password, cmnd, phone, address, cap, donvi, donvicon, firstName, lastName}) => {
     try {
-      const holderAccount = await User.findOne({email}).lean();
+      const holderAccount = await User.findOne({loginName}).lean();
       if (holderAccount) {
-        throw new BadRequestError("Error: email đã tồn tại trong hệ thống, vui lòng thử một email khác");
+        throw new BadRequestError("Error: loginName đã tồn tại trong hệ thống, vui lòng thử một loginName khác");
       }
       const passwordHash = await bcrypt.hash(password, 10);
       const traineeRole = await Role.findOne({name: "Trainee"});
 
       const newAccount = await User.create({
+        loginName,
         email,
         password: passwordHash,
         roles: [traineeRole._id],
@@ -179,7 +182,7 @@ class AccessService {
         }
 
         const tokens = await createTokenPair(
-            {userId: newAccount._id, email},
+            {userId: newAccount._id, loginName},
             publicKey,
             privateKey
         );
@@ -188,7 +191,7 @@ class AccessService {
           code: 201,
           message: {
             account: getInfoData({
-              fileds: ["_id", "email", "lastName"],
+              fileds: ["_id", "loginName", "email", "lastName"],
               object: newAccount,
             }),
             tokens,
@@ -325,7 +328,7 @@ class AccessService {
       let query = {status: "active"};
 
       const users = await User.find(query)
-          .select("lastName firstName email status")
+          .select("loginName lastName firstName email status")
           .populate("roles", "_id name")
           .lean()
           .sort({updatedAt: -1, createdAt: -1});
@@ -361,6 +364,8 @@ class AccessService {
   static deleteUser = async ({id}) => {
     try {
       const user = await User.findById(id);
+      user.loginName = 'hahah';
+      console.log(user, 'userssss');
       if (!user) {
         throw new NotFoundError("User not found");
       }
