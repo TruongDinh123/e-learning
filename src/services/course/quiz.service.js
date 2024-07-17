@@ -1412,7 +1412,7 @@ class QuizService {
             const user = score.user;
             return {
               userId: user ? user._id : null,
-              loginName: user? user.loginName : 'No loginName',
+              loginName: user ? user.loginName : 'No loginName',
               userEmail: user ? user.email : 'No Email',
               score: score.score,
               submitTime: score.submitTime,
@@ -1541,7 +1541,7 @@ class QuizService {
         .populate('quiz')
         .populate('user')
         .lean()
-        .sort({'createdAt': -1});
+        .sort({createdAt: -1});
 
       for await (const quiz of quizsHasUserTested) {
         Object.assign(usersTested, {
