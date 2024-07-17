@@ -57,10 +57,6 @@ const scoreSchema = new mongoose.Schema(
       type: Number,
       required: false,
     },
-    predictAmountMaxScore: {
-      type: Number,
-      required: false,
-    }
   },
   {
     timestamps: true,

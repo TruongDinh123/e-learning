@@ -997,8 +997,6 @@ class QuizService {
 
   static generateCustomPoint = async ({quiz, scoreCurrent}) => {
     let scoreCustom = 0;
-    const numberOfQuestion = quiz?.questions?.length ?? 0;
-    const maxScore = 10 * numberOfQuestion;
     const scores = await Score.find({quiz: quiz._id})
       .populate('quiz')
       .populate('user')
@@ -1018,25 +1016,9 @@ class QuizService {
     );
     score1 = maxScore1 * (1 - Math.min(distance1 / maxDistance, 1));
 
-    // Tính điểm cho câu 2
-    const maxScore2 = 10;
-    let score2 = 0;
-    let actualUserCorrectAll = (
-      await Score.find({quiz: quiz._id, score: maxScore})
-    ).length;
-    const maxDistance2 = Math.max(
-      ...scores.map((score) =>
-        Math.abs(score.predictAmountMaxScore ?? 0 - actualUserCorrectAll)
-      )
-    );
-    const distance2 = Math.abs(
-      scoreCurrent.predictAmountMaxScore ?? 0 - actualUserCorrectAll
-    );
-    score2 = maxScore2 * (1 - Math.min(distance2 / maxDistance2, 1));
-
     // Tính điểm thực lại
     scoreCustom =
-      Math.round((scoreCurrent.score + score1 + score2) * 100) / 100;
+      Math.round((scoreCurrent.score + score1) * 100) / 100;
 
     return scoreCustom;
   };
@@ -1046,7 +1028,6 @@ class QuizService {
     userId,
     answers,
     predictAmount,
-    predictAmountMaxScore
   ) => {
     try {
       if (!answers || !Array.isArray(answers)) {
@@ -1108,7 +1089,6 @@ class QuizService {
       }
       scoreRecord.submitTime = Date.now();
       scoreRecord.predictAmount = predictAmount ?? 0;
-      scoreRecord.predictAmountMaxScore = predictAmountMaxScore ?? 0;
 
       scoreRecord.scoreCustom = await this.generateCustomPoint({
         quiz,
@@ -1229,9 +1209,6 @@ class QuizService {
 
   static getScoreByQuizId = async (quizId) => {
     try {
-      const quiz = await Quiz.findById(quizId);
-      const numberOfQuestion = quiz?.questions?.length ?? 0;
-      const maxScore = 10 * numberOfQuestion;
       const scores = await Score.find({quiz: quizId})
         .populate('quiz')
         .populate('user')
@@ -1253,28 +1230,10 @@ class QuizService {
         score1[i] = maxScore1 * (1 - Math.min(distance / maxDistance, 1));
       }
 
-      // Tính điểm cho câu 2
-      const maxScore2 = 10;
-      let score2 = Array(actualUserAttend).fill(0);
-      let actualUserCorrectAll = (
-        await Score.find({quiz: quizId, score: maxScore})
-      ).length;
-      const maxDistance2 = Math.max(
-        ...scores.map((score) =>
-          Math.abs(score.predictAmountMaxScore ?? 0 - actualUserCorrectAll)
-        )
-      );
-      for (let i = 0; i < actualUserAttend; i++) {
-        const distance = Math.abs(
-          scores[i].predictAmountMaxScore ?? 0 - actualUserCorrectAll
-        );
-        score2[i] = maxScore2 * (1 - Math.min(distance / maxDistance2, 1));
-      }
-
       // Tính điểm thực lại
       for (let i = 0; i < actualUserAttend; i++) {
         scores[i].score =
-          Math.round((scores[i].score + score1[i] + score2[i]) * 100) / 100;
+          Math.round((scores[i].score + score1[i]) * 100) / 100;
       }
 
       if (!scores) throw new NotFoundError('scores not found');
@@ -1463,7 +1422,6 @@ class QuizService {
         {
           isComplete: 1,
           predictAmount: 1,
-          predictAmountMaxScore: 1,
           score: 1,
           startTime: 1,
           quiz: 0,
