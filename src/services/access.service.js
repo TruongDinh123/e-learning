@@ -147,8 +147,6 @@ class AccessService {
     phone,
     address,
     cap,
-    donvi,
-    donvicon,
     firstName,
     lastName,
   }) => {
@@ -173,8 +171,6 @@ class AccessService {
         phoneNumber: phone ?? '',
         address: address ?? '',
         cap: cap ?? '',
-        donvi: donvi ?? '',
-        donvicon: donvicon ?? '',
         firstName: firstName ?? '',
         lastName: lastName ?? '',
       });
