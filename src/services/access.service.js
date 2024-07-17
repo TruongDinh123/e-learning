@@ -15,7 +15,6 @@ const {
 const {
   findByEmail,
   generatePassword,
-  findByLoginName,
 } = require('./user.service');
 const Role = require('../models/role.model');
 const validateMongoDbId = require('../config/validateMongoDbId');
@@ -33,7 +32,7 @@ cloudinary.config({
 
 class AccessService {
   static handleRefreshToken = async ({keyAccount, user, refreshToken}) => {
-    const {userId, loginName} = user;
+    const {userId, email} = user;
 
     if (keyAccount.refreshTokensUsed.includes(refreshToken)) {
       await KeyTokenService.deleteKeyById(userId);
@@ -44,12 +43,12 @@ class AccessService {
       throw new ForbiddenError('Refresh token has been used!! pls relogin');
     }
 
-    const foundAccount = await findByLoginName({loginName});
+    const foundAccount = await findByEmail({email});
     if (!foundAccount) throw new AuthFailureError('Refresh token not found');
 
     //create 1 cap moi
     const tokens = await createTokenPair(
-      {userId, loginName},
+      {userId, email},
       keyAccount.publicKey,
       keyAccount.privateKey
     );
@@ -69,8 +68,8 @@ class AccessService {
     };
   };
 
-  static login = async ({loginName, password, refreshToken = null} = null) => {
-    const foundAccount = await findByLoginName({loginName});
+  static login = async ({email, password, refreshToken = null} = null) => {
+    const foundAccount = await findByEmail({email});
     if (!foundAccount) {
       throw new BadRequestError('Email or Password is not correct');
     }
@@ -90,7 +89,7 @@ class AccessService {
     const {_id: userId} = foundAccount;
 
     const tokens = await createTokenPair(
-      {userId, loginName},
+      {userId, email},
       publicKey,
       privateKey
     );
@@ -107,7 +106,6 @@ class AccessService {
         fileds: [
           '_id',
           'firstName',
-          'loginName',
           'email',
           'lastName',
           'roles',
@@ -140,7 +138,6 @@ class AccessService {
   };
 
   static signUp = async ({
-    loginName,
     email,
     password,
     cmnd,
@@ -151,19 +148,16 @@ class AccessService {
     lastName,
   }) => {
     try {
-      const holderAccount = await User.findOne({loginName}).lean();
+      const holderAccount = await User.findOne({email}).lean();
       if (holderAccount) {
         throw new BadRequestError(
-          'Error: loginName đã tồn tại trong hệ thống, vui lòng thử một loginName khác'
+          'Error: email đã tồn tại trong hệ thống, vui lòng thử một email khác'
         );
       }
-      console.log(loginName, 'loginNameloginName');
       const passwordHash = await bcrypt.hash(password, 10);
       const traineeRole = await Role.findOne({name: 'Trainee'});
-      console.log(loginName, 'loginNameloginName');
 
       const newAccount = await User.create({
-        loginName,
         email,
         password: passwordHash,
         roles: [traineeRole._id],
@@ -193,7 +187,7 @@ class AccessService {
         }
 
         const tokens = await createTokenPair(
-          {userId: newAccount._id, loginName},
+          {userId: newAccount._id, email},
           publicKey,
           privateKey
         );
@@ -202,7 +196,7 @@ class AccessService {
           code: 201,
           message: {
             account: getInfoData({
-              fileds: ['_id', 'loginName', 'email', 'lastName'],
+              fileds: ['_id', 'email', 'lastName'],
               object: newAccount,
             }),
             tokens,
@@ -339,7 +333,7 @@ class AccessService {
       let query = {status: 'active'};
 
       const users = await User.find(query)
-        .select('loginName lastName firstName email status')
+        .select('email lastName firstName status')
         .populate('roles', '_id name')
         .lean()
         .sort({updatedAt: -1, createdAt: -1});
@@ -375,8 +369,7 @@ class AccessService {
   static deleteUser = async ({id}) => {
     try {
       const user = await User.findById(id);
-      user.loginName = 'hahah';
-      console.log(user, 'userssss');
+
       if (!user) {
         throw new NotFoundError('User not found');
       }

@@ -5,33 +5,9 @@ const userModel = require("../models/user.model");
 const User = require("../models/user.model");
 const nodemailer = require("nodemailer");
 
-const findByLoginName = async ({
-  loginName,
-  select = {
-    loginName: 1,
-    email: 1,
-    password: 1,
-    lastName: 1,
-    firstName: 1,
-    image_url: 1,
-    roles: 1,
-    status: 1,
-    courses: 1,
-    quizCount: 1,
-    quizLimit: 1,
-  },
-}) => {
-  return await User.findOne({ loginName })
-    .select(select)
-    .populate("roles", "_id name")
-    .populate("courses", "_id name teacherQuizzes")
-    .lean();
-};
-
 const findByEmail = async ({
   email,
   select = {
-    loginName: 1,
     email: 1,
     password: 1,
     lastName: 1,
@@ -90,9 +66,8 @@ const createResponseObject = async (user) => {
     message: "Student added to course successfully!",
     status: 200,
     metadata: {
-      loginName: user.loginName,
-      firstName: user.firstName,
       email: user.email,
+      firstName: user.firstName,
       courses: user.courses.map((course) => course.toString()), // Chỉ trả về ID của khóa học
       quizzes: user.quizzes.map((quiz) => quiz.toString()), // Chỉ trả về ID của quiz
       roles: user.roles.map((role) => role.toString()), // Chỉ trả về ID của vai trò
@@ -199,7 +174,6 @@ const createResponseObject = async (user) => {
   }
 
 module.exports = {
-  findByLoginName,
   findByEmail,
   sendEmail,
   findUserById,

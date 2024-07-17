@@ -124,8 +124,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    email: String,
-    loginName: {
+    email: {
       type: String,
       required: true,
       unique: true,

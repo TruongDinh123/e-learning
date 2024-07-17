@@ -709,7 +709,7 @@ class QuizService {
             populate: {
               path: 'teacher',
               model: 'User',
-              select: 'loginName name email lastName firstName',
+              select: 'email name lastName firstName',
             },
           },
         })
@@ -738,7 +738,7 @@ class QuizService {
           populate: {
             path: 'teacher',
             model: 'User',
-            select: 'loginName name email lastName firstName',
+            select: 'email name lastName firstName',
           },
         },
       })
@@ -1402,7 +1402,7 @@ class QuizService {
       // Map through quizzes and get scores for each quiz
       const scoresPromises = quizzes.map(async (quiz) => {
         const scores = await Score.find({quiz: quiz._id})
-          .populate('user', 'email', 'loginName')
+          .populate('user', 'email')
           .lean();
         return {
           quizId: quiz._id,
@@ -1412,7 +1412,6 @@ class QuizService {
             const user = score.user;
             return {
               userId: user ? user._id : null,
-              loginName: user ? user.loginName : 'No loginName',
               userEmail: user ? user.email : 'No Email',
               score: score.score,
               submitTime: score.submitTime,
@@ -1585,7 +1584,7 @@ class QuizService {
             populate: {
               path: 'teacher',
               model: 'User',
-              select: 'loginName name email lastName firstName',
+              select: 'email name lastName firstName',
             },
           },
         })
