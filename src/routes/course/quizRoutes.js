@@ -22,7 +22,6 @@ router.post(
   asyncHandler(quizController.saveDraftQuiz)
 );
 
-
 router.delete(
   "/e-learning/quiz/draft/:quizIdDraft",
   permission(["Super-Admin", "Admin", "Mentor"]),
@@ -118,7 +117,7 @@ router.delete(
   "/e-learning/quiz/delete-image-question",
   permission(["Super-Admin", "Admin", "Mentor"]),
   asyncHandler(quizController.deleteQuestionImage)
-)
+);
 
 router.delete(
   "/e-learning/quiz/:quizId",
@@ -231,6 +230,10 @@ router.get(
   asyncHandler(quizController.getAllQuizsNotDraft)
 );
 
-
+router.get(
+  "/e-learning/get-random-questions/:quizId",
+  permission(["Mentor", "Admin", "Trainee"]),
+  asyncHandler(quizController.getRandomQuestions)
+);
 
 module.exports = router;
