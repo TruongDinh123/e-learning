@@ -1003,6 +1003,21 @@ class QuizService {
 
   static submitQuiz = async (quizId, userId, answers, predictAmount) => {
     try {
+      const NUMBER_QUIZ_LIMIT = 1;
+
+      let userRecord = await userModel.findById(userId);
+      let testCount = 0;
+      if (userRecord) {
+        testCount = userRecord.testCount ? userRecord.testCount + 1 : 1;
+        userRecord.testCount = testCount;
+
+        if(testCount > NUMBER_QUIZ_LIMIT) {
+          throw new BadRequestError(`Người dùng đã kiểm tra hơn ${NUMBER_QUIZ_LIMIT} lần`);
+        }
+
+        await userRecord.save();
+      }
+
       if (!answers || !Array.isArray(answers)) {
         throw new BadRequestError('Invalid answers format');
       }
@@ -1039,22 +1054,12 @@ class QuizService {
         }
       });
 
-      let userRecord = await userModel.findById(userId);
-      let testCount = 0;
-      if (userRecord) {
-        testCount = userRecord.testCount ? userRecord.testCount + 1 : 1;
-        userRecord.testCount = testCount;
-
-        await userRecord.save();
-      }
-
       // Tính tổng điểm dựa trên số câu trả lời đúng
       let totalScore = correctAnswersCount * pointsPerCorrectAnswer;
 
       // Cập nhật điểm số và trạng thái hoàn thành cho bản ghi điểm
       scoreRecord.score = totalScore;
       scoreRecord.answers = answers;
-      const NUMBER_QUIZ_LIMIT = 1;
 
       if (testCount === NUMBER_QUIZ_LIMIT) {
         scoreRecord.isComplete = true;
