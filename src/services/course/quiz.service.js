@@ -1,21 +1,21 @@
-"use strict";
-const validateMongoDbId = require("../../config/validateMongoDbId");
-const { NotFoundError, BadRequestError } = require("../../core/error.response");
-const courseModel = require("../../models/course.model");
-const Quiz = require("../../models/quiz.model");
-const Score = require("../../models/score.model");
-const userModel = require("../../models/user.model");
-const nodemailer = require("nodemailer");
-const { v2: cloudinary } = require("cloudinary");
-const QuizTemplate = require("../../models/quizTemplate.model");
-const lessonModel = require("../../models/lesson.model");
-const Role = require("../../models/role.model");
-const { encrypt, encryptQuiz } = require("../../utils");
+'use strict';
+const validateMongoDbId = require('../../config/validateMongoDbId');
+const {NotFoundError, BadRequestError} = require('../../core/error.response');
+const courseModel = require('../../models/course.model');
+const Quiz = require('../../models/quiz.model');
+const Score = require('../../models/score.model');
+const userModel = require('../../models/user.model');
+const nodemailer = require('nodemailer');
+const {v2: cloudinary} = require('cloudinary');
+const QuizTemplate = require('../../models/quizTemplate.model');
+const lessonModel = require('../../models/lesson.model');
+const Role = require('../../models/role.model');
+const {encrypt, encryptQuiz} = require('../../utils');
 
 cloudinary.config({
-  cloud_name: "dvsvd87sm",
-  api_key: "243392977754277",
-  api_secret: "YnSIAsvn7hRPqxTdIQBX9gBzihE",
+  cloud_name: 'dvsvd87sm',
+  api_key: '243392977754277',
+  api_secret: 'YnSIAsvn7hRPqxTdIQBX9gBzihE',
 });
 
 class QuizService {
@@ -54,10 +54,10 @@ class QuizService {
 
     const user = await userModel
       .findById(userId)
-      .select("roles quizCount quizLimit")
-      .populate("roles", "name")
+      .select('roles quizCount quizLimit')
+      .populate('roles', 'name')
       .lean();
-    const isMentor = user.roles.some((role) => role.name === "Mentor");
+    const isMentor = user.roles.some((role) => role.name === 'Mentor');
 
     // Kiểm tra điều kiện để tạo QuizTemplate mới
     const isCreatingQuizTemplate =
@@ -68,11 +68,11 @@ class QuizService {
     let quizTemplate;
     if (quizTemplateId) {
       quizTemplate = await QuizTemplate.findById(quizTemplateId).lean();
-      if (!quizTemplate) throw new NotFoundError("Quiz template not found");
+      if (!quizTemplate) throw new NotFoundError('Quiz template not found');
     }
 
     const formattedQuestions =
-      type === "multiple_choice"
+      type === 'multiple_choice'
         ? questions.map((question) => ({
             question: question.question,
             options: question.options,
@@ -111,7 +111,7 @@ class QuizService {
         lessonId,
         questions: formattedQuestions,
         essay:
-          type === "essay"
+          type === 'essay'
             ? {
                 title: essay.title,
                 content: essay.content,
@@ -273,23 +273,23 @@ class QuizService {
 
     if (lessonId) {
       const lesson = await lessonModel.findById(lessonId);
-      if (!lesson) throw new NotFoundError("Lesson not found");
+      if (!lesson) throw new NotFoundError('Lesson not found');
 
       // Check if the lesson already has a quiz
       if (lesson.quizzes && lesson.quizzes.length > 0) {
-        throw new BadRequestError("Bài tập đã tồn tại trong bài học này");
+        throw new BadRequestError('Bài tập đã tồn tại trong bài học này');
       }
 
       // Update the lesson with the new quiz
       await lessonModel.updateOne(
-        { _id: lessonId },
-        { $set: { quizzes: [savedQuiz._id] } }
+        {_id: lessonId},
+        {$set: {quizzes: [savedQuiz._id]}}
       );
 
       // Thêm logic để cập nhật quizCount cho giáo viên của khóa học mà bài học này thuộc về
       if (isMentor) {
         const course = await courseModel.findById(lesson.courseId).lean();
-        if (!course) throw new NotFoundError("Course not found");
+        if (!course) throw new NotFoundError('Course not found');
 
         const teacherQuizInfoIndex = course.teacherQuizzes.findIndex(
           (tq) => tq.teacherId.toString() === userId.toString()
@@ -303,7 +303,7 @@ class QuizService {
           );
         }
         if (teacherQuizInfoIndex === -1) {
-          course.teacherQuizzes.push({ teacherId: userId, quizCount: 1 });
+          course.teacherQuizzes.push({teacherId: userId, quizCount: 1});
         } else {
           course.teacherQuizzes[teacherQuizInfoIndex].quizCount += 1;
         }
@@ -316,8 +316,8 @@ class QuizService {
     // Sử dụng bulkWrite để cập nhật nhiều documents một cách hiệu quả
     const studentUpdates = studentIds.map((studentId) => ({
       updateOne: {
-        filter: { _id: studentId },
-        update: { $push: { quizzes: savedQuiz._id } },
+        filter: {_id: studentId},
+        update: {$push: {quizzes: savedQuiz._id}},
       },
     }));
 
@@ -325,8 +325,8 @@ class QuizService {
 
     const courseUpdates = courseIds.map((courseId) => ({
       updateOne: {
-        filter: { _id: courseId },
-        update: { $push: { quizzes: savedQuiz._id } },
+        filter: {_id: courseId},
+        update: {$push: {quizzes: savedQuiz._id}},
       },
     }));
 
@@ -357,13 +357,13 @@ class QuizService {
       if (quizIdDraft) {
         // Nếu có newQuestion, chỉ thêm câu hỏi mới vào mảng questions
         quiz = await Quiz.findById(quizIdDraft);
-        if (!quiz) throw new NotFoundError("Quiz not found");
+        if (!quiz) throw new NotFoundError('Quiz not found');
 
         // Xử lý xóa các câu hỏi đã bị xóa bằng cách sử dụng $pull
         if (deletedQuestionIds && deletedQuestionIds.length > 0) {
           await Quiz.updateOne(
-            { _id: quizIdDraft },
-            { $pull: { questions: { _id: { $in: deletedQuestionIds } } } }
+            {_id: quizIdDraft},
+            {$pull: {questions: {_id: {$in: deletedQuestionIds}}}}
           );
         }
 
@@ -402,7 +402,7 @@ class QuizService {
 
         if (quizTemplateId) {
           quizTemplate = await QuizTemplate.findById(quizTemplateId).lean();
-          if (!quizTemplate) throw new NotFoundError("Quiz template not found");
+          if (!quizTemplate) throw new NotFoundError('Quiz template not found');
         }
 
         // Tạo bản nháp mới
@@ -416,7 +416,7 @@ class QuizService {
             ...questions,
           ],
           essay:
-            type === "essay"
+            type === 'essay'
               ? {
                   title: essay.title,
                   content: essay.content,
@@ -435,12 +435,12 @@ class QuizService {
     } catch (error) {}
   };
 
-  static getDraftQuiz = async ({ teacherId }) => {
+  static getDraftQuiz = async ({teacherId}) => {
     // Kiểm tra xem teacherId có vai trò là Admin hay không
     const isAdmin = await userModel.findOne({
       _id: teacherId,
       roles: {
-        $in: (await Role.find({ name: "Admin" })).map((role) => role._id),
+        $in: (await Role.find({name: 'Admin'})).map((role) => role._id),
       },
     });
 
@@ -450,7 +450,7 @@ class QuizService {
         creatorId: teacherId,
         isDraft: true,
       })
-        .select("-creatorId -createdAt -updatedAt -studentIds -__v")
+        .select('-creatorId -createdAt -updatedAt -studentIds -__v')
         .lean();
     }
 
@@ -458,7 +458,7 @@ class QuizService {
     return Quiz.find({
       isDraft: true,
     })
-      .select("-creatorId -createdAt -updatedAt -studentIds -__v")
+      .select('-creatorId -createdAt -updatedAt -studentIds -__v')
       .lean();
   };
 
@@ -466,7 +466,7 @@ class QuizService {
     try {
       const DeldraftQuiz = await Quiz.findByIdAndDelete(quizIdDraft);
       if (!DeldraftQuiz)
-        throw new NotFoundError("No draft quiz template found");
+        throw new NotFoundError('No draft quiz template found');
     } catch (error) {
       console.log(error);
     }
@@ -482,7 +482,7 @@ class QuizService {
     validateMongoDbId(questionId);
     try {
       let quiz;
-      const isTemplate = isTemplateMode === "true" || isTemplateMode === true;
+      const isTemplate = isTemplateMode === 'true' || isTemplateMode === true;
 
       if (isTemplate) {
         quiz = await QuizTemplate.findById(quizId);
@@ -493,32 +493,32 @@ class QuizService {
       const questionIndex = quiz.questions.findIndex(
         (question) => question._id.toString() === questionId
       );
-      if (questionIndex === -1) throw new NotFoundError("Question not found");
+      if (questionIndex === -1) throw new NotFoundError('Question not found');
 
       // Nếu câu hỏi đã có hình ảnh, xóa hình ảnh cũ trên Cloudinary
       if (quiz.questions[questionIndex].image_url) {
         const publicId = quiz.questions[questionIndex].image_url
-          .split("/")
+          .split('/')
           .pop()
-          .split(".")[0];
+          .split('.')[0];
         await cloudinary.uploader.destroy(publicId, {
-          folder: "quiz_questions",
-          resource_type: "image",
+          folder: 'quiz_questions',
+          resource_type: 'image',
         });
       }
 
       // Tải lên hình ảnh mới và cập nhật URL
       const result = await cloudinary.uploader.upload(filename, {
-        folder: "quiz_questions",
-        resource_type: "image",
+        folder: 'quiz_questions',
+        resource_type: 'image',
       });
 
       quiz.questions[questionIndex].image_url = result.secure_url;
       await quiz.save();
 
-      return { message: "Image uploaded successfully", quiz };
+      return {message: 'Image uploaded successfully', quiz};
     } catch (error) {
-      throw new BadRequestError("Failed to upload question image", error);
+      throw new BadRequestError('Failed to upload question image', error);
     }
   };
 
@@ -530,11 +530,11 @@ class QuizService {
   static getAllQuizTemplates = async () => {
     try {
       const quizTemplate = await QuizTemplate.find().lean();
-      if (!quizTemplate) throw new NotFoundError("quizTemplate not found");
+      if (!quizTemplate) throw new NotFoundError('quizTemplate not found');
 
       return quizTemplate;
     } catch (error) {
-      throw new BadRequestError("Failed to get quiz template", error);
+      throw new BadRequestError('Failed to get quiz template', error);
     }
   };
 
@@ -543,20 +543,20 @@ class QuizService {
       const findQuizTemplate = await QuizTemplate.findByIdAndDelete(
         quizTemplateId
       );
-      if (!findQuizTemplate) throw new NotFoundError("No quiz template found");
+      if (!findQuizTemplate) throw new NotFoundError('No quiz template found');
     } catch (error) {}
   };
 
   static updateQuizTemplate = async (quizTemplateId, updateQuizTemplate) => {
-    const { name, questions } = updateQuizTemplate;
+    const {name, questions} = updateQuizTemplate;
     const quizTemplate = await QuizTemplate.findById(quizTemplateId);
 
     if (!quizTemplate) {
-      throw new NotFoundError("quiz template not found");
+      throw new NotFoundError('quiz template not found');
     }
     quizTemplate.name = name;
 
-    if (quizTemplate.type === "multiple_choice") {
+    if (quizTemplate.type === 'multiple_choice') {
       for (const updateQuestion of questions) {
         const questionIndex = quizTemplate.questions.findIndex(
           (question) => question._id.toString() === updateQuestion._id
@@ -578,37 +578,37 @@ class QuizService {
     try {
       // Tìm quiz để lấy URL ảnh hiện tại
       const quiz = await Quiz.findById(quizId);
-      if (!quiz) throw new Error("Quiz not found");
+      if (!quiz) throw new Error('Quiz not found');
 
       const questionIndex = quiz.questions.findIndex(
         (q) => q._id.toString() === questionId
       );
-      if (questionIndex === -1) throw new Error("Question not found");
+      if (questionIndex === -1) throw new Error('Question not found');
 
       const imageUrl = quiz.questions[questionIndex].image_url;
-      if (!imageUrl) throw new Error("Image does not exist");
+      if (!imageUrl) throw new Error('Image does not exist');
 
       // Xác định publicId từ URL ảnh
-      const publicId = imageUrl.split("/").pop().split(".")[0];
+      const publicId = imageUrl.split('/').pop().split('.')[0];
 
       // Xóa ảnh từ Cloudinary
       await cloudinary.uploader.destroy(publicId, {
-        folder: "quiz_questions",
-        resource_type: "image",
+        folder: 'quiz_questions',
+        resource_type: 'image',
       });
 
       const result = await Quiz.findOneAndUpdate(
-        { _id: quizId, "questions._id": questionId },
+        {_id: quizId, 'questions._id': questionId},
         {
           $set: {
-            "questions.$.image_url": "",
+            'questions.$.image_url': '',
           },
         },
-        { new: true }
+        {new: true}
       );
 
       if (!result) {
-        throw new Error("Quiz not found or question index is out of bounds");
+        throw new Error('Quiz not found or question index is out of bounds');
       }
 
       return result;
@@ -617,21 +617,21 @@ class QuizService {
     }
   };
 
-  static uploadFile = async ({ filename, quizId }) => {
+  static uploadFile = async ({filename, quizId}) => {
     validateMongoDbId(quizId);
     try {
       const findQuiz = await Quiz.findById(quizId);
       if (!findQuiz) {
-        throw new NotFoundError("Quiz not found");
+        throw new NotFoundError('Quiz not found');
       }
 
       const result = await cloudinary.uploader.upload(filename, {
-        resource_type: "raw",
+        resource_type: 'raw',
       });
       findQuiz.essay.attachment = result.secure_url;
       await findQuiz.save();
 
-      return { findQuiz };
+      return {findQuiz};
     } catch (error) {
       throw new BadRequestError(error);
     }
@@ -639,13 +639,13 @@ class QuizService {
 
   static getAllQuizs = async () => {
     try {
-      const quizs = await Quiz.find().populate("questions").lean();
+      const quizs = await Quiz.find().populate('questions').lean();
 
-      if (!quizs) throw new NotFoundError("quizs not found");
+      if (!quizs) throw new NotFoundError('quizs not found');
 
       return quizs;
     } catch (error) {
-      throw new BadRequestError("Failed to get quizs", error);
+      throw new BadRequestError('Failed to get quizs', error);
     }
   };
 
@@ -653,10 +653,10 @@ class QuizService {
     try {
       // Find the course
       const course = await courseModel.findById(courseIds);
-      if (!course) throw new NotFoundError("Course not found");
+      if (!course) throw new NotFoundError('Course not found');
 
       // Find lessons that belong to the course
-      const lessons = await lessonModel.find({ courseId: courseIds });
+      const lessons = await lessonModel.find({courseId: courseIds});
 
       // Extract all quiz IDs from the lessons
       const lessonQuizIds = lessons.flatMap((lesson) => lesson.quizzes);
@@ -664,21 +664,21 @@ class QuizService {
       // Find quizzes that belong to the course
       const courseQuizzes = await Quiz.find({
         $and: [
-          { $or: [{ courseIds: courseIds }, { _id: { $in: lessonQuizIds } }] },
-          { $or: [{ isDraft: false }, { isDraft: { $exists: false } }] },
+          {$or: [{courseIds: courseIds}, {_id: {$in: lessonQuizIds}}]},
+          {$or: [{isDraft: false}, {isDraft: {$exists: false}}]},
         ],
       })
-        .populate("questions")
+        .populate('questions')
         .lean();
 
       // Combine courseQuizzes and lessonQuizzes
       const quizzes = courseQuizzes;
 
-      if (!quizzes) throw new NotFoundError("Quizzes not found");
+      if (!quizzes) throw new NotFoundError('Quizzes not found');
 
       return quizzes;
     } catch (error) {
-      throw new BadRequestError("Failed to get quizs", error);
+      throw new BadRequestError('Failed to get quizs', error);
     }
   };
 
@@ -686,10 +686,10 @@ class QuizService {
     try {
       // Find the course
       const course = await courseModel.findById(courseIds);
-      if (!course) throw new NotFoundError("Course not found");
+      if (!course) throw new NotFoundError('Course not found');
 
       // Find lessons that belong to the course
-      const lessons = await lessonModel.find({ courseId: courseIds });
+      const lessons = await lessonModel.find({courseId: courseIds});
 
       // Extract all quiz IDs from the lessons
       const lessonQuizIds = lessons.flatMap((lesson) => lesson.quizzes);
@@ -697,21 +697,21 @@ class QuizService {
       // Find quizzes that belong to the course
       const courseQuizzes = await Quiz.find({
         $and: [
-          { $or: [{ courseIds: courseIds }, { _id: { $in: lessonQuizIds } }] },
-          { $or: [{ isDraft: false }, { isDraft: { $exists: false } }] },
+          {$or: [{courseIds: courseIds}, {_id: {$in: lessonQuizIds}}]},
+          {$or: [{isDraft: false}, {isDraft: {$exists: false}}]},
         ],
       })
-        .select("-updatedAt -createdAt -studentIds -__v")
-        .populate("courseIds", "name")
+        .select('-updatedAt -createdAt -studentIds -__v')
+        .populate('courseIds', 'name')
         .populate({
-          path: "lessonId",
+          path: 'lessonId',
           populate: {
-            path: "courseId",
-            model: "Course",
+            path: 'courseId',
+            model: 'Course',
             populate: {
-              path: "teacher",
-              model: "User",
-              select: "email name lastName firstName",
+              path: 'teacher',
+              model: 'User',
+              select: 'email name lastName firstName',
             },
           },
         })
@@ -720,27 +720,27 @@ class QuizService {
       // Combine courseQuizzes and lessonQuizzes
       const quizzes = courseQuizzes;
 
-      if (!quizzes) throw new NotFoundError("Quizzes not found");
+      if (!quizzes) throw new NotFoundError('Quizzes not found');
 
       return quizzes;
     } catch (error) {
-      throw new BadRequestError("Failed to get quizs", error);
+      throw new BadRequestError('Failed to get quizs', error);
     }
   };
 
   static getAQuizByCourse = async (quizId) => {
-    const quizs = await Quiz.find({ _id: quizId })
-      .populate("questions")
-      .populate("courseIds", "name")
+    const quizs = await Quiz.find({_id: quizId})
+      .populate('questions')
+      .populate('courseIds', 'name')
       .populate({
-        path: "lessonId",
+        path: 'lessonId',
         populate: {
-          path: "courseId",
-          model: "Course",
+          path: 'courseId',
+          model: 'Course',
           populate: {
-            path: "teacher",
-            model: "User",
-            select: "email name lastName firstName",
+            path: 'teacher',
+            model: 'User',
+            select: 'email name lastName firstName',
           },
         },
       })
@@ -753,64 +753,34 @@ class QuizService {
       }));
     }
 
-    if (!quizs) throw new NotFoundError("quizs not found");
+    if (!quizs) throw new NotFoundError('quizs not found');
 
     return quizs;
   };
 
-  static getAQuizByCourseForUserScreen = async () => {
-    const quizs = await Quiz.findOne(
-      { activePresent: true },
-      { studentIds: 0, courseIds: 0 }
-    )
-      .populate("questions")
-      .lean();
-
-    if (!quizs) throw new NotFoundError("quizs not found");
-
-    const randomQuestions = await this.getRandomQuestions(quizs._id, 28);
-
-    // Xóa câu trả lời từ các câu hỏi
-    const questionsWithoutAnswers = randomQuestions.map((question) => {
-      delete question.answer;
-      return question;
-    });
-
-    // Cập nhật quiz với các câu hỏi ngẫu nhiên
-    quizs.questions = questionsWithoutAnswers;
-
-    const encryptQuizInit = encryptQuiz(JSON.stringify(quizs));
-
-    return {
-      _id: quizs._id,
-      data: encryptQuizInit,
-    };
-  };
-
   static getAQuizTemplate = async (quizTemplateId) => {
     const quizs = await QuizTemplate.find()
-      .where({ _id: quizTemplateId })
-      .populate("questions")
+      .where({_id: quizTemplateId})
+      .populate('questions')
       .lean();
 
-    if (!quizs) throw new NotFoundError("Không tồn tại");
+    if (!quizs) throw new NotFoundError('Không tồn tại');
 
     return quizs;
   };
 
   static updateQuiz = async (quizId, updatedQuizData) => {
-    const { name, questions, timeLimit, submissionTime, essay } =
-      updatedQuizData;
+    const {name, questions, timeLimit, submissionTime, essay} = updatedQuizData;
     const quiz = await Quiz.findById(quizId);
 
     if (!quiz) {
-      throw new NotFoundError("quiz not found");
+      throw new NotFoundError('quiz not found');
     }
 
-    const score = await Score.findOne({ quiz: quizId, isComplete: true });
+    const score = await Score.findOne({quiz: quizId, isComplete: true});
     if (score) {
       throw new BadRequestError(
-        "Không thể cập nhật khóa học vì đã có học sinh làm bài."
+        'Không thể cập nhật khóa học vì đã có học sinh làm bài.'
       );
     }
 
@@ -818,7 +788,7 @@ class QuizService {
     quiz.submissionTime = submissionTime;
     quiz.timeLimit = timeLimit;
 
-    if (quiz.type === "multiple_choice") {
+    if (quiz.type === 'multiple_choice') {
       for (const updateQuestion of questions) {
         const questionIndex = quiz.questions.findIndex(
           (question) => question._id.toString() === updateQuestion._id
@@ -829,7 +799,7 @@ class QuizService {
           quiz.questions.push(updateQuestion);
         }
       }
-    } else if (quiz.type === "essay") {
+    } else if (quiz.type === 'essay') {
       quiz.essay = {
         title: essay.title,
         content: essay.content,
@@ -850,11 +820,11 @@ class QuizService {
     };
   };
 
-  static updateQuizTimeSubmit = async ({ quizId, submissionTime }) => {
+  static updateQuizTimeSubmit = async ({quizId, submissionTime}) => {
     const quiz = await Quiz.findById(quizId);
 
     if (!quiz) {
-      throw new NotFoundError("quiz not found");
+      throw new NotFoundError('quiz not found');
     }
     quiz.submissionTime = submissionTime;
     quiz.save();
@@ -862,34 +832,32 @@ class QuizService {
     return quiz;
   };
 
-  static deleteQuiz = async ({ quizId, userId }) => {
+  static deleteQuiz = async ({quizId, userId}) => {
     try {
       validateMongoDbId(quizId);
 
       const quiz = await Quiz.findById(quizId);
-      if (!quiz) throw new NotFoundError("Quiz not found");
+      if (!quiz) throw new NotFoundError('Quiz not found');
 
       // Xóa các hình ảnh của câu hỏi trên Cloudinary
       for (const question of quiz.questions) {
         if (question.image_url) {
-          const publicId = question.image_url.split("/").pop().split(".")[0];
+          const publicId = question.image_url.split('/').pop().split('.')[0];
           await cloudinary.uploader.destroy(publicId);
         }
       }
 
-      await Score.deleteMany({ quiz: quizId });
+      await Score.deleteMany({quiz: quizId});
 
-      const coursesToUpdate = await courseModel
-        .find({ quizzes: quizId })
-        .lean();
+      const coursesToUpdate = await courseModel.find({quizzes: quizId}).lean();
 
       const user = await userModel
         .findById(userId)
-        .populate("roles", "name")
+        .populate('roles', 'name')
         .lean();
 
       const isAdmin = user.roles.some(
-        (role) => role.name === "Admin" || role.name === "Admin-Super"
+        (role) => role.name === 'Admin' || role.name === 'Admin-Super'
       );
 
       for (const course of coursesToUpdate) {
@@ -904,7 +872,7 @@ class QuizService {
             (teacherQuiz) => {
               // Giảm quizCount cho tất cả giáo viên trong teacherQuizzes
               const newQuizCount = Math.max(0, teacherQuiz.quizCount - 1);
-              return { ...teacherQuiz, quizCount: newQuizCount };
+              return {...teacherQuiz, quizCount: newQuizCount};
             }
           );
 
@@ -915,41 +883,38 @@ class QuizService {
       }
 
       await courseModel.updateMany(
-        { quizzes: quizId },
-        { $pull: { quizzes: quizId } }
+        {quizzes: quizId},
+        {$pull: {quizzes: quizId}}
       );
 
       if (quiz.lessonId) {
         await lessonModel.updateOne(
-          { _id: quiz.lessonId },
-          { $pull: { quizzes: quizId } }
+          {_id: quiz.lessonId},
+          {$pull: {quizzes: quizId}}
         );
       }
 
-      await userModel.updateMany(
-        { quizzes: quizId },
-        { $pull: { quizzes: quizId } }
-      );
+      await userModel.updateMany({quizzes: quizId}, {$pull: {quizzes: quizId}});
 
       const deletedQuiz = await Quiz.findByIdAndDelete(quizId);
 
       return deletedQuiz;
     } catch (error) {
       console.error(error);
-      throw new BadRequestError("Failed to delete quiz", error);
+      throw new BadRequestError('Failed to delete quiz', error);
     }
   };
 
   static deleteQuestion = async (quizId, questionId) => {
     try {
       const quiz = await Quiz.findById(quizId);
-      if (!quiz) throw new NotFoundError("quiz not found");
+      if (!quiz) throw new NotFoundError('quiz not found');
 
       const questionExists = quiz.questions.some(
         (question) => question._id.toString() === questionId
       );
 
-      if (!questionExists) throw new NotFoundError("question not found");
+      if (!questionExists) throw new NotFoundError('question not found');
 
       quiz.questions = quiz.questions.filter(
         (question) => question._id.toString() !== questionId
@@ -963,22 +928,22 @@ class QuizService {
 
       return quiz;
     } catch (error) {
-      throw new BadRequestError("Failed to delete question", error);
+      throw new BadRequestError('Failed to delete question', error);
     }
   };
 
   static async startQuiz(quizId, userId) {
     const quiz = await Quiz.findById(quizId)
-      .select("-createdAt -updatedAt -__v -questions")
+      .select('-createdAt -updatedAt -__v -questions')
       .lean();
     if (!quiz) {
-      throw new Error("Quiz not found");
+      throw new Error('Quiz not found');
     }
 
     // Kiểm tra xem thời gian hiện tại đã vượt qua thời gian kết thúc dự kiến của bài quiz chưa
     const currentTime = new Date();
     if (quiz.submissionTime && currentTime > new Date(quiz.submissionTime)) {
-      throw new Error("Thời gian làm bài đã hết, không thể bắt đầu làm bài.");
+      throw new Error('Thời gian làm bài đã hết, không thể bắt đầu làm bài.');
     }
 
     // Kiểm tra xem đã có bản ghi điểm cho người dùng và quiz này chưa
@@ -995,7 +960,7 @@ class QuizService {
           user: userId,
         },
         {
-          $setOnInsert: { startTime: new Date(), isComplete: false },
+          $setOnInsert: {startTime: new Date(), isComplete: false},
         },
         {
           new: true,
@@ -1009,11 +974,11 @@ class QuizService {
     return scoreRecord;
   }
 
-  static generateCustomPoint = async ({ quiz, scoreCurrent }) => {
+  static generateCustomPoint = async ({quiz, scoreCurrent}) => {
     let scoreCustom = 0;
-    const scores = await Score.find({ quiz: quiz._id })
-      .populate("quiz")
-      .populate("user")
+    const scores = await Score.find({quiz: quiz._id})
+      .populate('quiz')
+      .populate('user')
       .lean();
 
     // Tính điểm cho câu 1
@@ -1039,10 +1004,10 @@ class QuizService {
   static submitQuiz = async (quizId, userId, answers, predictAmount) => {
     try {
       if (!answers || !Array.isArray(answers)) {
-        throw new BadRequestError("Invalid answers format");
+        throw new BadRequestError('Invalid answers format');
       }
 
-      const scoreRecordArr = await Score.find({ user: userId });
+      const scoreRecordArr = await Score.find({user: userId});
       const scoreRecord = new Score({
         user: userId,
         quiz: quizId,
@@ -1050,7 +1015,7 @@ class QuizService {
       });
 
       const quiz = await Quiz.findById(quizId);
-      if (!quiz) throw new NotFoundError("No quiz found");
+      if (!quiz) throw new NotFoundError('No quiz found');
       !quiz.usersTested.includes(userId) && quiz.usersTested.push(userId);
 
       await quiz.save();
@@ -1089,8 +1054,9 @@ class QuizService {
       // Cập nhật điểm số và trạng thái hoàn thành cho bản ghi điểm
       scoreRecord.score = totalScore;
       scoreRecord.answers = answers;
+      const NUMBER_QUIZ_LIMIT = 1;
 
-      if (testCount === 5) {
+      if (testCount === NUMBER_QUIZ_LIMIT) {
         scoreRecord.isComplete = true;
       } else {
         scoreRecord.isComplete = false;
@@ -1107,30 +1073,30 @@ class QuizService {
 
       return scoreRecord;
     } catch (error) {
-      throw new BadRequestError("Failed to submit quiz", error);
+      throw new BadRequestError('Failed to submit quiz', error);
     }
   };
 
-  static uploadFileUserSubmit = async ({ filename, quizId, userId }) => {
+  static uploadFileUserSubmit = async ({filename, quizId, userId}) => {
     validateMongoDbId(quizId);
     validateMongoDbId(userId);
     try {
       const findQuiz = await Quiz.findById(quizId);
       if (!findQuiz) {
-        throw new NotFoundError("Quiz not found");
+        throw new NotFoundError('Quiz not found');
       }
 
-      const score = await Score.findOne({ quiz: quizId, user: userId });
+      const score = await Score.findOne({quiz: quizId, user: userId});
 
       if (score.filename) {
         // Delete the old image from Cloudinary
         await cloudinary.uploader.destroy(score.filename, {
-          resource_type: "score",
+          resource_type: 'score',
         });
       }
 
       const result = await cloudinary.uploader.upload(filename, {
-        resource_type: "raw",
+        resource_type: 'raw',
       });
 
       score.filename = result.secure_url;
@@ -1143,12 +1109,12 @@ class QuizService {
     }
   };
 
-  static submitQuizEssay = async ({ userId, quizId, essayAnswer }) => {
+  static submitQuizEssay = async ({userId, quizId, essayAnswer}) => {
     try {
       const quiz = await Quiz.findById(quizId);
-      if (!quiz) throw new NotFoundError("no quiz found");
+      if (!quiz) throw new NotFoundError('no quiz found');
 
-      const existingScore = await Score.findOne({ user: userId, quiz: quizId });
+      const existingScore = await Score.findOne({user: userId, quiz: quizId});
 
       if (existingScore) {
         existingScore.essayAnswer = essayAnswer;
@@ -1170,23 +1136,23 @@ class QuizService {
 
   static getScoreByUser = async (userId) => {
     try {
-      const scores = await Score.find({ user: userId }).populate("quiz").lean();
+      const scores = await Score.find({user: userId}).populate('quiz').lean();
 
-      if (!scores) throw new NotFoundError("scores not found");
+      if (!scores) throw new NotFoundError('scores not found');
 
       return scores;
     } catch (error) {
-      throw new BadRequestError("Failed to get scores", error);
+      throw new BadRequestError('Failed to get scores', error);
     }
   };
 
   static getScoreByUserId = async (userId, quizId) => {
     try {
-      const scores = await Score.find({ user: userId, quiz: quizId })
-        .populate("quiz", "_id name")
+      const scores = await Score.find({user: userId, quiz: quizId})
+        .populate('quiz', '_id name')
         .lean();
 
-      if (!scores) throw new NotFoundError("scores not found");
+      if (!scores) throw new NotFoundError('scores not found');
 
       const scoreAndAnswers = scores.map((score) => ({
         score: score.score,
@@ -1196,30 +1162,30 @@ class QuizService {
 
       return scoreAndAnswers;
     } catch (error) {
-      throw new BadRequestError("Failed to get scores and answers", error);
+      throw new BadRequestError('Failed to get scores and answers', error);
     }
   };
 
   static getScoreByInfo = async (userId) => {
     try {
-      const scores = await Score.find({ user: userId })
-        .select("_id score isComplete user")
-        .populate("quiz", "_id name")
+      const scores = await Score.find({user: userId})
+        .select('_id score isComplete user')
+        .populate('quiz', '_id name')
         .lean();
 
-      if (!scores) throw new NotFoundError("scores not found");
+      if (!scores) throw new NotFoundError('scores not found');
 
       return scores;
     } catch (error) {
-      throw new BadRequestError("Failed to get scores and answers", error);
+      throw new BadRequestError('Failed to get scores and answers', error);
     }
   };
 
   static getScoreByQuizId = async (quizId) => {
     try {
-      const scores = await Score.find({ quiz: quizId })
-        .populate("quiz")
-        .populate("user")
+      const scores = await Score.find({quiz: quizId})
+        .populate('quiz')
+        .populate('user')
         .lean();
 
       // Tính điểm cho câu 1
@@ -1243,20 +1209,20 @@ class QuizService {
         scores[i].score = Math.round((scores[i].score + score1[i]) * 100) / 100;
       }
 
-      if (!scores) throw new NotFoundError("scores not found");
+      if (!scores) throw new NotFoundError('scores not found');
 
       return scores;
     } catch (error) {
-      throw new BadRequestError("Failed to get scores", error);
+      throw new BadRequestError('Failed to get scores', error);
     }
   };
 
-  static deleteScorebyQuiz = async ({ scoreId }) => {
+  static deleteScorebyQuiz = async ({scoreId}) => {
     try {
-      const deletedScore = await Score.deleteOne({ _id: scoreId });
-      if (!deletedScore) throw new NotFoundError("No score found");
+      const deletedScore = await Score.deleteOne({_id: scoreId});
+      if (!deletedScore) throw new NotFoundError('No score found');
     } catch (error) {
-      throw new BadRequestError("Failed to delete score", error);
+      throw new BadRequestError('Failed to delete score', error);
     }
   };
 
@@ -1271,11 +1237,11 @@ class QuizService {
       courseModel.findById(courseId),
     ]);
 
-    if (!student) throw new NotFoundError("Student not found");
-    if (!course) throw new NotFoundError("Course not found");
+    if (!student) throw new NotFoundError('Student not found');
+    if (!course) throw new NotFoundError('Course not found');
 
     // Find lessons that belong to the course
-    const lessons = await lessonModel.find({ courseId: courseId });
+    const lessons = await lessonModel.find({courseId: courseId});
 
     // Extract all quiz IDs from the lessons
     const lessonQuizIds = lessons.flatMap((lesson) => lesson.quizzes);
@@ -1283,38 +1249,38 @@ class QuizService {
     // Find quizzes that belong to the course and assigned to the student
     const [courseQuizzes, lessonQuizzes] = await Promise.all([
       Quiz.find({
-        _id: { $in: student.quizzes },
+        _id: {$in: student.quizzes},
         courseIds: courseId,
       })
-        .select("-updatedAt -createdAt -__v")
-        .populate("courseIds", "_id name")
+        .select('-updatedAt -createdAt -__v')
+        .populate('courseIds', '_id name')
         .populate({
-          path: "lessonId",
+          path: 'lessonId',
           populate: {
-            path: "courseId",
-            model: "Course",
+            path: 'courseId',
+            model: 'Course',
             populate: {
-              path: "teacher",
-              model: "User",
-              select: "name email lastName firstName",
+              path: 'teacher',
+              model: 'User',
+              select: 'name email lastName firstName',
             },
           },
         })
         .lean(),
       Quiz.find({
-        _id: { $in: [...student.quizzes, ...lessonQuizIds] },
+        _id: {$in: [...student.quizzes, ...lessonQuizIds]},
       })
-        .select("-updatedAt -createdAt -__v")
-        .populate("courseIds", "_id name")
+        .select('-updatedAt -createdAt -__v')
+        .populate('courseIds', '_id name')
         .populate({
-          path: "lessonId",
+          path: 'lessonId',
           populate: {
-            path: "courseId",
-            model: "Course",
+            path: 'courseId',
+            model: 'Course',
             populate: {
-              path: "teacher",
-              model: "User",
-              select: "name email lastName firstName",
+              path: 'teacher',
+              model: 'User',
+              select: 'name email lastName firstName',
             },
           },
         })
@@ -1333,14 +1299,14 @@ class QuizService {
   static updateScore = async (scoresToUpdate) => {
     try {
       if (!Array.isArray(scoresToUpdate)) {
-        throw new BadRequestError("scoresToUpdate must be an array");
+        throw new BadRequestError('scoresToUpdate must be an array');
       }
 
       const updateScores = [];
 
-      for (const { scoreId, updateScore } of scoresToUpdate) {
+      for (const {scoreId, updateScore} of scoresToUpdate) {
         const score = await Score.findById(scoreId);
-        if (!score) throw new NotFoundError("score not found");
+        if (!score) throw new NotFoundError('score not found');
 
         score.score = updateScore;
         await score.save();
@@ -1349,7 +1315,7 @@ class QuizService {
 
       return updateScores;
     } catch (error) {
-      throw new BadRequestError("Failed to update score", error);
+      throw new BadRequestError('Failed to update score', error);
     }
   };
 
@@ -1360,15 +1326,15 @@ class QuizService {
 
       // Find the course to ensure it exists
       const course = await courseModel.findById(courseId);
-      if (!course) throw new NotFoundError("Course not found");
+      if (!course) throw new NotFoundError('Course not found');
 
       // Get all quizzes associated with the course
-      const quizzes = await Quiz.find({ courseIds: courseId });
+      const quizzes = await Quiz.find({courseIds: courseId});
 
       // Map through quizzes and get scores for each quiz
       const scoresPromises = quizzes.map(async (quiz) => {
-        const scores = await Score.find({ quiz: quiz._id })
-          .populate("user", "email")
+        const scores = await Score.find({quiz: quiz._id})
+          .populate('user', 'email')
           .lean();
         return {
           quizId: quiz._id,
@@ -1378,7 +1344,7 @@ class QuizService {
             const user = score.user;
             return {
               userId: user ? user._id : null,
-              userEmail: user ? user.email : "No Email",
+              userEmail: user ? user.email : 'No Email',
               score: score.score,
               submitTime: score.submitTime,
               isComplete: score.isComplete,
@@ -1392,8 +1358,8 @@ class QuizService {
 
       return allScores;
     } catch (error) {
-      console.error("Error in getAllScoresByCourseId:", error);
-      throw new BadRequestError("Failed to get scores by course ID", error);
+      console.error('Error in getAllScoresByCourseId:', error);
+      throw new BadRequestError('Failed to get scores by course ID', error);
     }
   };
 
@@ -1404,19 +1370,19 @@ class QuizService {
 
       // Find the course to ensure it exists
       const course = await courseModel.findById(courseId);
-      if (!course) throw new NotFoundError("Course not found");
+      if (!course) throw new NotFoundError('Course not found');
 
       // Get all quizzes associated with the course
       const quizSubmissionTime = await Quiz.find(
-        { courseIds: courseId, isDraft: false, activePresent: true },
-        { submissionTime: 1 }
+        {courseIds: courseId, isDraft: false, activePresent: true},
+        {submissionTime: 1}
       ).limit(1);
 
       return quizSubmissionTime;
     } catch (error) {
-      console.error("Error in getSubmissionTimeActiveQuizByCourseId:", error);
+      console.error('Error in getSubmissionTimeActiveQuizByCourseId:', error);
       throw new BadRequestError(
-        "Failed to get submissionTime in the latest quizz by course ID",
+        'Failed to get submissionTime in the latest quizz by course ID',
         error
       );
     }
@@ -1425,7 +1391,7 @@ class QuizService {
   static getInfoCommonScoreByUserId = async (userId) => {
     try {
       const scores = await Score.find(
-        { user: userId },
+        {user: userId},
         {
           isComplete: 1,
           predictAmount: 1,
@@ -1434,45 +1400,44 @@ class QuizService {
           quiz: 0,
         }
       )
-        .populate("quiz")
+        .populate('quiz')
         .lean();
 
-      if (!scores) throw new NotFoundError("scores not found");
+      if (!scores) throw new NotFoundError('scores not found');
 
       const data = scores[0];
 
       return data;
     } catch (error) {
-      console.error("Error in getInfoCommonScoreByUserId:", error);
+      console.error('Error in getInfoCommonScoreByUserId:', error);
       throw new BadRequestError(
-        "Failed to get info common in the latest quizz by course ID",
+        'Failed to get info common in the latest quizz by course ID',
         error
       );
     }
   };
 
-  static activeQuizPresent = async ({ newQuizId, oldQuizId }) => {
+  static activeQuizPresent = async ({newQuizId, oldQuizId}) => {
     try {
       oldQuizId &&
         (await Quiz.updateOne(
           {
             _id: oldQuizId,
           },
-          { $set: { activePresent: false } }
+          {$set: {activePresent: false}}
         ));
 
       const quiz = await Quiz.findOneAndUpdate(
         {
           _id: newQuizId,
         },
-        { $set: { activePresent: true } }
+        {$set: {activePresent: true}}
       );
 
-      console.log(quiz, "quizquiz");
       return quiz;
     } catch (error) {
       console.log(error);
-      throw new BadRequestError("Failed to update activeQuizPresent");
+      throw new BadRequestError('Failed to update activeQuizPresent');
     }
   };
 
@@ -1485,27 +1450,28 @@ class QuizService {
       return quiz;
     } catch (error) {
       console.log(error);
-      throw new BadRequestError("Failed to get activeCoursePresent");
+      throw new BadRequestError('Failed to get activeCoursePresent');
     }
   };
 
   static getScoreHasUsersTested = async () => {
     try {
       const quizs = await Quiz.find({
-        usersTested: { $exists: true },
-      }).populate("usersTested", "firstName lastName");
+        usersTested: {$exists: true},
+      }).populate('usersTested', 'firstName lastName');
 
-      if (!quizs) throw new NotFoundError("scores not found");
+      if (!quizs) throw new NotFoundError('scores not found');
       const result = {};
       const usersTested = {};
+      const scoresInit = await Score.find()
+        .populate('quiz')
+        .populate('user')
+        .lean()
+        .sort({createdAt: -1});
+
       const quizsHasUserTested = quizs.filter(
         (quizItem) => quizItem.usersTested.length
       );
-      const scoresInit = await Score.find()
-        .populate("quiz")
-        .populate("user")
-        .lean()
-        .sort({ createdAt: -1 });
 
       for await (const quiz of quizsHasUserTested) {
         Object.assign(usersTested, {
@@ -1519,17 +1485,34 @@ class QuizService {
           },
         });
 
-        const scores = scoresInit?.filter(
-          (score) => score?.quiz?._id.toString() === quiz._id.toString()
-        );
-        // console.log(scoresInit, 'scoresInitscoresInit', scores);
+        const scoresCustom = [];
 
-        result[quiz._id] = scores;
+        scoresInit.forEach((scoreItem) => {
+          if (scoreItem?.quiz?._id.toString() === quiz._id.toString()) {
+            const questionFilterInit = JSON.parse(
+              JSON.stringify(quiz.questions)
+            );
+            const questionFilter = [];
+
+            questionFilterInit.forEach((questionFilterInitItem) => {
+              scoreItem.answers?.forEach((answerItem) => {
+                if (Object.keys(answerItem)[0] === questionFilterInitItem._id)
+                  questionFilter.push(questionFilterInitItem);
+              });
+            });
+            const scoreItemClone = JSON.parse(JSON.stringify(scoreItem));
+            scoreItemClone.quiz.questions = questionFilter;
+
+            scoresCustom.push(scoreItemClone);
+          }
+        });
+
+        result[quiz._id] = scoresCustom;
       }
 
-      return { scores: result, usersTested };
+      return {scores: result, usersTested};
     } catch (error) {
-      throw new BadRequestError("Failed to get scores", error);
+      throw new BadRequestError('Failed to get scores', error);
     }
   };
 
@@ -1537,34 +1520,63 @@ class QuizService {
     try {
       // Find quizzes that belong to the course
       const courseQuizzes = await Quiz.find({
-        $or: [{ isDraft: false }, { isDraft: { $exists: false } }],
+        $or: [{isDraft: false}, {isDraft: {$exists: false}}],
       })
-        .select("-updatedAt -createdAt -studentIds -__v")
-        .populate("courseIds", "name")
+        .select('-updatedAt -createdAt -studentIds -__v')
+        .populate('courseIds', 'name')
         .populate({
-          path: "lessonId",
+          path: 'lessonId',
           populate: {
-            path: "courseId",
-            model: "Course",
+            path: 'courseId',
+            model: 'Course',
             populate: {
-              path: "teacher",
-              model: "User",
-              select: "email name lastName firstName",
+              path: 'teacher',
+              model: 'User',
+              select: 'email name lastName firstName',
             },
           },
         })
         .lean()
-        .sort({ updatedAt: -1, createdAt: -1 });
+        .sort({updatedAt: -1, createdAt: -1});
 
       // Combine courseQuizzes and lessonQuizzes
       const quizzes = courseQuizzes;
 
-      if (!quizzes) throw new NotFoundError("Quizzes not found");
+      if (!quizzes) throw new NotFoundError('Quizzes not found');
 
       return quizzes;
     } catch (error) {
-      throw new BadRequestError("Failed to get quizs", error);
+      throw new BadRequestError('Failed to get quizs', error);
     }
+  };
+
+  static getAQuizByCourseForUserScreen = async () => {
+    const quizs = await Quiz.findOne(
+      {activePresent: true},
+      {studentIds: 0, courseIds: 0}
+    )
+      .populate('questions')
+      .lean();
+
+    if (!quizs) throw new NotFoundError('quizs not found');
+
+    const randomQuestions = await this.getRandomQuestions(quizs._id);
+
+    // Xóa câu trả lời từ các câu hỏi
+    const questionsWithoutAnswers = randomQuestions.map((question) => {
+      delete question.answer;
+      return question;
+    });
+
+    // Cập nhật quiz với các câu hỏi ngẫu nhiên
+    quizs.questions = questionsWithoutAnswers;
+
+    const encryptQuizInit = encryptQuiz(JSON.stringify(quizs));
+
+    return {
+      _id: quizs._id,
+      data: encryptQuizInit,
+    };
   };
 
   static async getRandomQuestions(quizId) {
@@ -1572,21 +1584,21 @@ class QuizService {
     try {
       let numberOfQuestions = 29;
       const quiz = await Quiz.aggregate([
-        { $match: { _id: quizId } },
-        { $unwind: "$questions" },
-        { $sample: { size: numberOfQuestions } },
-        { $group: { _id: "$_id", questions: { $push: "$questions" } } },
+        {$match: {_id: quizId}},
+        {$unwind: '$questions'},
+        {$sample: {size: numberOfQuestions}},
+        {$group: {_id: '$_id', questions: {$push: '$questions'}}},
       ]);
 
       if (quiz.length === 0 || quiz[0].questions.length < numberOfQuestions) {
-        const fullQuiz = await Quiz.findById(quizId).select("questions").lean();
+        const fullQuiz = await Quiz.findById(quizId).select('questions').lean();
         return fullQuiz.questions;
       }
 
       return quiz[0].questions;
     } catch (error) {
       console.error(error);
-      throw new Error("Error fetching random questions");
+      throw new Error('Error fetching random questions');
     }
   }
 }
